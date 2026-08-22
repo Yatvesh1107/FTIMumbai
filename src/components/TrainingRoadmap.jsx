@@ -234,25 +234,23 @@ export default function TrainingRoadmap() {
               className="tp-step"
               style={posFor(i)}
             >
-              <div className="mx-auto mb-1.5 flex h-20 w-[140px] items-end justify-center overflow-hidden rounded-[50%_/_30%] bg-white shadow-[0_6px_16px_rgba(11,60,104,0.14)] max-[900px]:h-14 max-[900px]:w-[95px] max-[480px]:h-12 max-[480px]:w-[82px]">
-                {img ? (
-                  <img
-                    src={img}
-                    alt=""
-                    loading="lazy"
-                    className="-mb-0.5 w-[120px] object-contain max-[900px]:w-[85px] max-[480px]:w-[74px]"
-                  />
-                ) : (
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="#8A6A5B"
-                    aria-hidden="true"
-                    className="mb-2 h-10 w-10 max-[900px]:h-7 max-[900px]:w-7 max-[480px]:h-6 max-[480px]:w-6"
-                  >
-                    <path d={step.icon} />
-                  </svg>
-                )}
-              </div>
+              {img ? (
+                <img
+                  src={img}
+                  alt=""
+                  loading="lazy"
+                  className="mx-auto block w-[100px] object-contain max-[900px]:w-[64px] max-[480px]:w-[80px]"
+                />
+              ) : (
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="#8A6A5B"
+                  aria-hidden="true"
+                  className="mx-auto mb-2 block h-10 w-10 max-[900px]:h-7 max-[900px]:w-7 max-[480px]:h-6 max-[480px]:w-6"
+                >
+                  <path d={step.icon} />
+                </svg>
+              )}
               <span className="inline-block rounded-full border-2 border-navy bg-white px-3 py-1.5 text-xs font-semibold whitespace-nowrap text-slate-900 shadow-sm max-[900px]:max-w-[105px] max-[900px]:text-[10px] max-[900px]:leading-tight max-[900px]:whitespace-normal max-[480px]:px-2 max-[480px]:py-1 max-[480px]:text-[9px]">
                 {step.title}
               </span>
