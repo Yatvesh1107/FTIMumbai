@@ -13,7 +13,7 @@ const STEPS = [
     icon: "M15 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4Zm-9-2V7H4v3H1v2h3v3h2v-3h3v-2H6Zm9 4c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4Z",
   },
   {
-    title: "Concept Sessions",
+    title: "Practice Sessions",
     icon: "M5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82ZM12 3 1 9l11 6 9-4.91V17h2V9L12 3Z",
   },
   {
@@ -25,7 +25,7 @@ const STEPS = [
     icon: "M9.4 16.6 4.8 12l4.6-4.6L8 6l-6 6 6 6 1.4-1.4Zm5.2 0 4.6-4.6-4.6-4.6L16 6l6 6-6 6-1.4-1.4Z",
   },
   {
-    title: "Practice Sessions",
+    title: "Practical Sessions",
     icon: "M20 18c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2H0v2h24v-2h-4ZM4 6h16v10H4V6Z",
   },
   {
@@ -209,14 +209,14 @@ export default function TrainingRoadmap() {
             ref={roadRef}
             d={ROAD_D}
             stroke="#0B3C68"
-            strokeWidth={mobile ? 56 : 48}
+            strokeWidth={mobile ? 35 : 48}
             strokeLinecap="round"
             strokeLinejoin="round"
           />
           <path
             d={ROAD_D}
             stroke="#F8FAFC"
-            strokeWidth={mobile ? 7 : 6}
+            strokeWidth={mobile ? 3 : 6}
             strokeDasharray="18 16"
             strokeLinecap="round"
             mask="url(#tp-road-mask)"
