@@ -1,7 +1,20 @@
+import fullstackImg from "../assets/courses/frame-5-fullstack.png";
+import mobileappImg from "../assets/courses/frame-6-mobileapp.png";
+import datascienceImg from "../assets/courses/frame-7-datascience.png";
+import dataanalyticsImg from "../assets/courses/frame-9-dataanalytics.png";
+import uxuiImg from "../assets/courses/frame-10-uxui.png";
+import digitalmarketingImg from "../assets/courses/frame-13-digitalmarketing.png";
+import softwaretestingImg from "../assets/courses/frame-14-softwaretesting.png";
+import graphicdesignImg from "../assets/courses/frame-15-graphicdesign.png";
+import cybersecurityImg from "../assets/courses/frame-17-cybersecurity.png";
+import devopsImg from "../assets/courses/frame-18-devops.png";
+import architect3dImg from "../assets/courses/frame-19-3darchitect.png";
+
 export const categories = [
   {
     id: 1,
     category: "Full Stack Web Development",
+    image: fullstackImg,
     icon: "M12 2 2 7l10 5 10-5-10-5Zm-8.5 9.6L2 13l10 5 10-5-1.5-1.4L12 16.2 3.5 11.6Z",
     topics: [
       "MERN Stack",
@@ -25,12 +38,14 @@ export const categories = [
   {
     id: 2,
     category: "Mobile App Development",
+    image: mobileappImg,
     icon: "M7 2h10a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Zm0 3v12h10V5H7Zm4 14a1 1 0 1 0 2 0 1 1 0 0 0-2 0Z",
     topics: ["Android", "IOS", "Flutter", "React Native", "Augmented Reality"],
   },
   {
     id: 3,
     category: "Data Science",
+    image: datascienceImg,
     icon: "M12 2c5 0 9 2.2 9 5s-4 5-9 5-9-2.2-9-5 4-5 9-5Zm9 10v5c0 2.8-4 5-9 5s-9-2.2-9-5v-5c2.1 1.9 5.4 3 9 3s6.9-1.1 9-3Z",
     topics: [
       "Data Science",
@@ -49,6 +64,7 @@ export const categories = [
   {
     id: 4,
     category: "Data Analytics",
+    image: dataanalyticsImg,
     icon: "M4 20V10h4v10H4Zm6 0V4h4v16h-4Zm6 0v-7h4v7h-4Z",
     topics: [
       "Python",
@@ -64,6 +80,7 @@ export const categories = [
   {
     id: 5,
     category: "UX-UI Designing",
+    image: uxuiImg,
     icon: "M12 2 4 6v6c0 5 3.4 9.4 8 10 4.6-.6 8-5 8-10V6l-8-4Zm0 4a3 3 0 1 1 0 6 3 3 0 0 1 0-6Zm0 12c-2 0-3.9-.9-5-2.4.1-1.7 3.3-2.6 5-2.6s4.9.9 5 2.6A6.5 6.5 0 0 1 12 18Z",
     topics: [
       "UX-UI Designing",
@@ -79,6 +96,7 @@ export const categories = [
   {
     id: 6,
     category: "Digital Marketing",
+    image: digitalmarketingImg,
     icon: "M21 6h-2V4H5v2H3v6h2v6h2v2h2v-2h6v2h2v-2h2v-6h2V6Zm-9 8a3 3 0 1 1 0-6 3 3 0 0 1 0 6Z",
     topics: [
       "SEO",
@@ -100,6 +118,7 @@ export const categories = [
   {
     id: 7,
     category: "Software Testing",
+    image: softwaretestingImg,
     icon: "M9 2h6v2h4v18H5V4h4V2Zm1 4H7v14h10V6h-3v2h-4V6Zm-2 6h8v2H8v-2Zm0 4h8v2H8v-2Z",
     topics: [
       "Manual Testing",
@@ -114,6 +133,7 @@ export const categories = [
   {
     id: 8,
     category: "Graphic Designing",
+    image: graphicdesignImg,
     icon: "M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm0 3c1.7 1 3 3 3 5.5S13.7 15 12 16c-1.7-1-3-3-3-5.5S10.3 5 12 5ZM5 12c0-2 .8-3.8 2-5.1C7 9.3 7.6 11 8.7 12.6c-.9 1.4-2 2.5-3.3 3A8 8 0 0 1 5 12Zm7 7c-1.4 0-2.7-.4-3.8-1 1-.7 1.9-1.6 2.7-2.7.7.2 1.4.2 2.2 0 .8 1.1 1.7 2 2.7 2.7a7 7 0 0 1-3.8 1Z",
     topics: [
       "Adobe Photoshop",
@@ -128,6 +148,7 @@ export const categories = [
   {
     id: 9,
     category: "Cyber Security",
+    image: cybersecurityImg,
     icon: "M12 2 4 5v6c0 5 3.4 9.4 8 10 4.6-.6 8-5 8-10V5l-8-3Zm0 5a3 3 0 0 1 3 3v1h1v5H8v-5h1v-1a3 3 0 0 1 3-3Zm0 2a1 1 0 0 0-1 1v1h2v-1a1 1 0 0 0-1-1Z",
     topics: [
       "Ethical Hacking",
@@ -144,6 +165,7 @@ export const categories = [
   {
     id: 10,
     category: "DevOps",
+    image: devopsImg,
     icon: "m12 2 9 5v10l-9 5-9-5V7l9-5Zm0 2.3L5 8v8l7 3.7L19 16V8l-7-3.7ZM12 8a4 4 0 1 1 0 8 4 4 0 0 1 0-8Zm0 2a2 2 0 1 0 0 4 2 2 0 0 0 0-4Z",
     topics: [
       "AWS Training",
@@ -160,6 +182,7 @@ export const categories = [
   {
     id: 11,
     category: "3D Software Architect",
+    image: architect3dImg,
     icon: "M12 2 3 7v10l9 5 9-5V7l-9-5Zm0 2.3L18.6 8 12 11.7 5.4 8 12 4.3ZM5 9.7l6 3.4v6.6l-6-3.3V9.7Zm8 10V13.1l6-3.4v6.7l-6 3.3Z",
     topics: ["Revit", "Sketchup", "Autocad", "Lumion", "Photoshop", "VRAY"],
   },

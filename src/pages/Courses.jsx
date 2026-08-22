@@ -40,11 +40,11 @@ export default function Courses() {
           <div key={activeCat.id} className="animate-fade-up flex-1">
             <div className="rounded-2xl bg-white p-8 shadow-card ring-1 ring-slate-100">
               <div className="flex items-start gap-5">
-                <span className="hidden h-16 w-16 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-navy to-navy-light sm:flex">
-                  <svg viewBox="0 0 24 24" fill="#F8FAFC" className="h-9 w-9">
-                    <path d={activeCat.icon} />
-                  </svg>
-                </span>
+                <img
+                  src={activeCat.image}
+                  alt={activeCat.category}
+                  className="hidden h-20 w-32 shrink-0 rounded-xl object-cover object-top shadow-card sm:block"
+                />
                 <div>
                   <h2 className="font-display text-2xl font-bold text-navy">
                     {activeCat.category}

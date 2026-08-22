@@ -86,16 +86,17 @@ export default function Home() {
         <div className="mx-auto max-w-7xl px-6 text-center">
           <SectionHeading>Our Courses</SectionHeading>
           <div className="mt-12 flex flex-wrap justify-center gap-7">
-            {categories.slice(0, 6).map((cat) => (
+            {categories.map((cat) => (
               <article
                 key={cat.id}
                 className="flex w-[21rem] flex-col overflow-hidden rounded-2xl bg-white shadow-card ring-1 ring-slate-100 transition hover:-translate-y-1 hover:shadow-lift"
               >
-                <div className="flex h-40 items-center justify-center bg-gradient-to-br from-navy to-navy-light">
-                  <svg viewBox="0 0 24 24" fill="#F8FAFC" className="h-20 w-20 opacity-90">
-                    <path d={cat.icon} />
-                  </svg>
-                </div>
+                <img
+                  src={cat.image}
+                  alt={cat.category}
+                  loading="lazy"
+                  className="h-44 w-full object-cover object-top transition duration-500 hover:scale-105"
+                />
                 <div className="px-5 pt-5 text-left">
                   <h3 className="font-display text-lg font-bold text-navy">{cat.category}</h3>
                   <p className="text-sm text-slate-500 italic">Topics covered</p>
