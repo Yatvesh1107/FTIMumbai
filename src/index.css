@@ -70,3 +70,34 @@ body {
 .animate-float {
   animation: float-y 4.5s ease-in-out infinite;
 }
+
+/* Scroll-drawn training roadmap */
+.tp-step {
+  position: absolute;
+  width: 160px;
+  z-index: 2;
+  text-align: center;
+  pointer-events: none;
+  opacity: 0;
+  transform: scale(0.8);
+  transition:
+    opacity 0.35s ease,
+    transform 0.35s ease;
+}
+
+.tp-step.tp-on {
+  opacity: 1;
+  transform: scale(1);
+}
+
+@media (max-width: 900px) {
+  .tp-step {
+    width: 115px;
+  }
+}
+
+@media (max-width: 480px) {
+  .tp-step {
+    width: 100px;
+  }
+}

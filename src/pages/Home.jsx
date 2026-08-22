@@ -2,10 +2,9 @@ import { Link, useNavigate } from "react-router-dom";
 import { categories, testimonials } from "../data/content";
 import heroBg from "../assets/hero-bg.png";
 import heroBoy from "../assets/hero-boy.png";
-import processDesktop from "../assets/process-desktop.png";
-import processMobile from "../assets/process-mobile.png";
 import whyDesktop from "../assets/why-desktop.png";
 import whyMobile from "../assets/why-mobile.png";
+import TrainingRoadmap from "../components/TrainingRoadmap";
 
 function SectionHeading({ children }) {
   return (
@@ -142,17 +141,7 @@ export default function Home() {
         <div className="relative mx-auto max-w-6xl px-6">
           <SectionHeading>Our Training Process</SectionHeading>
           <span className="mx-auto mt-8 mb-10 block h-0.5 w-64 bg-navy sm:w-96" />
-          <img
-            src={processDesktop}
-            alt="Our training process roadmap"
-            className="mx-auto hidden w-[70%] rounded-2xl bg-white p-4 shadow-lift ring-1 ring-slate-100 md:block"
-          />
-          <img
-            src={processMobile}
-            alt="Our training process roadmap"
-            loading="lazy"
-            className="mx-auto w-[90%] rounded-2xl bg-white p-4 shadow-lift ring-1 ring-slate-100 md:hidden"
-          />
+          <TrainingRoadmap />
         </div>
       </section>
 
