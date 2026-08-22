@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
+import ScrollToTop from "./components/ScrollToTop";
 import Home from "./pages/Home";
 import Courses from "./pages/Courses";
 import CourseDetails from "./pages/CourseDetails";
@@ -10,6 +11,7 @@ import ContactUs from "./pages/ContactUs";
 export default function App() {
   return (
     <BrowserRouter>
+      <ScrollToTop />
       <div className="flex min-h-svh flex-col">
         <Navbar />
         <div className="flex-1">

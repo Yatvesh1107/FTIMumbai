@@ -113,7 +113,7 @@ export default function CourseDetails() {
             src={processDesktop}
             alt="Training process"
             loading="lazy"
-            className="mx-auto mt-10 w-[70%]"
+            className="mx-auto mt-10 hidden w-[70%] md:block"
           />
           <img
             src={processMobile}

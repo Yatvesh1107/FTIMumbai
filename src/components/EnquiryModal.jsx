@@ -17,13 +17,25 @@ export default function EnquiryModal({ open, onClose }) {
   const handleChange = (e) =>
     setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.name.trim()) return alert("Please enter your Name");
     if (!form.mobile.trim()) return alert("Please enter your Mobile No.");
     if (!form.email.trim()) return alert("Please enter your Email");
     if (!form.course.trim()) return alert("Please enter your Course Name");
-    setSubmitted(true);
+
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/enquiry`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error);
+      setSubmitted(true);
+      setForm({ name: "", mobile: "", email: "", course: "" });
+    } catch (err) {
+      alert(err.message || "Could not send enquiry. Please try again.");
+    }
   };
 
   return (

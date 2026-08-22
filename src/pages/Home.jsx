@@ -164,7 +164,7 @@ export default function Home() {
             src={whyDesktop}
             alt="Why choose FTI Mumbai"
             loading="lazy"
-            className="mx-auto mt-10 w-[60%]"
+            className="mx-auto mt-10 hidden w-[60%] md:block"
           />
           <img
             src={whyMobile}
