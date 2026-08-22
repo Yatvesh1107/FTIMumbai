@@ -26,7 +26,7 @@ export default function Footer() {
       <div className="mx-auto grid max-w-7xl gap-10 px-6 py-14 md:grid-cols-2 lg:grid-cols-[1.2fr_0.8fr_1fr_1.1fr]">
         <div>
           <div className="rounded-xl bg-white/95 p-3 inline-block">
-            <Logo className="h-11" />
+            <Logo variant="footer" className="h-12" />
           </div>
           <p className="mt-4 max-w-xs text-sm leading-relaxed text-white/70">
             Learn to Code, Land Your Dream Job. Get 100% practical trainings
