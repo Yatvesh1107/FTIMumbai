@@ -1,205 +1,264 @@
+import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { categories, courses, testimonials } from "../data/content";
+import { testimonials } from "../data/content";
+import blurBg from "../assets/blur-bg.png";
+import processDesktop from "../assets/detail-process-desktop.png";
+import processMobile from "../assets/detail-process-mobile.png";
 
-const fallback = {
-  title: "Professional Training Course",
-  tagline:
-    "Get 100% practical, employment focused training with live projects and placement assistance.",
-  learn: [
-    "Learn the fundamentals from scratch with hands-on sessions",
-    "Build real-time industry level projects & assignments",
-    "Develop your code using modern development tools",
-    "Work on capstone projects reviewed by industry mentors",
-    "Mock interviews and personality development sessions",
-    "Dedicated placement assistance until you get hired",
-  ],
-};
+const highlights = [
+  "Personalized Career Coach",
+  "Study Material",
+  "90% Practical Training",
+  "Instant Doubt Solving",
+  "Certification",
+  "Mock Interviews",
+  "100% Job Assurance",
+  "Live Projects",
+];
+
+const stats = [
+  { value: "100+ Hrs", label: "Training Duration", icon: "M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm1 5h-2v6l4.8 2.9 1-1.7L13 12V7Z" },
+  { value: "25000+", label: "Students Trained", icon: "M12 3 1 8l11 5 9-4.09V15h2V8L12 3ZM5 12.18V16c0 1.66 3.13 3 7 3s7-1.34 7-3v-3.82l-7 3.18-7-3.18Z" },
+  { value: "1000+", label: "Hiring Companies", icon: "M4 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18h-5v-4H9v4H4Zm3-14h2V6H7v2Zm4 0h2V6h-2v2Zm-4 4h2v-2H7v2Zm4 0h2v-2h-2v2Zm5 10V8h4a2 2 0 0 1 2 2v12h-4v-4h-2v4Zm2-10h2v-2h-2v2Zm0 4h2v-2h-2v2Z" },
+  { value: "8+ LPA", label: "Highest Fresher Salary", icon: "M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm1 15h-2v-1a3.5 3.5 0 0 1-3-3.5h2c0 1 .9 1.5 2 1.5s2-.5 2-1.3c0-.9-.8-1.2-2.6-1.7C10.7 10.4 9 9.8 9 8.2 9 7 10 6 11 5.6V5h2v.6c1.2.4 2 1.4 2 2.9h-2c0-1-.7-1.5-1.5-1.5S10 7.5 10 8.2c0 .8.9 1.1 2.6 1.6 1.6.5 3.4 1.1 3.4 3 0 1.4-1 2.6-3 3.1v1.1Z" },
+];
 
 export default function CourseDetails() {
   const location = useLocation();
-  const categoryName =
-    (location.state && location.state.category) ||
-    categories[0].category;
-  const detail = courses["Full Stack Web Development"];
-  const data = categoryName === "Full Stack Web Development" ? detail : fallback;
-  const syllabus = detail.syllabus || null;
+  const state = location.state || {};
+  const [all, setAll] = useState(null);
+
+  useEffect(() => {
+    let alive = true;
+    import("../data/courseData.json").then((mod) => {
+      if (alive) setAll(mod.default);
+    });
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [state.course]);
+
+  if (!all) {
+    return (
+      <div className="flex min-h-[50vh] items-center justify-center">
+        <div className="h-12 w-12 animate-spin rounded-full border-4 border-navy/20 border-t-navy" />
+      </div>
+    );
+  }
+
+  const names = Object.keys(all);
+  const courseName =
+    (state.course && all[state.course] && state.course) ||
+    names.find((n) => !state.category || all[n].category === state.category) ||
+    names[0];
+  const data = all[courseName] || {};
 
   return (
     <main>
       {/* Header */}
-      <section className="bg-gradient-to-br from-navy to-navy-dark py-16 text-white">
-        <div className="mx-auto max-w-7xl px-6 text-center">
-          <p className="text-sm font-semibold tracking-widest text-terracotta-light uppercase">
-            {categoryName}
+      <section
+        className="relative bg-cover bg-center"
+        style={{ backgroundImage: `url(${blurBg})` }}
+      >
+        <div className="absolute inset-0 bg-navy-dark/80" />
+        <div className="relative mx-auto flex min-h-[60vh] max-w-4xl flex-col items-center justify-center px-6 py-16 text-center text-white">
+          <p className="text-xs font-semibold uppercase tracking-[0.25em] text-terracotta-light">
+            {data.category}
           </p>
-          <h1 className="font-display mx-auto mt-3 max-w-3xl text-3xl font-extrabold sm:text-4xl lg:text-5xl">
-            {data.title}
+          <h1 className="font-display mt-4 text-3xl font-extrabold sm:text-4xl lg:text-5xl">
+            {courseName}
           </h1>
-          <p className="mx-auto mt-4 max-w-2xl leading-relaxed text-white/75">
-            {data.tagline}
+          <p className="mt-4 max-w-2xl text-lg italic leading-relaxed text-white/80">
+            {data.description}
           </p>
-          <div className="mt-8 flex flex-wrap justify-center gap-4">
-            <Link
-              to="/contactus"
-              className="rounded-full bg-terracotta px-8 py-3 font-semibold shadow-md transition hover:bg-terracotta-dark hover:shadow-lift"
-            >
-              Book Free Demo
-            </Link>
-            <Link
-              to="/contactus"
-              className="rounded-full border-2 border-white/60 px-8 py-3 font-semibold transition hover:bg-white hover:text-navy"
-            >
-              Download Syllabus
-            </Link>
-          </div>
+          <Link
+            to="/contactus"
+            className="mt-8 rounded-full bg-cream px-10 py-3 font-semibold text-navy shadow-md transition hover:bg-terracotta hover:text-white hover:shadow-lift"
+          >
+            Enroll Now
+          </Link>
         </div>
       </section>
 
       {/* What you'll learn */}
-      <section className="bg-cream py-14">
-        <div className="mx-auto grid max-w-7xl gap-10 px-6 lg:grid-cols-[1.6fr_1fr]">
-          <div>
-            <h2 className="font-display inline-block border-b-4 border-terracotta pb-1 text-2xl font-bold text-navy sm:text-3xl">
-              What you'll learn
-            </h2>
-            <ul className="mt-8 grid gap-x-10 gap-y-4 sm:grid-cols-2">
-              {data.learn.map((point) => (
-                <li key={point} className="flex items-start gap-3 text-sm text-slate-700">
-                  <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-navy text-[10px] text-white">
-                    ✓
-                  </span>
-                  {point}
-                </li>
-              ))}
-            </ul>
-
-            {syllabus && (
-              <>
-                <h2 className="font-display mt-12 inline-block border-b-4 border-terracotta pb-1 text-2xl font-bold text-navy sm:text-3xl">
-                  Course Content
-                </h2>
-                <div className="mt-8 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-                  {Object.entries(syllabus).map(([module, topics]) => (
-                    <div
-                      key={module}
-                      className="rounded-2xl bg-white p-6 shadow-card ring-1 ring-slate-100"
-                    >
-                      <h3 className="font-display flex items-center gap-2 font-bold text-navy">
-                        <span className="h-2 w-2 rounded-full bg-terracotta" />
-                        {module}
-                      </h3>
-                      <ul className="mt-3 space-y-1.5 text-sm text-slate-600">
-                        {topics.map((t) => (
-                          <li key={t}>• {t}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  ))}
-                </div>
-              </>
-            )}
-          </div>
-
-          {/* Highlights card */}
-          <aside className="space-y-4 self-start rounded-2xl bg-white p-7 shadow-card ring-1 ring-slate-100 lg:sticky lg:top-28">
-            <h3 className="font-display text-xl font-bold text-navy">Course Highlights</h3>
-            <ul className="divide-y divide-slate-100">
-              {(data.highlights || [
-                { label: "Training Duration", value: "2 - 4 Months" },
-                { label: "Certification", value: "Industry Recognised" },
-                { label: "Mode", value: "Online / Offline Batches" },
-                { label: "Placement", value: "100% Job Assistance" },
-              ]).map((h) => (
-                <li key={h.label} className="flex justify-between gap-4 py-3 text-sm">
-                  <span className="text-slate-500">{h.label}</span>
-                  <span className="font-semibold text-navy">{h.value}</span>
-                </li>
-              ))}
-            </ul>
-            <Link
-              to="/contactus"
-              className="block rounded-full bg-gradient-to-r from-navy to-navy-light py-3 text-center font-semibold text-white transition hover:brightness-110"
-            >
-              Enquire Now
-            </Link>
-          </aside>
+      <section className="bg-white py-14">
+        <div className="mx-auto max-w-6xl px-6">
+          <h2 className="font-display inline-block border-b-4 border-terracotta pb-1 text-2xl font-bold text-navy sm:text-3xl">
+            What you'll learn
+          </h2>
+          <ul className="mt-8 grid gap-x-10 gap-y-4 sm:grid-cols-2">
+            {(data.wywl || []).map((point) => (
+              <li key={point} className="flex items-start gap-3 text-sm leading-relaxed text-slate-700 sm:text-base">
+                <svg viewBox="0 0 24 24" fill="#0B3C68" className="mt-0.5 h-5 w-5 shrink-0">
+                  <path d="M16.97 6.25a2 2 0 0 0-2.72.78l-3.71 6.68-2.13-2.13a2 2 0 1 0-2.82 2.83l4 4a2 2 0 0 0 1.69.56 2 2 0 0 0 1.47-1l5-9a2 2 0 0 0-.78-2.72Z" />
+                </svg>
+                {point}
+              </li>
+            ))}
+          </ul>
         </div>
       </section>
 
       {/* Training process */}
-      <section className="bg-white py-14">
-        <div className="mx-auto max-w-7xl px-6">
+      <section className="bg-cream py-14 text-center">
+        <div className="mx-auto max-w-6xl px-6">
           <h2 className="font-display inline-block border-b-4 border-terracotta pb-1 text-2xl font-bold text-navy sm:text-3xl">
             Our Training Process
           </h2>
-          <ol className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-            {[
-              "Learn the fundamentals with hands-on practicals",
-              "Build real-time industry level projects",
-              "Personalized career coaching & mock interviews",
-              "Be Job Ready — resume, drives & offers",
-            ].map((step, i) => (
-              <li key={step} className="rounded-2xl bg-cream p-6 ring-1 ring-slate-100">
-                <span className="font-display text-sm font-extrabold text-terracotta">
-                  STEP {i + 1}
-                </span>
-                <p className="mt-2 text-sm leading-relaxed text-slate-700">{step}</p>
-              </li>
-            ))}
-          </ol>
+          <img
+            src={processDesktop}
+            alt="Training process"
+            loading="lazy"
+            className="mx-auto mt-10 w-[70%]"
+          />
+          <img
+            src={processMobile}
+            alt="Training process"
+            loading="lazy"
+            className="mx-auto mt-8 w-[85%] md:hidden"
+          />
         </div>
       </section>
 
-      {/* Certification */}
-      <section className="bg-cream py-14">
-        <div className="mx-auto grid max-w-5xl items-center gap-8 px-6 md:grid-cols-2">
-          <div>
-            <h2 className="font-display text-2xl font-bold text-navy sm:text-3xl">
-              Course Certification
-            </h2>
-            <p className="mt-4 leading-relaxed text-slate-600">
-              Become a certified professional with FTI Mumbai and enhance your
-              career prospects to the next level. This certificate serves as an
-              official badge of your successful training completion,
-              highlighting your expertise.
-            </p>
-          </div>
-          <div className="relative mx-auto w-full max-w-sm rotate-1 rounded-xl border-8 border-white bg-gradient-to-br from-navy to-navy-light p-8 text-center shadow-lift">
-            <p className="text-xs font-semibold tracking-[0.3em] text-terracotta-light uppercase">
-              Certificate of Completion
-            </p>
-            <div className="mx-auto mt-5 h-px w-24 bg-terracotta" />
-            <p className="mt-5 text-lg font-semibold text-white">Awarded To</p>
-            <p className="font-display mt-1 text-2xl font-extrabold text-white">
-              Your Name Here
-            </p>
-            <p className="mt-4 text-xs text-white/70">
-              for successfully completing the {categoryName} training program at FTI Mumbai.
-            </p>
-            <div className="mt-6 flex items-center justify-between text-[10px] text-white/60">
-              <span>FTI Mumbai</span>
-              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-terracotta font-bold text-white">
-                FTI
-              </span>
+      {/* Key Highlights */}
+      <section
+        className="relative bg-cover bg-center py-16"
+        style={{ backgroundImage: `url(${blurBg})` }}
+      >
+        <div className="absolute inset-0 bg-navy-dark/75" />
+        <div className="relative mx-auto max-w-6xl px-6">
+          <h2 className="font-display inline-block border-b-4 border-terracotta pb-1 text-2xl font-bold text-white sm:text-3xl">
+            Key Highlights
+          </h2>
+          <div className="mt-10 grid gap-10 lg:grid-cols-2">
+            <ul className="grid content-start gap-4 sm:grid-cols-2">
+              {highlights.map((h) => (
+                <li key={h} className="flex items-center gap-3 text-sm font-medium text-white/90">
+                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-terracotta">
+                    <svg viewBox="0 0 24 24" fill="#FFFFFF" className="h-4 w-4">
+                      <path d="M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2Z" />
+                    </svg>
+                  </span>
+                  {h}
+                </li>
+              ))}
+            </ul>
+            <div className="grid grid-cols-2 gap-4 self-start">
+              {stats.map((s) => (
+                <div
+                  key={s.label}
+                  className="rounded-2xl bg-white/95 p-6 text-center shadow-card transition hover:-translate-y-1 hover:shadow-lift"
+                >
+                  <span className="mx-auto flex h-11 w-11 items-center justify-center rounded-full bg-navy">
+                    <svg viewBox="0 0 24 24" fill="#F8FAFC" className="h-6 w-6">
+                      <path d={s.icon} />
+                    </svg>
+                  </span>
+                  <p className="font-display mt-3 text-xl font-extrabold text-navy">{s.value}</p>
+                  <p className="mt-1 text-xs font-medium text-slate-500">{s.label}</p>
+                </div>
+              ))}
             </div>
           </div>
         </div>
       </section>
 
-      {/* Reviews */}
+      {/* Course Content */}
+      {(data.content || []).length > 0 && (
+        <section className="bg-white py-14">
+          <div className="mx-auto max-w-6xl px-6">
+            <h2 className="font-display inline-block border-b-4 border-terracotta pb-1 text-2xl font-bold text-navy sm:text-3xl">
+              Course Content
+            </h2>
+            <div className="mt-10 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {data.content.map((mod) => (
+                <div
+                  key={mod.heading}
+                  className="rounded-2xl bg-cream p-6 shadow-card ring-1 ring-slate-100 transition hover:-translate-y-1 hover:shadow-lift"
+                >
+                  <h3 className="font-display flex items-center gap-2 font-bold text-navy">
+                    <span className="h-2 w-2 shrink-0 rounded-full bg-terracotta" />
+                    {mod.heading}
+                  </h3>
+                  <ul className="mt-3 space-y-1.5 pl-4 text-sm leading-relaxed text-slate-600">
+                    {mod.topics.map((t) => (
+                      <li key={t}>• {t}</li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Skills */}
+      {(data.skills || []).length > 0 && (
+        <section className="bg-cream py-14 text-center">
+          <div className="mx-auto max-w-6xl px-6">
+            <h2 className="font-display inline-block border-b-4 border-terracotta pb-1 text-2xl font-bold text-navy sm:text-3xl">
+              Skills you will gain
+            </h2>
+            <div className="mt-10 flex flex-wrap justify-center gap-3">
+              {data.skills.map((s) => (
+                <span
+                  key={s}
+                  className="rounded-full bg-white px-5 py-2 text-sm font-medium text-navy shadow-sm ring-1 ring-slate-200 transition hover:bg-navy hover:text-white"
+                >
+                  {s}
+                </span>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Certification */}
       <section className="bg-white py-14">
+        <div className="mx-auto max-w-4xl px-6 text-center">
+          <h2 className="font-display inline-block border-b-4 border-terracotta pb-1 text-2xl font-bold text-navy sm:text-3xl">
+            Course Certification
+          </h2>
+          <p className="mt-8 leading-relaxed text-slate-600">
+            Become a Certified <strong className="text-navy">{courseName}</strong> professional
+            with FTI Mumbai and enhance your career prospects to the next level.
+          </p>
+          <p className="mt-4 leading-relaxed text-slate-600">
+            This certificate serves as an official badge of your successful{" "}
+            {courseName} course completion, highlighting your expertise.
+          </p>
+          <Link
+            to="/contactus"
+            className="mt-8 inline-block rounded-full bg-gradient-to-r from-navy to-navy-light px-10 py-3 font-semibold text-white shadow-md transition hover:shadow-lift hover:brightness-110"
+          >
+            Enroll Now
+          </Link>
+        </div>
+      </section>
+
+      {/* Reviews */}
+      <section className="bg-cream py-14">
         <div className="mx-auto max-w-7xl px-6 text-center">
           <h2 className="font-display inline-block border-b-4 border-terracotta pb-1 text-2xl font-bold text-navy sm:text-3xl">
             Genuine Reviews For Our Courses
           </h2>
-          <div className="mt-10 grid gap-7 md:grid-cols-2 xl:grid-cols-4">
-            {testimonials.slice(0, 4).map((t) => (
-              <figure key={t.name} className="flex flex-col rounded-2xl bg-cream p-6 text-left ring-1 ring-slate-100">
-                <span className="font-display text-5xl leading-none text-terracotta/50">&ldquo;</span>
-                <blockquote className="-mt-3 flex-1 text-sm leading-relaxed text-slate-600">{t.text}</blockquote>
-                <figcaption className="mt-5 border-t border-slate-200 pt-4">
-                  <p className="font-display text-sm font-bold text-navy">{t.name}</p>
-                  <p className="text-xs text-slate-500">{t.role}</p>
+          <div className="mt-10 grid gap-7 md:grid-cols-3">
+            {testimonials.slice(0, 3).map((t) => (
+              <figure key={t.name} className="flex flex-col rounded-2xl bg-white p-7 text-left shadow-card ring-1 ring-slate-100">
+                <span className="font-display text-6xl leading-none text-terracotta/50">&ldquo;</span>
+                <blockquote className="-mt-4 flex-1 text-sm leading-relaxed text-slate-600">{t.text}</blockquote>
+                <figcaption className="mt-6 flex items-center gap-3 border-t border-slate-200 pt-4">
+                  <span className="flex h-11 w-11 items-center justify-center rounded-full bg-navy font-display font-bold text-white">
+                    {t.name[0]}
+                  </span>
+                  <span>
+                    <p className="font-display text-sm font-bold text-navy">{t.name}</p>
+                    <p className="text-xs text-slate-500">{t.role}</p>
+                  </span>
                 </figcaption>
               </figure>
             ))}

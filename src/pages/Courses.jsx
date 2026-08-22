@@ -1,13 +1,34 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { categories } from "../data/content";
+import courseIndex from "../data/courseIndex.json";
+
+// Map data categories (e.g. "Cyber security", "DevOPS") onto our card names
+const alias = {
+  "Cyber security": "Cyber Security",
+  DevOPS: "DevOps",
+  JAVA: "Full Stack Web Development",
+};
 
 export default function Courses() {
   const location = useLocation();
+  const requested = location.state && location.state.category;
+
+  const byCategory = useMemo(() => {
+    const map = {};
+    for (const [name, cat] of Object.entries(courseIndex)) {
+      const key = alias[cat] || cat;
+      (map[key] = map[key] || []).push(name);
+    }
+    return map;
+  }, []);
+
   const initial =
-    (location.state && location.state.category) || categories[0].category;
+    requested && byCategory[requested] ? requested : categories[0].category;
   const [active, setActive] = useState(initial);
+
   const activeCat = categories.find((c) => c.category === active);
+  const courseList = byCategory[active] || [];
 
   return (
     <main className="mx-auto max-w-7xl px-6 py-12">
@@ -35,56 +56,55 @@ export default function Courses() {
           </div>
         </aside>
 
-        {/* Course panel */}
-        {activeCat && (
-          <div key={activeCat.id} className="animate-fade-up flex-1">
-            <div className="rounded-2xl bg-white p-8 shadow-card ring-1 ring-slate-100">
-              <div className="flex items-start gap-5">
-                <img
-                  src={activeCat.image}
-                  alt={activeCat.category}
-                  className="hidden h-20 w-32 shrink-0 rounded-xl object-cover object-top shadow-card sm:block"
-                />
-                <div>
-                  <h2 className="font-display text-2xl font-bold text-navy">
-                    {activeCat.category}
-                  </h2>
-                  <p className="mt-1 text-sm text-slate-500">
-                    {activeCat.topics.length} topics covered · Practical training
-                    with placement assistance
-                  </p>
-                </div>
-              </div>
-
-              <div className="mt-6 flex flex-wrap gap-2.5">
-                {activeCat.topics.map((t) => (
-                  <span
-                    key={t}
-                    className="rounded-full bg-cream px-4 py-1.5 text-sm font-medium text-navy ring-1 ring-slate-200"
-                  >
-                    {t}
-                  </span>
-                ))}
-              </div>
-
-              <div className="mt-8 flex flex-wrap gap-4 border-t border-slate-100 pt-6">
-                <Link
-                  to="/coursedetails"
-                  state={{ category: activeCat.category }}
-                  className="rounded-full bg-gradient-to-r from-navy to-navy-light px-7 py-3 text-sm font-semibold text-white transition hover:brightness-110"
-                >
-                  KNOW MORE
-                </Link>
-                <Link
-                  to="/contactus"
-                  className="rounded-full border-2 border-terracotta px-7 py-3 text-sm font-semibold text-terracotta transition hover:bg-terracotta hover:text-white"
-                >
-                  ENQUIRE NOW
-                </Link>
+        {/* Course list */}
+        <div key={active} className="animate-fade-up flex-1">
+          {activeCat && (
+            <div className="mb-6 flex items-start gap-5 rounded-2xl bg-navy p-6 shadow-card">
+              <img
+                src={activeCat.image}
+                alt={activeCat.category}
+                className="hidden h-20 w-32 shrink-0 rounded-xl object-cover object-top sm:block"
+              />
+              <div>
+                <h2 className="font-display text-2xl font-bold text-white">
+                  {activeCat.category}
+                </h2>
+                <p className="mt-1 text-sm text-white/60">
+                  {courseList.length} courses available · Practical training
+                  with placement assistance
+                </p>
               </div>
             </div>
+          )}
+
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            {courseList.map((name) => (
+              <div
+                key={name}
+                className="flex flex-col justify-between rounded-2xl bg-white p-6 shadow-card ring-1 ring-slate-100 transition hover:-translate-y-1 hover:shadow-lift"
+              >
+                <h3 className="font-display font-bold leading-snug text-navy">
+                  {name}
+                </h3>
+                <div className="mt-4 flex items-center justify-between gap-3 border-t border-slate-100 pt-4">
+                  <Link
+                    to="/coursedetails"
+                    state={{ course: name }}
+                    className="text-sm font-bold tracking-wide text-terracotta transition hover:text-navy"
+                  >
+                    KNOW MORE →
+                  </Link>
+                  <Link
+                    to="/contactus"
+                    className="rounded-full bg-cream px-4 py-1.5 text-xs font-semibold text-navy ring-1 ring-slate-200 transition hover:bg-navy hover:text-white"
+                  >
+                    ENQUIRE
+                  </Link>
+                </div>
+              </div>
+            ))}
           </div>
-        )}
+        </div>
       </div>
     </main>
   );

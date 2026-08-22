@@ -2,6 +2,10 @@ import { Link, useNavigate } from "react-router-dom";
 import { categories, testimonials } from "../data/content";
 import heroBg from "../assets/hero-bg.png";
 import heroBoy from "../assets/hero-boy.png";
+import processDesktop from "../assets/process-desktop.png";
+import processMobile from "../assets/process-mobile.png";
+import whyDesktop from "../assets/why-desktop.png";
+import whyMobile from "../assets/why-mobile.png";
 
 function SectionHeading({ children }) {
   return (
@@ -132,111 +136,42 @@ export default function Home() {
       </section>
 
       {/* ---------- Our Training Process ---------- */}
-      <section className="bg-white py-16">
-        <div className="mx-auto max-w-6xl px-6 text-center">
+      <section className="relative overflow-hidden bg-cream py-16 text-center">
+        <div className="pointer-events-none absolute -top-24 -left-24 h-72 w-72 rounded-full bg-navy/5 blur-3xl" />
+        <div className="pointer-events-none absolute -right-24 -bottom-24 h-72 w-72 rounded-full bg-terracotta/10 blur-3xl" />
+        <div className="relative mx-auto max-w-6xl px-6">
           <SectionHeading>Our Training Process</SectionHeading>
-          <div className="mt-14 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {[
-              { n: "01", t: "Learn", d: "Master the fundamentals from scratch with hands-on practical sessions." },
-              { n: "02", t: "Build", d: "Work on real-time industry level projects and assignments." },
-              { n: "03", t: "Prepare", d: "Personalized career coaching, mock interviews & resume building." },
-              { n: "04", t: "Get Hired", d: "Attend placement drives conducted by our hiring partners." },
-            ].map((step, i) => (
-              <div
-                key={step.n}
-                className="relative rounded-2xl bg-cream p-7 pt-9 text-left shadow-card ring-1 ring-slate-100 transition hover:-translate-y-1 hover:shadow-lift"
-              >
-                <span className="font-display absolute -top-5 left-6 flex h-11 w-11 items-center justify-center rounded-full bg-terracotta text-sm font-extrabold text-white shadow-md">
-                  {step.n}
-                </span>
-                {i < 3 && (
-                  <span className="absolute top-1/2 -right-3 hidden h-0.5 w-6 bg-slate-300 lg:block" />
-                )}
-                <h3 className="font-display mt-2 text-xl font-bold text-navy">{step.t}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-slate-600">{step.d}</p>
-              </div>
-            ))}
-          </div>
+          <span className="mx-auto mt-8 mb-10 block h-0.5 w-64 bg-navy sm:w-96" />
+          <img
+            src={processDesktop}
+            alt="Our training process roadmap"
+            className="mx-auto hidden w-[70%] rounded-2xl bg-white p-4 shadow-lift ring-1 ring-slate-100 md:block"
+          />
+          <img
+            src={processMobile}
+            alt="Our training process roadmap"
+            loading="lazy"
+            className="mx-auto w-[90%] rounded-2xl bg-white p-4 shadow-lift ring-1 ring-slate-100 md:hidden"
+          />
         </div>
       </section>
 
       {/* ---------- Why Choose Us ---------- */}
-      <section className="bg-cream py-16">
-        <div className="mx-auto grid max-w-7xl items-center gap-12 px-6 lg:grid-cols-2">
-          <div>
-            <SectionHeading>Why Choose Us</SectionHeading>
-            <ul className="mt-8 space-y-5">
-              {[
-                {
-                  t: "100% Practical Training",
-                  d: "Every concept is taught with live coding sessions and real-world projects.",
-                },
-                {
-                  t: "Job Placement Assistance",
-                  d: "Dedicated placement cell conducting regular drives with top hiring companies.",
-                },
-                {
-                  t: "Industry Expert Mentors",
-                  d: "Learn directly from working professionals with years of industry experience.",
-                },
-                {
-                  t: "Certification",
-                  d: "Earn an industry recognised certificate that validates your new skills.",
-                },
-              ].map((item) => (
-                <li key={item.t} className="flex gap-4">
-                  <span className="mt-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-navy text-xs text-white">
-                    ✓
-                  </span>
-                  <div>
-                    <h3 className="font-display font-bold text-navy">{item.t}</h3>
-                    <p className="mt-1 text-sm leading-relaxed text-slate-600">{item.d}</p>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </div>
-          <div className="relative mx-auto w-full max-w-md">
-            <div className="absolute -inset-6 rounded-[2rem] bg-gradient-to-br from-navy/10 to-terracotta/15 rotate-2" />
-            <div className="relative rounded-3xl bg-white p-8 shadow-lift ring-1 ring-slate-100">
-              <div className="flex items-center gap-2">
-                <span className="h-3 w-3 rounded-full bg-terracotta" />
-                <span className="h-3 w-3 rounded-full bg-navy/30" />
-                <span className="h-3 w-3 rounded-full bg-slate-200" />
-              </div>
-              <pre className="font-mono mt-6 overflow-x-auto rounded-xl bg-navy p-5 text-[13px] leading-relaxed text-left">
-                <code>
-                  <span className="text-terracotta-light">const</span>{" "}
-                  <span className="text-white">career</span>{" "}
-                  <span className="text-white/60">=</span>{" "}
-                  <span className="text-terracotta-light">await</span>{" "}
-                  <span className="text-white">ftiMumbai</span>
-                  <span className="text-white/60">.</span>
-                  <span className="text-white">train</span>
-                  <span className="text-white/60">(</span>
-                  <span className="text-emerald-300">"you"</span>
-                  <span className="text-white/60">);</span>
-                  {"\n\n"}
-                  <span className="text-white/40">// Learn → Build → Prepare → Get Hired</span>
-                  {"\n"}
-                  <span className="text-white">career</span>
-                  <span className="text-white/60">.</span>
-                  <span className="text-white">landDreamJob</span>
-                  <span className="text-white/60">();</span>{" "}
-                  <span className="text-emerald-300">// 🚀</span>
-                </code>
-              </pre>
-              <div className="mt-6 flex items-center gap-4">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-navy to-terracotta font-display text-lg font-bold text-white">
-                  FTI
-                </div>
-                <p className="text-sm text-slate-600">
-                  <span className="font-bold text-navy">250+ students</span> already
-                  placed in top companies.
-                </p>
-              </div>
-            </div>
-          </div>
+      <section className="bg-white py-16 text-center">
+        <div className="mx-auto max-w-6xl px-6">
+          <SectionHeading>Why Choose Us</SectionHeading>
+          <img
+            src={whyDesktop}
+            alt="Why choose FTI Mumbai"
+            loading="lazy"
+            className="mx-auto mt-10 w-[60%]"
+          />
+          <img
+            src={whyMobile}
+            alt="Why choose FTI Mumbai"
+            loading="lazy"
+            className="mx-auto mt-8 w-[90%] md:hidden"
+          />
         </div>
       </section>
 
