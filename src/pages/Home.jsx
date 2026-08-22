@@ -98,7 +98,7 @@ export default function Home() {
                   src={cat.image}
                   alt={cat.category}
                   loading="lazy"
-                  className="h-44 w-full object-cover object-top transition duration-500 hover:scale-105"
+                  className="h-44 w-full object object-top transition duration-500 hover:scale-105"
                 />
                 <div className="px-5 pt-5 text-left">
                   <h3 className="font-display text-lg font-bold text-navy">{cat.category}</h3>
@@ -140,7 +140,7 @@ export default function Home() {
         <div className="pointer-events-none absolute -right-24 -bottom-24 h-72 w-72 rounded-full bg-terracotta/10 blur-3xl" />
         <div className="relative mx-auto max-w-6xl px-6">
           <SectionHeading>Our Training Process</SectionHeading>
-          <span className="mx-auto mt-8 mb-10 block h-0.5 w-64 bg-navy sm:w-96" />
+          <span className="mx-auto mt-8 mb-10 block h-0.5 w-64 bg-white sm:w-96" />
           <TrainingRoadmap />
         </div>
       </section>
