@@ -202,6 +202,7 @@ export default function TrainingRoadmap() {
                 strokeWidth={mobile ? 60 : 52}
                 strokeLinecap="round"
                 strokeLinejoin="round"
+                vectorEffect="non-scaling-stroke"
               />
             </mask>
           </defs>
@@ -212,6 +213,7 @@ export default function TrainingRoadmap() {
             strokeWidth={mobile ? 35 : 48}
             strokeLinecap="round"
             strokeLinejoin="round"
+            vectorEffect="non-scaling-stroke"
           />
           <path
             d={ROAD_D}
@@ -220,6 +222,7 @@ export default function TrainingRoadmap() {
             strokeDasharray="18 16"
             strokeLinecap="round"
             mask="url(#tp-road-mask)"
+            vectorEffect="non-scaling-stroke"
           />
         </svg>
 
