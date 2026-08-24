@@ -20,6 +20,7 @@ import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdmissionDesk from "./pages/admin/AdmissionDesk";
 import AdmissionsList from "./pages/admin/AdmissionsList";
 import CoursesManagement from "./pages/admin/CoursesManagement";
+import BatchManagement from "./pages/admin/batches/BatchManagement";
 import FeeManagement from "./pages/admin/FeeManagement";
 import LMSManagement from "./pages/admin/LMSManagement";
 import StudyNotesList from "./pages/admin/notes/StudyNotesList";
@@ -123,6 +124,7 @@ export default function App() {
             <Route path="admissions/new" element={<AdmissionDesk />} />
             <Route path="admissions" element={<AdmissionsList />} />
             <Route path="courses" element={<CoursesManagement />} />
+            <Route path="batches" element={<BatchManagement />} />
             <Route path="fees" element={<FeeManagement />} />
             <Route path="lms" element={<LMSManagement />} />
             

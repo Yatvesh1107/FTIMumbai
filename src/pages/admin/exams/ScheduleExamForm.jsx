@@ -9,7 +9,11 @@ import {
   AlertCircle,
   HelpCircle,
   Award,
-  Sparkles
+  Sparkles,
+  Users,
+  UserCheck,
+  CheckSquare,
+  Square
 } from 'lucide-react';
 
 const EXAM_TYPES = [
@@ -20,6 +24,11 @@ const EXAM_TYPES = [
 export default function ScheduleExamForm() {
   const navigate = useNavigate();
   const [courses, setCourses] = useState([]);
+  const [batches, setBatches] = useState([]);
+  const [students, setStudents] = useState([]);
+  const [selectedStudentIds, setSelectedStudentIds] = useState([]);
+  const [targetType, setTargetType] = useState('batch'); // 'batch' | 'individual'
+
   const [questionCount, setQuestionCount] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -27,6 +36,7 @@ export default function ScheduleExamForm() {
 
   const [formData, setFormData] = useState({
     courseId: '',
+    batchId: 'All',
     examTitle: 'Final Certification MCQ Examination',
     examType: 'final_exam',
     totalQuestions: 25,
@@ -46,8 +56,10 @@ export default function ScheduleExamForm() {
         if (res.success && res.courses.length > 0) {
           setCourses(res.courses);
           const first = res.courses[0];
-          setFormData(prev => ({ ...prev, courseId: first._id }));
+          setFormData(prev => ({ ...prev, courseId: first._id, batchId: 'All' }));
           checkQuestionBank(first._id);
+          fetchBatches(first._id);
+          fetchTargetStudents(first._id, 'All');
         }
       } catch (err) {
         console.error(err);
@@ -55,6 +67,37 @@ export default function ScheduleExamForm() {
     };
     fetchCourses();
   }, []);
+
+  const fetchBatches = async (courseId) => {
+    try {
+      const res = await apiRequest(`/batches/course/${courseId}`);
+      if (res.success && res.batches && res.batches.length > 0) {
+        setBatches(res.batches);
+        const firstBatchId = res.batches[0]._id;
+        setFormData(prev => ({ ...prev, batchId: firstBatchId }));
+        fetchTargetStudents(courseId, firstBatchId);
+      } else {
+        setBatches([]);
+        setFormData(prev => ({ ...prev, batchId: '' }));
+        fetchTargetStudents(courseId, '');
+      }
+    } catch (e) {
+      console.error('Error fetching batches:', e);
+    }
+  };
+
+  const fetchTargetStudents = async (courseId, batchId) => {
+    try {
+      const url = `/exams/target-students?courseId=${courseId}${batchId ? `&batchId=${batchId}` : ''}`;
+      const res = await apiRequest(url);
+      if (res.success) {
+        setStudents(res.students || []);
+        setSelectedStudentIds((res.students || []).map(s => s.studentId));
+      }
+    } catch (e) {
+      console.error('Error fetching students for exam:', e);
+    }
+  };
 
   const checkQuestionBank = async (courseId) => {
     try {
@@ -68,8 +111,30 @@ export default function ScheduleExamForm() {
   };
 
   const handleCourseChange = (courseId) => {
-    setFormData({ ...formData, courseId });
+    setFormData(prev => ({ ...prev, courseId }));
     checkQuestionBank(courseId);
+    fetchBatches(courseId);
+  };
+
+  const handleBatchChange = (batchId) => {
+    setFormData(prev => ({ ...prev, batchId }));
+    fetchTargetStudents(formData.courseId, batchId);
+  };
+
+  const toggleStudentSelect = (id) => {
+    if (selectedStudentIds.includes(id)) {
+      setSelectedStudentIds(selectedStudentIds.filter(sId => sId !== id));
+    } else {
+      setSelectedStudentIds([...selectedStudentIds, id]);
+    }
+  };
+
+  const handleSelectAllStudents = () => {
+    if (selectedStudentIds.length === students.length) {
+      setSelectedStudentIds([]);
+    } else {
+      setSelectedStudentIds(students.map(s => s.studentId));
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -84,11 +149,22 @@ export default function ScheduleExamForm() {
       return;
     }
 
+    if (targetType === 'individual' && selectedStudentIds.length === 0) {
+      setError('Please select at least one individual student for this exam.');
+      return;
+    }
+
     setLoading(true);
     setError('');
 
     try {
-      const res = await apiRequest('/exams/schedules', 'POST', formData);
+      const payload = {
+        ...formData,
+        targetType,
+        targetStudentIds: targetType === 'individual' ? selectedStudentIds : []
+      };
+
+      const res = await apiRequest('/exams/schedules', 'POST', payload);
       if (res.success) {
         setSuccess(true);
         setTimeout(() => {
@@ -117,13 +193,13 @@ export default function ScheduleExamForm() {
       <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm space-y-6">
         <div>
           <div className="inline-flex items-center gap-2 rounded-full bg-indigo-50 px-3 py-1 text-xs font-bold text-indigo-800">
-            <Calendar className="h-3.5 w-3.5" /> Examination Scheduler
+            <Calendar className="h-3.5 w-3.5" /> Magma Examination Scheduler
           </div>
           <h1 className="mt-2 font-display text-2xl font-black text-slate-900">
             Schedule Online Examination
           </h1>
           <p className="text-xs text-slate-500">
-            Choose between Normal Practice Exam and Final Exam with random question sampling from the pool.
+            Configure assessment type, assign to specific batches or individual students, and sample random questions.
           </p>
         </div>
 
@@ -142,11 +218,11 @@ export default function ScheduleExamForm() {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-6 text-xs font-semibold text-slate-700">
-          {/* STEP 1: TARGET COURSE & QUESTION POOL */}
+          {/* STEP 1: TARGET COURSE & BATCH */}
           <div className="space-y-4 rounded-2xl bg-slate-50 p-5 border border-slate-200">
             <div className="flex justify-between items-center">
               <h3 className="text-xs font-bold uppercase tracking-wider text-indigo-900">
-                Step 1: Course & Question Pool
+                Step 1: Course & Cohort Target
               </h3>
               <span className={`inline-flex items-center gap-1 rounded-md px-2.5 py-1 text-[11px] font-bold ${
                 questionCount > 0 ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'
@@ -157,7 +233,7 @@ export default function ScheduleExamForm() {
 
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
-                <label className="block uppercase text-[10px] text-slate-400 font-bold">Target Course *</label>
+                <label className="block uppercase text-[10px] text-slate-400 font-bold">1. Select Course *</label>
                 <select
                   required
                   value={formData.courseId}
@@ -173,23 +249,127 @@ export default function ScheduleExamForm() {
               </div>
 
               <div>
-                <label className="block uppercase text-[10px] text-slate-400 font-bold">Examination Title *</label>
-                <input
-                  type="text"
+                <label className="block uppercase text-[10px] text-slate-400 font-bold">2. Select Batch *</label>
+                <select
                   required
-                  value={formData.examTitle}
-                  onChange={(e) => setFormData({ ...formData, examTitle: e.target.value })}
-                  placeholder="e.g. Full Stack Final Certification Examination"
-                  className="mt-1 w-full rounded-xl border border-slate-300 p-3 text-xs font-medium text-slate-900 bg-white"
-                />
+                  value={formData.batchId}
+                  onChange={(e) => handleBatchChange(e.target.value)}
+                  className="mt-1 w-full rounded-xl border border-slate-300 bg-white p-3 text-xs font-bold text-indigo-900"
+                >
+                  {batches.map((b) => (
+                    <option key={b._id} value={b._id}>
+                      {b.batchName} ({b.timing}) [{b.batchCode}]
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
+
+            <div>
+              <label className="block uppercase text-[10px] text-slate-400 font-bold">3. Examination Title *</label>
+              <input
+                type="text"
+                required
+                value={formData.examTitle}
+                onChange={(e) => setFormData({ ...formData, examTitle: e.target.value })}
+                placeholder="e.g. Full Stack Final Certification Examination"
+                className="mt-1 w-full rounded-xl border border-slate-300 p-3 text-xs font-medium text-slate-900 bg-white"
+              />
+            </div>
+
+            {/* Target Audience Mode: Batch vs Individual */}
+            <div className="pt-2">
+              <label className="block uppercase text-[10px] text-slate-400 font-bold mb-2">4. Target Audience</label>
+              <div className="grid grid-cols-2 gap-3">
+                <div
+                  onClick={() => setTargetType('batch')}
+                  className={`cursor-pointer rounded-2xl border p-3.5 transition flex items-center gap-2.5 ${
+                    targetType === 'batch'
+                      ? 'border-indigo-600 bg-indigo-50/90 text-indigo-950 font-bold ring-2 ring-indigo-600/20 shadow-sm'
+                      : 'border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-semibold'
+                  }`}
+                >
+                  <Users className="h-4 w-4 text-indigo-700 shrink-0" />
+                  <div>
+                    <p className="text-xs">Batch Mode</p>
+                    <p className="text-[10px] text-slate-500 font-normal">Assign to selected batch</p>
+                  </div>
+                </div>
+
+                <div
+                  onClick={() => setTargetType('individual')}
+                  className={`cursor-pointer rounded-2xl border p-3.5 transition flex items-center gap-2.5 ${
+                    targetType === 'individual'
+                      ? 'border-indigo-600 bg-indigo-50/90 text-indigo-950 font-bold ring-2 ring-indigo-600/20 shadow-sm'
+                      : 'border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-semibold'
+                  }`}
+                >
+                  <UserCheck className="h-4 w-4 text-indigo-700 shrink-0" />
+                  <div>
+                    <p className="text-xs">Individual Students</p>
+                    <p className="text-[10px] text-slate-500 font-normal">Select specific students from list</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Individual Students Selection Table */}
+            {targetType === 'individual' && (
+              <div className="rounded-2xl border border-indigo-200 bg-white p-4 space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="font-bold text-slate-800 text-xs">
+                    Select Students to Assign this Exam:
+                  </span>
+                  <button
+                    type="button"
+                    onClick={handleSelectAllStudents}
+                    className="text-xs font-bold text-indigo-700 hover:underline"
+                  >
+                    {selectedStudentIds.length === students.length ? 'Deselect All' : 'Select All'}
+                  </button>
+                </div>
+
+                {students.length === 0 ? (
+                  <p className="text-xs text-slate-400 italic py-2">No students enrolled in this batch yet.</p>
+                ) : (
+                  <div className="max-h-56 overflow-y-auto divide-y divide-slate-100 border rounded-xl">
+                    {students.map((stu) => {
+                      const isSelected = selectedStudentIds.includes(stu.studentId);
+                      return (
+                        <div
+                          key={stu.studentId}
+                          onClick={() => toggleStudentSelect(stu.studentId)}
+                          className={`cursor-pointer flex items-center justify-between p-3 transition ${
+                            isSelected ? 'bg-indigo-50/70 font-semibold' : 'hover:bg-slate-50'
+                          }`}
+                        >
+                          <div className="flex items-center gap-3">
+                            {isSelected ? (
+                              <CheckSquare className="h-4 w-4 text-indigo-700" />
+                            ) : (
+                              <Square className="h-4 w-4 text-slate-300" />
+                            )}
+                            <div>
+                              <p className="text-xs font-bold text-slate-900">{stu.fullName}</p>
+                              <p className="text-[10px] text-slate-500 font-mono">
+                                {stu.enrollmentNo} • {stu.batchName}
+                              </p>
+                            </div>
+                          </div>
+                          <span className="text-[10px] text-slate-400 font-mono">{stu.mobile}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
-          {/* STEP 2: EXAM TYPE (ONLY 2 TYPES) */}
+          {/* STEP 2: EXAM TYPE */}
           <div className="space-y-4 rounded-2xl bg-slate-50 p-5 border border-slate-200">
             <h3 className="text-xs font-bold uppercase tracking-wider text-indigo-900">
-              Step 2: Choose Exam Type
+              Step 2: Choose Exam Type & Question Sampling
             </h3>
 
             <div className="grid gap-3 sm:grid-cols-2">

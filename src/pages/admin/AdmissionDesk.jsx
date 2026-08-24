@@ -43,6 +43,9 @@ export default function AdmissionDesk() {
   const [transactionRef, setTransactionRef] = useState('');
 
   // Student Profile State
+  const [batches, setBatches] = useState([]);
+  const [selectedBatchId, setSelectedBatchId] = useState('');
+
   const [formData, setFormData] = useState({
     fullName: '',
     gender: 'Male',
@@ -66,6 +69,21 @@ export default function AdmissionDesk() {
     joiningDate: new Date().toISOString().split('T')[0],
     remarks: ''
   });
+
+  const fetchCourseBatches = async (courseId) => {
+    try {
+      const res = await apiRequest(`/batches/course/${courseId}`);
+      if (res.success && res.batches.length > 0) {
+        setBatches(res.batches);
+        setSelectedBatchId(res.batches[0]._id);
+      } else {
+        setBatches([]);
+        setSelectedBatchId('');
+      }
+    } catch (e) {
+      console.error('Error fetching batches:', e);
+    }
+  };
 
   // Load Courses
   useEffect(() => {
@@ -93,6 +111,7 @@ export default function AdmissionDesk() {
     setSelectedCourse(course);
     setAgreedFee(course.standardFee);
     setDiscountAmount(0);
+    fetchCourseBatches(course._id);
 
     // Default down payment = 30% of standard fee rounded to 1000s
     const defaultDp = Math.min(course.standardFee, Math.round((course.standardFee * 0.3) / 500) * 500);
@@ -173,6 +192,7 @@ export default function AdmissionDesk() {
       const payload = {
         ...formData,
         courseId: selectedCourseId,
+        batchId: selectedBatchId || undefined,
         agreedTotalFee: agreedFee,
         downPayment,
         paymentMode,
@@ -634,18 +654,29 @@ export default function AdmissionDesk() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase">Batch Preferred Timing</label>
-                <select
-                  value={formData.batchTiming}
-                  onChange={(e) => setFormData({ ...formData, batchTiming: e.target.value })}
-                  className="mt-1.5 w-full rounded-xl border border-slate-300 p-2.5 text-sm font-semibold text-[#0b3c68]"
-                >
-                  <option value="Morning (08:00 AM - 10:00 AM)">Morning (08:00 AM - 10:00 AM)</option>
-                  <option value="Morning (10:00 AM - 12:00 PM)">Morning (10:00 AM - 12:00 PM)</option>
-                  <option value="Afternoon (01:00 PM - 03:00 PM)">Afternoon (01:00 PM - 03:00 PM)</option>
-                  <option value="Evening (04:00 PM - 06:00 PM)">Evening (04:00 PM - 06:00 PM)</option>
-                  <option value="Weekend Special">Weekend Special</option>
-                </select>
+                <label className="block text-xs font-bold text-slate-700 uppercase">Assigned Training Batch *</label>
+                {batches.length > 0 ? (
+                  <select
+                    required
+                    value={selectedBatchId}
+                    onChange={(e) => {
+                      setSelectedBatchId(e.target.value);
+                      const b = batches.find(item => item._id === e.target.value);
+                      if (b) setFormData({ ...formData, batchTiming: `${b.batchName} (${b.timing})` });
+                    }}
+                    className="mt-1.5 w-full rounded-xl border border-slate-300 p-2.5 text-sm font-bold text-[#0b3c68] bg-white"
+                  >
+                    {batches.map((b) => (
+                      <option key={b._id} value={b._id}>
+                        {b.batchName} ({b.timing}) [{b.batchCode}] - {b.days}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <div className="mt-1.5 rounded-xl border border-amber-200 bg-amber-50 p-2.5 text-xs text-amber-900 font-semibold">
+                    No active batches found for this course. Please create a batch in Batch Management or select timing below.
+                  </div>
+                )}
               </div>
 
               <div>
