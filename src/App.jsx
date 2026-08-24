@@ -38,6 +38,7 @@ import CertificatesManagement from "./pages/admin/CertificatesManagement";
 import StudentDashboard from "./pages/student/StudentDashboard";
 import StudentClassroom from "./pages/student/StudentClassroom";
 import StudentStudyNotes from "./pages/student/StudentStudyNotes";
+import StudyNoteDetail from "./pages/student/StudyNoteDetail";
 import StudentAssignments from "./pages/student/StudentAssignments";
 import StudentLiveClasses from "./pages/student/StudentLiveClasses";
 import StudentExams from "./pages/student/StudentExams";
@@ -154,6 +155,7 @@ export default function App() {
             <Route path="dashboard" element={<StudentDashboard />} />
             <Route path="classroom" element={<StudentClassroom />} />
             <Route path="notes" element={<StudentStudyNotes />} />
+            <Route path="notes/:id" element={<StudyNoteDetail />} />
             <Route path="assignments" element={<StudentAssignments />} />
             <Route path="live-classes" element={<StudentLiveClasses />} />
             <Route path="exams" element={<StudentExams />} />
