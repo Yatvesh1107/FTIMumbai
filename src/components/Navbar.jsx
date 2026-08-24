@@ -151,13 +151,20 @@ export default function Navbar() {
                 Contact Us
               </NavLink>
             </li>
-            <li className="lg:pl-2">
+            <li className="lg:pl-2 flex flex-col sm:flex-row items-center gap-2">
+              <Link
+                to="/login"
+                onClick={closeAll}
+                className="w-full text-center rounded-full border border-navy/30 bg-white px-5 py-2 text-xs font-bold text-navy shadow-sm hover:bg-slate-50 transition lg:w-auto"
+              >
+                Portal Login
+              </Link>
               <button
                 onClick={() => {
                   setMenuOpen(false);
                   setEnquiryOpen(true);
                 }}
-                className="w-full rounded-full bg-gradient-to-r from-navy to-navy-light px-6 py-2.5 text-sm font-semibold text-white shadow-md transition hover:shadow-lift hover:brightness-110 lg:w-auto"
+                className="w-full rounded-full bg-gradient-to-r from-navy to-navy-light px-5 py-2 text-xs font-bold text-white shadow-md transition hover:shadow-lift hover:brightness-110 lg:w-auto"
               >
                 Enquire Now
               </button>
