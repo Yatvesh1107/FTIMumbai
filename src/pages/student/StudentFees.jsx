@@ -2,12 +2,8 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { apiRequest } from '../../utils/api';
 import {
-  CreditCard,
   Calendar,
-  CheckCircle2,
-  AlertTriangle,
-  Printer,
-  FileCheck
+  AlertTriangle
 } from 'lucide-react';
 
 export default function StudentFees() {
@@ -62,6 +58,41 @@ export default function StudentFees() {
         </p>
       </div>
 
+      {/* Next Due Date Banner (Magma-style) */}
+      {feeDoc.remainingAmount > 0 && (
+        <div className={`flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 rounded-2xl border p-5 shadow-sm ${
+          feeDoc.isAppLocked
+            ? 'border-red-200 bg-red-50'
+            : 'border-orange-200 bg-orange-50'
+        }`}>
+          <div className="flex items-center gap-3">
+            <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border ${
+              feeDoc.isAppLocked ? 'border-red-200 bg-white text-red-600' : 'border-orange-200 bg-white text-orange-600'
+            }`}>
+              {feeDoc.isAppLocked ? <AlertTriangle className="h-6 w-6" /> : <Calendar className="h-6 w-6" />}
+            </div>
+            <div>
+              <span className={`text-[10px] uppercase font-bold tracking-wider ${feeDoc.isAppLocked ? 'text-red-500' : 'text-orange-500'}`}>
+                {feeDoc.isAppLocked ? 'Account Access Restricted' : 'Next Payment Due Date'}
+              </span>
+              <p className={`font-display text-lg font-black ${feeDoc.isAppLocked ? 'text-red-700' : 'text-orange-800'}`}>
+                {feeDoc.nextDueDate
+                  ? new Date(feeDoc.nextDueDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })
+                  : 'Contact the office for your schedule'}
+                {feeDoc.nextDueDate && new Date(feeDoc.nextDueDate) < new Date() && !feeDoc.isAppLocked && (
+                  <span className="ml-2 text-xs font-bold text-red-600">(Overdue — please pay ASAP)</span>
+                )}
+              </p>
+            </div>
+          </div>
+          {!feeDoc.isAppLocked && feeDoc.nextDueDate && (
+            <span className="rounded-full bg-orange-100 px-3 py-1 text-[10px] font-bold uppercase tracking-wide text-orange-700 self-start sm:self-auto">
+              Installment Mode
+            </span>
+          )}
+        </div>
+      )}
+
       {/* Summary Cards */}
       <div className="grid gap-4 sm:grid-cols-3">
         <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -99,9 +130,15 @@ export default function StudentFees() {
               <div className="text-right">
                 <p className="font-bold text-slate-900 text-sm">₹{inst.amount?.toLocaleString('en-IN')}</p>
                 <span className={`inline-block rounded-full px-2.5 py-0.5 text-[10px] font-bold capitalize mt-0.5 ${
-                  inst.status === 'paid' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'
+                  inst.status === 'paid'
+                    ? 'bg-emerald-100 text-emerald-800'
+                    : inst.status === 'partially_paid'
+                      ? 'bg-sky-100 text-sky-800'
+                      : inst.status === 'overdue'
+                        ? 'bg-red-100 text-red-700'
+                        : 'bg-amber-100 text-amber-800'
                 }`}>
-                  {inst.status}
+                  {inst.status.replace('_', ' ')}
                 </span>
               </div>
             </div>

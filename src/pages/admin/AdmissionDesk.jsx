@@ -4,17 +4,13 @@ import { apiRequest } from '../../utils/api';
 import {
   UserPlus,
   BookOpen,
-  DollarSign,
   AlertCircle,
   CheckCircle2,
-  Calendar,
   CreditCard,
-  Percent,
-  Sparkles,
+  Plus,
+  Trash2,
   ArrowRight,
   ArrowLeft,
-  ShieldCheck,
-  Building,
   GraduationCap
 } from 'lucide-react';
 
@@ -37,10 +33,22 @@ export default function AdmissionDesk() {
   const [agreedFee, setAgreedFee] = useState(0);
   const [discountAmount, setDiscountAmount] = useState(0);
   const [downPayment, setDownPayment] = useState(0);
-  const [numInstallments, setNumInstallments] = useState(2);
+  const [paymentType, setPaymentType] = useState('installment');
+  const [nextDueDate, setNextDueDate] = useState('');
+  const [nextDueDateManual, setNextDueDateManual] = useState(false);
   const [installmentsList, setInstallmentsList] = useState([]);
   const [paymentMode, setPaymentMode] = useState('UPI');
   const [transactionRef, setTransactionRef] = useState('');
+
+  // Magma-style helper: next due date is 30 days from the joining date
+  const calculateNextDueDate = (joiningDate) => {
+    const date = new Date(joiningDate || new Date());
+    date.setDate(date.getDate() + 30);
+    return date.toISOString().split('T')[0];
+  };
+
+  // Remaining balance after received amount
+  const remainingBalance = Math.max(0, (agreedFee || 0) - (downPayment || 0));
 
   // Student Profile State
   const [batches, setBatches] = useState([]);
@@ -85,7 +93,129 @@ export default function AdmissionDesk() {
     }
   };
 
-  // Load Courses
+  // When course selected, initialize negotiation pricing & default installments
+  const handleCourseSelect = (course) => {
+    setSelectedCourseId(course._id);
+    setSelectedCourse(course);
+    setAgreedFee(course.standardFee);
+    setDiscountAmount(0);
+    setNextDueDateManual(false);
+    setNextDueDate(calculateNextDueDate(formData.joiningDate));
+    fetchCourseBatches(course._id);
+
+    // Default received amount = 30% of standard fee rounded to 500s (locked to full fee in Full Payment mode)
+    const defaultDp = paymentType === 'full'
+      ? course.standardFee
+      : Math.min(course.standardFee, Math.round((course.standardFee * 0.3) / 500) * 500);
+    setDownPayment(defaultDp);
+    setInstallmentsList(buildDefaultSchedule(course.standardFee - defaultDp, calculateNextDueDate(formData.joiningDate)));
+  };
+
+  // Handle Agreed Fee Change with Validation
+  const handleAgreedFeeChange = (value) => {
+    const val = Number(value);
+    setAgreedFee(val);
+    if (selectedCourse) {
+      const disc = Math.max(0, selectedCourse.standardFee - val);
+      setDiscountAmount(disc);
+
+      if (paymentType === 'full') {
+        setDownPayment(Math.max(0, val));
+        setInstallmentsList([]);
+        return;
+      }
+
+      let received = downPayment;
+      if (received > val) {
+        received = val;
+        setDownPayment(val);
+      }
+      setInstallmentsList(buildDefaultSchedule(Math.max(0, val - received), nextDueDate));
+    }
+  };
+
+  // Payment Type switch: full locks the received amount to the final fee (Magma-style)
+  const handlePaymentTypeChange = (type) => {
+    setPaymentType(type);
+    if (type === 'full') {
+      setDownPayment(agreedFee || 0);
+      setInstallmentsList([]);
+    } else {
+      const received = !downPayment || downPayment >= agreedFee ? 0 : downPayment;
+      setDownPayment(received);
+      setInstallmentsList(buildDefaultSchedule(Math.max(0, agreedFee - received), nextDueDate));
+    }
+  };
+
+  // Handle Received Amount Change with Magma-style validation
+  const handleReceivedAmountChange = (value) => {
+    const val = Number(value);
+    if (Number.isNaN(val) || val < 0) return;
+    if (agreedFee > 0 && val > agreedFee) {
+      alert(`Received Amount cannot exceed Final Fee (₹${agreedFee.toLocaleString('en-IN')})`);
+      return;
+    }
+    setDownPayment(val);
+    setInstallmentsList(buildDefaultSchedule(Math.max(0, agreedFee - val), nextDueDate));
+  };
+
+  // Joining date drives the auto-calculated next due date (until manually edited)
+  const handleJoiningDateChange = (value) => {
+    setFormData({ ...formData, joiningDate: value });
+    if (!nextDueDateManual) {
+      const autoDue = calculateNextDueDate(value);
+      setNextDueDate(autoDue);
+      rebaseInstallmentDates(autoDue, remainingBalance);
+    }
+  };
+
+  const handleNextDueDateChange = (value) => {
+    setNextDueDateManual(true);
+    setNextDueDate(value);
+    rebaseInstallmentDates(value, remainingBalance);
+  };
+
+  // Manual ledger helpers — admin enters each installment amount + its due date
+  function buildDefaultSchedule(balance, startDate) {
+    if (!balance || balance <= 0) return [];
+    const base = new Date(startDate || new Date());
+    return [{ amount: Math.round(balance), dueDate: base.toISOString().split('T')[0] }];
+  }
+
+  // Keep amounts, shift due dates so the first row starts at the given date (monthly cadence)
+  function rebaseInstallmentDates(startDate, balance) {
+    const base = new Date(startDate || new Date());
+    if (!installmentsList.length) {
+      setInstallmentsList(buildDefaultSchedule(balance, startDate));
+      return;
+    }
+    setInstallmentsList(
+      installmentsList.map((inst, i) => {
+        const due = new Date(base);
+        due.setMonth(base.getMonth() + i);
+        return { ...inst, dueDate: due.toISOString().split('T')[0] };
+      })
+    );
+  }
+
+  const handleAddInstallment = () => {
+    const allocated = installmentsList.reduce((sum, inst) => sum + Number(inst.amount || 0), 0);
+    const left = Math.round(remainingBalance - allocated);
+    if (left <= 0) {
+      alert('Balance Amount is already fully covered by the existing installments.');
+      return;
+    }
+    const last = installmentsList[installmentsList.length - 1];
+    const due = new Date(last ? new Date(last.dueDate) : (nextDueDate ? new Date(nextDueDate) : new Date()));
+    if (last) due.setMonth(due.getMonth() + 1);
+    setInstallmentsList([...installmentsList, { amount: left, dueDate: due.toISOString().split('T')[0] }]);
+  };
+
+  const handleRemoveInstallment = (index) => {
+    setInstallmentsList(installmentsList.filter((_, i) => i !== index));
+  };
+
+  // Load Courses (declared after handlers so handler references resolve safely)
   useEffect(() => {
     const fetchCourses = async () => {
       try {
@@ -96,93 +226,54 @@ export default function AdmissionDesk() {
             handleCourseSelect(res.courses[0]);
           }
         }
-      } catch (err) {
+      } catch {
         setError('Failed to load courses.');
       } finally {
         setLoading(false);
       }
     };
     fetchCourses();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // When course selected, initialize negotiation pricing & default installments
-  const handleCourseSelect = (course) => {
-    setSelectedCourseId(course._id);
-    setSelectedCourse(course);
-    setAgreedFee(course.standardFee);
-    setDiscountAmount(0);
-    fetchCourseBatches(course._id);
-
-    // Default down payment = 30% of standard fee rounded to 1000s
-    const defaultDp = Math.min(course.standardFee, Math.round((course.standardFee * 0.3) / 500) * 500);
-    setDownPayment(defaultDp);
-    generateInstallmentSchedule(course.standardFee - defaultDp, 2);
-  };
-
-  // Handle Agreed Fee Change with Validation
-  const handleAgreedFeeChange = (value) => {
-    const val = Number(value);
-    setAgreedFee(val);
-    if (selectedCourse) {
-      const disc = Math.max(0, selectedCourse.standardFee - val);
-      setDiscountAmount(disc);
-      const remainingBalance = Math.max(0, val - downPayment);
-      generateInstallmentSchedule(remainingBalance, numInstallments);
-    }
-  };
-
-  // Handle Down Payment Change
-  const handleDownPaymentChange = (value) => {
-    const dp = Number(value);
-    setDownPayment(dp);
-    const remainingBalance = Math.max(0, agreedFee - dp);
-    generateInstallmentSchedule(remainingBalance, numInstallments);
-  };
-
-  // Generate Installment Schedule dynamically
-  const generateInstallmentSchedule = (balance, count) => {
-    if (balance <= 0 || count <= 0) {
-      setInstallmentsList([]);
-      return;
-    }
-    const perInstallment = Math.round(balance / count);
-    const list = [];
-    const today = new Date();
-
-    for (let i = 1; i <= count; i++) {
-      const dueDate = new Date(today);
-      dueDate.setMonth(today.getMonth() + i);
-      const amount = i === count ? balance - perInstallment * (count - 1) : perInstallment;
-      list.push({
-        installmentNo: i,
-        amount,
-        dueDate: dueDate.toISOString().split('T')[0]
-      });
-    }
-    setInstallmentsList(list);
-  };
-
   const handleInstallmentDateChange = (index, newDate) => {
-    const updated = [...installmentsList];
-    updated[index].dueDate = newDate;
-    setInstallmentsList(updated);
+    setInstallmentsList(installmentsList.map((inst, i) => (i === index ? { ...inst, dueDate: newDate } : inst)));
   };
 
   const handleInstallmentAmountChange = (index, newAmount) => {
-    const updated = [...installmentsList];
-    updated[index].amount = Number(newAmount);
-    setInstallmentsList(updated);
+    setInstallmentsList(installmentsList.map((inst, i) => (i === index ? { ...inst, amount: Number(newAmount) } : inst)));
   };
 
   // Validation Checks
   const isFloorBreached = selectedCourse && agreedFee < selectedCourse.minFloorFee;
-  const isDownPaymentInvalid = downPayment > agreedFee;
+  const isReceivedInvalid = downPayment > agreedFee;
+
+  // Magma-style: installment ledger must exactly cover the pending balance
+  const scheduledTotal = installmentsList.reduce((sum, inst) => sum + Number(inst.amount || 0), 0);
+  const hasInstallmentMismatch = paymentType === 'installment' && remainingBalance > 0 && Math.abs(scheduledTotal - remainingBalance) > 1;
+  const hasInvalidInstallments = paymentType === 'installment' && installmentsList.some((inst) => !inst.dueDate || Number(inst.amount) <= 0);
 
   const handleSubmitAdmission = async (e) => {
     e.preventDefault();
     if (isFloorBreached) {
       setError(`Cannot register admission! Negotiated fee of ₹${agreedFee} is below the allowable floor limit of ₹${selectedCourse.minFloorFee}.`);
       return;
+    }
+
+    // Magma-style fee validation before submission
+    if (paymentType === 'installment') {
+      if (remainingBalance > 0 && installmentsList.length === 0) {
+        setError('Please add at least one installment covering the pending Balance Amount.');
+        return;
+      }
+      if (hasInvalidInstallments) {
+        setError('Every installment must have an amount greater than 0 and a valid due date.');
+        return;
+      }
+      if (hasInstallmentMismatch) {
+        setError(`Installment amounts total (₹${scheduledTotal.toLocaleString('en-IN')}) must match the pending Balance Amount (₹${remainingBalance.toLocaleString('en-IN')}).`);
+        return;
+      }
     }
 
     setSubmitting(true);
@@ -195,9 +286,13 @@ export default function AdmissionDesk() {
         batchId: selectedBatchId || undefined,
         agreedTotalFee: agreedFee,
         downPayment,
+        paymentType,
+        nextDueDate: paymentType === 'installment' && remainingBalance > 0 ? nextDueDate : null,
         paymentMode,
         transactionRef,
-        installmentsList
+        installmentsList: paymentType === 'full'
+          ? []
+          : installmentsList.map((inst, i) => ({ installmentNo: i + 1, amount: Number(inst.amount), dueDate: inst.dueDate }))
       };
 
       const res = await apiRequest('/admissions', 'POST', payload);
@@ -255,8 +350,28 @@ export default function AdmissionDesk() {
             <span className="font-bold text-emerald-700">₹{successData.admission.agreedTotalFee.toLocaleString('en-IN')}</span>
           </div>
           <div className="flex justify-between py-1">
-            <span className="text-slate-500 font-semibold">Down Payment Collected:</span>
+            <span className="text-slate-500 font-semibold">Payment Type:</span>
+            <span className={`font-bold ${successData.admission.paymentType === 'full' ? 'text-emerald-600' : 'text-[#0b3c68]'}`}>
+              {successData.admission.paymentType === 'full' ? 'Full Payment' : 'Installment'}
+            </span>
+          </div>
+          <div className="flex justify-between py-1 border-b border-slate-200">
+            <span className="text-slate-500 font-semibold">Received Amount:</span>
             <span className="font-bold text-slate-900">₹{successData.admission.downPayment.toLocaleString('en-IN')}</span>
+          </div>
+          <div className="flex justify-between py-1">
+            <span className="text-slate-500 font-semibold">
+              {successData.admission.totalBalance > 0 ? 'Next Due Date:' : 'Balance Status:'}
+            </span>
+            {successData.admission.totalBalance > 0 ? (
+              <span className="font-bold text-orange-600">
+                {successData.admission.nextDueDate
+                  ? new Date(successData.admission.nextDueDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
+                  : '—'}
+              </span>
+            ) : (
+              <span className="font-bold text-emerald-600">Fully Paid ✓</span>
+            )}
           </div>
         </div>
 
@@ -684,7 +799,7 @@ export default function AdmissionDesk() {
                 <input
                   type="date"
                   value={formData.joiningDate}
-                  onChange={(e) => setFormData({ ...formData, joiningDate: e.target.value })}
+                  onChange={(e) => handleJoiningDateChange(e.target.value)}
                   className="mt-1.5 w-full rounded-xl border border-slate-300 p-2.5 text-sm"
                 />
               </div>
@@ -724,63 +839,101 @@ export default function AdmissionDesk() {
         </div>
       )}
 
-      {/* STEP 4: DOWN PAYMENT & INSTALLMENT SCHEDULE GENERATOR */}
+      {/* STEP 4: FEE DETAILS — PAYMENT TYPE, RECEIVED AMOUNT, BALANCE & NEXT DUE DATE (Magma-style) */}
       {currentStep === 4 && (
         <form onSubmit={handleSubmitAdmission} className="space-y-6">
           <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-6">
             <h3 className="font-display text-base font-bold text-slate-800 flex items-center gap-2">
-              <CreditCard className="h-5 w-5 text-[#0b3c68]" /> 4. Down Payment & Installment Schedule Breakdown
+              <CreditCard className="h-5 w-5 text-[#0b3c68]" /> 4. Fee Details & Payment Schedule
             </h3>
 
             <div className="grid gap-6 sm:grid-cols-2">
-              {/* Payment Details */}
+              {/* Payment Configuration */}
               <div className="space-y-4">
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 uppercase">Down Payment / Initial Reg. Fee (₹)</label>
+                  <label className="block text-xs font-bold text-slate-700 uppercase">Payment Type</label>
+                  <select
+                    value={paymentType}
+                    onChange={(e) => handlePaymentTypeChange(e.target.value)}
+                    className="mt-1.5 w-full rounded-xl border border-slate-300 p-3 text-xs font-bold focus:border-[#0b3c68]"
+                  >
+                    <option value="installment">Installment</option>
+                    <option value="full">Full Payment</option>
+                  </select>
+                </div>
+
+                {paymentType === 'full' ? (
+                  /* FULL PAYMENT: Received amount auto-locked to final fee (readonly) */
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 uppercase">Received Amount (₹)</label>
+                    <input
+                      type="number"
+                      value={downPayment}
+                      readOnly
+                      title="Full payment selected — received amount is locked to the final fee"
+                      className="mt-1.5 w-full cursor-not-allowed rounded-xl border border-slate-300 bg-emerald-50 p-3 text-base font-bold text-emerald-800"
+                    />
+                  </div>
+                ) : (
+                  /* INSTALLMENT: editable received amount with validation */
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 uppercase">Received Amount (₹)</label>
+                    <input
+                      type="number"
+                      min={0}
+                      max={agreedFee}
+                      value={downPayment}
+                      onChange={(e) => handleReceivedAmountChange(e.target.value)}
+                      className={`mt-1.5 w-full rounded-xl border p-3 text-base font-bold text-slate-900 focus:border-[#0b3c68] ${isReceivedInvalid ? 'border-red-500 ring-1 ring-red-200' : 'border-slate-300'}`}
+                    />
+                    {isReceivedInvalid && (
+                      <p className="mt-1 text-[11px] font-semibold text-red-600">Received Amount cannot exceed the Final Fee.</p>
+                    )}
+                  </div>
+                )}
+
+                {/* Balance Amount: green when cleared, red when pending */}
+                <div
+                  className={`rounded-xl border p-3 ${remainingBalance === 0 ? 'border-emerald-200 bg-emerald-50' : 'border-red-200 bg-red-50'}`}
+                >
+                  <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-500">Balance Amount</span>
+                  <span className={`text-lg font-extrabold ${remainingBalance === 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                    ₹{remainingBalance.toLocaleString('en-IN')}
+                    {remainingBalance === 0 && <span className="ml-2 text-xs font-bold">— Fully Paid ✓</span>}
+                  </span>
+                </div>
+
+                {/* Next Due Date: auto = Joining Date + 30 days (Magma-style) */}
+                <div>
+                  <label className="block text-xs font-bold text-orange-600 uppercase">
+                    Next Due Date {paymentType === 'full' || remainingBalance === 0 ? '(N/A)' : ''}
+                  </label>
                   <input
-                    type="number"
-                    value={downPayment}
-                    onChange={(e) => handleDownPaymentChange(e.target.value)}
-                    className="mt-1.5 w-full rounded-xl border border-slate-300 p-3 text-base font-bold text-slate-900 focus:border-[#0b3c68]"
+                    type="date"
+                    min={new Date().toISOString().split('T')[0]}
+                    disabled={paymentType === 'full' || remainingBalance === 0}
+                    value={paymentType === 'full' || remainingBalance === 0 ? '' : nextDueDate}
+                    onChange={(e) => handleNextDueDateChange(e.target.value)}
+                    className="mt-1.5 w-full rounded-xl border border-orange-300 bg-orange-50 p-3 text-xs font-bold text-orange-800 focus:border-orange-400 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400"
                   />
-                  <p className="mt-1 text-[11px] text-slate-500">
-                    Remaining Balance to split: <strong className="text-[#0b3c68]">₹{Math.max(0, agreedFee - downPayment).toLocaleString('en-IN')}</strong>
+                  <p className="mt-1 text-[11px] text-orange-600 italic">
+                    Auto-calculated as Joining Date + 30 days. Editable if needed.
                   </p>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 uppercase">Payment Mode</label>
-                    <select
-                      value={paymentMode}
-                      onChange={(e) => setPaymentMode(e.target.value)}
-                      className="mt-1.5 w-full rounded-xl border border-slate-300 p-2.5 text-xs font-bold"
-                    >
-                      <option value="UPI">UPI (GPay/PhonePe)</option>
-                      <option value="Cash">Cash at Counter</option>
-                      <option value="Card">Credit/Debit Card (POS)</option>
-                      <option value="Bank Transfer">Bank Transfer (NEFT)</option>
-                      <option value="Cheque">Cheque</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 uppercase">Installments Count</label>
-                    <select
-                      value={numInstallments}
-                      onChange={(e) => {
-                        const count = Number(e.target.value);
-                        setNumInstallments(count);
-                        generateInstallmentSchedule(Math.max(0, agreedFee - downPayment), count);
-                      }}
-                      className="mt-1.5 w-full rounded-xl border border-slate-300 p-2.5 text-xs font-bold"
-                    >
-                      <option value={1}>1 Installment</option>
-                      <option value={2}>2 Monthly Installments</option>
-                      <option value={3}>3 Monthly Installments</option>
-                      <option value={4}>4 Monthly Installments</option>
-                    </select>
-                  </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 uppercase">Payment Mode</label>
+                  <select
+                    value={paymentMode}
+                    onChange={(e) => setPaymentMode(e.target.value)}
+                    className="mt-1.5 w-full rounded-xl border border-slate-300 p-2.5 text-xs font-bold"
+                  >
+                    <option value="UPI">UPI (GPay/PhonePe)</option>
+                    <option value="Cash">Cash at Counter</option>
+                    <option value="Card">Credit/Debit Card (POS)</option>
+                    <option value="Bank Transfer">Bank Transfer (NEFT)</option>
+                    <option value="Cheque">Cheque</option>
+                  </select>
                 </div>
 
                 <div>
@@ -795,43 +948,117 @@ export default function AdmissionDesk() {
                 </div>
               </div>
 
-              {/* Installment Breakdown Ledger */}
-              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 space-y-3">
-                <span className="font-bold text-slate-700 uppercase tracking-wider text-[11px] block">
-                  Scheduled Installments Ledger
-                </span>
-
-                {installmentsList.length === 0 ? (
-                  <p className="text-xs text-slate-500 italic">Full payment cleared in down payment.</p>
-                ) : (
-                  <div className="space-y-2.5">
-                    {installmentsList.map((inst, idx) => (
-                      <div key={idx} className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white p-2.5 shadow-sm">
-                        <span className="rounded-md bg-[#0b3c68]/10 px-2 py-1 text-[11px] font-bold text-[#0b3c68]">
-                          Inst #{inst.installmentNo}
-                        </span>
-                        <div className="flex-1">
-                          <label className="text-[10px] font-semibold text-slate-400 block">Due Date</label>
-                          <input
-                            type="date"
-                            value={inst.dueDate}
-                            onChange={(e) => handleInstallmentDateChange(idx, e.target.value)}
-                            className="text-xs font-semibold text-slate-800 bg-transparent border-0 p-0 focus:ring-0"
-                          />
-                        </div>
-                        <div className="w-28 text-right">
-                          <label className="text-[10px] font-semibold text-slate-400 block">Amount (₹)</label>
-                          <input
-                            type="number"
-                            value={inst.amount}
-                            onChange={(e) => handleInstallmentAmountChange(idx, e.target.value)}
-                            className="w-full text-right text-xs font-bold text-slate-900 bg-transparent border-0 p-0 focus:ring-0"
-                          />
-                        </div>
-                      </div>
-                    ))}
+              {/* Right column: fee breakdown + installment ledger */}
+              <div className="space-y-4">
+                {/* Final Fee Breakdown Summary */}
+                <div className="rounded-2xl border border-slate-200 bg-[#0b3c68]/[0.03] p-4 space-y-2">
+                  <span className="font-bold text-slate-700 uppercase tracking-wider text-[11px] block">Final Fee Breakdown</span>
+                  <div className="flex justify-between text-xs text-slate-600">
+                    <span>Standard Course Fee</span>
+                    <span className="font-bold">₹{(selectedCourse?.standardFee || 0).toLocaleString('en-IN')}</span>
                   </div>
-                )}
+                  <div className="flex justify-between text-xs text-slate-600">
+                    <span>Negotiated Discount</span>
+                    <span className="font-bold text-emerald-600">− ₹{(discountAmount || 0).toLocaleString('en-IN')}</span>
+                  </div>
+                  <hr className="border-slate-200" />
+                  <div className="flex justify-between text-xs text-slate-800">
+                    <span className="font-bold">Final Payable Fee</span>
+                    <span className="font-extrabold text-[#0b3c68]">₹{agreedFee.toLocaleString('en-IN')}</span>
+                  </div>
+                  <div className="flex justify-between text-xs text-slate-600">
+                    <span>Received Now ({paymentType === 'full' ? 'Full Payment' : 'Down Payment'})</span>
+                    <span className="font-bold text-emerald-600">₹{(downPayment || 0).toLocaleString('en-IN')}</span>
+                  </div>
+                  <div className="flex justify-between text-xs">
+                    <span className={`font-bold ${remainingBalance === 0 ? 'text-emerald-600' : 'text-red-600'}`}>Balance Due</span>
+                    <span className={`font-extrabold ${remainingBalance === 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                      ₹{remainingBalance.toLocaleString('en-IN')}
+                    </span>
+                  </div>
+                  {hasInstallmentMismatch && (
+                    <p className="rounded-lg bg-red-100 px-2 py-1.5 text-[11px] font-semibold text-red-700">
+                      Installment total (₹{scheduledTotal.toLocaleString('en-IN')}) does not match Balance (₹{remainingBalance.toLocaleString('en-IN')}).
+                    </p>
+                  )}
+                </div>
+
+                {/* Scheduled Installments Ledger — manual amount + due date entry */}
+                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-slate-700 uppercase tracking-wider text-[11px]">
+                      Scheduled Installments Ledger
+                    </span>
+                    {paymentType === 'installment' && remainingBalance > 0 && (
+                      <button
+                        type="button"
+                        onClick={handleAddInstallment}
+                        className="flex items-center gap-1 rounded-lg bg-[#0b3c68] px-2.5 py-1.5 text-[10px] font-bold text-white hover:bg-[#12518a] transition"
+                      >
+                        <Plus className="h-3.5 w-3.5" /> Add Installment
+                      </button>
+                    )}
+                  </div>
+
+                  {paymentType === 'full' || installmentsList.length === 0 ? (
+                    <p className="text-xs text-slate-500 italic">
+                      {paymentType === 'full'
+                        ? 'Full payment selected — no installments required.'
+                        : 'No installments added yet. Click "Add Installment" to schedule the pending balance.'}
+                    </p>
+                  ) : (
+                    <div className="space-y-2.5">
+                      {installmentsList.map((inst, idx) => (
+                        <div key={idx} className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white p-2.5 shadow-sm">
+                          <span className="rounded-md bg-[#0b3c68]/10 px-2 py-1 text-[11px] font-bold text-[#0b3c68]">
+                            Inst #{idx + 1}
+                          </span>
+                          <div className="w-32 text-right">
+                            <label className="text-[10px] font-semibold text-slate-400 block">Amount (₹)</label>
+                            <input
+                              type="number"
+                              min={0}
+                              value={inst.amount}
+                              onChange={(e) => handleInstallmentAmountChange(idx, e.target.value)}
+                              className={`w-full text-right text-xs font-bold border-b p-0.5 focus:outline-none focus:border-[#0b3c68] ${Number(inst.amount) <= 0 ? 'text-red-500 border-red-300' : 'text-slate-900 border-transparent'}`}
+                            />
+                          </div>
+                          <div className="flex-1">
+                            <label className="text-[10px] font-semibold text-slate-400 block">Next Installment Date</label>
+                            <input
+                              type="date"
+                              value={inst.dueDate}
+                              onChange={(e) => handleInstallmentDateChange(idx, e.target.value)}
+                              className={`text-xs font-semibold border-b p-0.5 bg-transparent focus:outline-none focus:border-[#0b3c68] ${!inst.dueDate ? 'text-red-500 border-red-300' : 'text-slate-800 border-transparent'}`}
+                            />
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveInstallment(idx)}
+                            title="Remove this installment"
+                            className="rounded-lg p-1.5 text-slate-400 hover:bg-red-50 hover:text-red-600 transition"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </div>
+                      ))}
+
+                      {/* Running allocation summary */}
+                      <div className={`flex justify-between rounded-xl px-3 py-2 text-[11px] font-bold ${
+                        Math.abs(scheduledTotal - remainingBalance) <= 1
+                          ? 'bg-emerald-100 text-emerald-700'
+                          : 'bg-red-100 text-red-700'
+                      }`}>
+                        <span>Scheduled: ₹{scheduledTotal.toLocaleString('en-IN')}</span>
+                        <span>
+                          {Math.abs(scheduledTotal - remainingBalance) <= 1
+                            ? '✓ Fully covers Balance Amount'
+                            : `Unallocated: ₹${(remainingBalance - scheduledTotal).toLocaleString('en-IN')}`}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
@@ -846,7 +1073,7 @@ export default function AdmissionDesk() {
             </button>
             <button
               type="submit"
-              disabled={submitting || isFloorBreached}
+              disabled={submitting || isFloorBreached || isReceivedInvalid || hasInstallmentMismatch || hasInvalidInstallments}
               className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-700 px-8 py-3.5 text-sm font-bold text-white shadow-lg hover:opacity-95 transition disabled:opacity-40"
             >
               {submitting ? 'Registering Admission...' : 'Confirm & Register Student Admission'}
