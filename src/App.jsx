@@ -23,6 +23,7 @@ import CoursesManagement from "./pages/admin/CoursesManagement";
 import BatchManagement from "./pages/admin/batches/BatchManagement";
 import FeeManagement from "./pages/admin/FeeManagement";
 import LMSManagement from "./pages/admin/LMSManagement";
+import UploadVideoLecture from "./pages/admin/lms/UploadVideoLecture";
 import StudyNotesList from "./pages/admin/notes/StudyNotesList";
 import UploadStudyNotes from "./pages/admin/notes/UploadStudyNotes";
 import StudyNoteStudentTracking from "./pages/admin/notes/StudyNoteStudentTracking";
@@ -36,7 +37,9 @@ import CertificatesManagement from "./pages/admin/CertificatesManagement";
 
 // Student Portal Pages
 import StudentDashboard from "./pages/student/StudentDashboard";
-import StudentClassroom from "./pages/student/StudentClassroom";
+import ClassroomCourses from "./pages/student/classroom/ClassroomCourses";
+import ClassroomVideos from "./pages/student/classroom/ClassroomVideos";
+import ClassroomWatch from "./pages/student/classroom/ClassroomWatch";
 import StudentStudyNotes from "./pages/student/StudentStudyNotes";
 import StudyNoteDetail from "./pages/student/StudyNoteDetail";
 import StudentAssignments from "./pages/student/StudentAssignments";
@@ -128,6 +131,8 @@ export default function App() {
             <Route path="batches" element={<BatchManagement />} />
             <Route path="fees" element={<FeeManagement />} />
             <Route path="lms" element={<LMSManagement />} />
+            <Route path="lms/upload" element={<UploadVideoLecture />} />
+            <Route path="lms/videos/edit/:id" element={<UploadVideoLecture />} />
             
             {/* Notes Routes */}
             <Route path="notes" element={<StudyNotesList />} />
@@ -153,7 +158,9 @@ export default function App() {
             element={<DashboardLayout allowedRoles={["student"]} />}
           >
             <Route path="dashboard" element={<StudentDashboard />} />
-            <Route path="classroom" element={<StudentClassroom />} />
+            <Route path="classroom" element={<ClassroomCourses />} />
+            <Route path="classroom/course/:courseId" element={<ClassroomVideos />} />
+            <Route path="classroom/watch/:courseId/:videoId" element={<ClassroomWatch />} />
             <Route path="notes" element={<StudentStudyNotes />} />
             <Route path="notes/:id" element={<StudyNoteDetail />} />
             <Route path="assignments" element={<StudentAssignments />} />
