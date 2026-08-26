@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { apiRequest } from '../utils/api';
+import { subscribeUserToPush } from '../utils/pushSubscription';
 
 const AuthContext = createContext(null);
 
@@ -11,6 +12,13 @@ export function AuthProvider({ children }) {
   const [token, setToken] = useState(() => localStorage.getItem('fti_token'));
   const [loading, setLoading] = useState(true);
 
+  const logout = () => {
+    setUser(null);
+    setToken(null);
+    localStorage.removeItem('fti_token');
+    localStorage.removeItem('fti_user');
+  };
+
   useEffect(() => {
     const checkAuth = async () => {
       const storedToken = localStorage.getItem('fti_token');
@@ -21,7 +29,7 @@ export function AuthProvider({ children }) {
             setUser(res.user);
             localStorage.setItem('fti_user', JSON.stringify(res.user));
           }
-        } catch (err) {
+        } catch {
           console.warn('Session expired or invalid token');
           logout();
         }
@@ -39,16 +47,10 @@ export function AuthProvider({ children }) {
       setUser(res.user);
       localStorage.setItem('fti_token', res.token);
       localStorage.setItem('fti_user', JSON.stringify(res.user));
+      subscribeUserToPush().catch(() => {});
       return res.user;
     }
     throw new Error(res.message || 'Login failed');
-  };
-
-  const logout = () => {
-    setUser(null);
-    setToken(null);
-    localStorage.removeItem('fti_token');
-    localStorage.removeItem('fti_user');
   };
 
   const isLocked = user?.role === 'student' && user?.studentStatus === 'locked';

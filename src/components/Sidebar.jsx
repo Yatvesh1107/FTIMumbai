@@ -16,7 +16,8 @@ import {
   Sparkles,
   Layers,
   Lock,
-  ClipboardList
+  ClipboardList,
+  Bell
 } from 'lucide-react';
 
 export default function Sidebar({ isOpen, setIsOpen }) {
@@ -42,6 +43,7 @@ export default function Sidebar({ isOpen, setIsOpen }) {
     { name: 'Question Bank & Exams', path: '/admin/exams', icon: HelpCircle },
     { name: 'Issue Certificates', path: '/admin/certificates', icon: Award },
     { name: 'Marksheets', path: '/admin/marksheets', icon: ClipboardList },
+    { name: 'Notifications', path: '/admin/notifications', icon: Bell },
   ];
 
   const receptionistLinks = [
@@ -49,6 +51,7 @@ export default function Sidebar({ isOpen, setIsOpen }) {
     { name: 'Admission Desk', path: '/admin/admissions/new', icon: UserPlus, highlight: true },
     { name: 'Students Register', path: '/admin/admissions', icon: Users },
     { name: 'Fee Counter & Receipts', path: '/admin/fees', icon: CreditCard },
+    { name: 'Notifications', path: '/admin/notifications', icon: Bell },
   ];
 
   const studentLinks = [
@@ -61,6 +64,7 @@ export default function Sidebar({ isOpen, setIsOpen }) {
     { name: 'Certificates & Credentials', path: '/student/certificates', icon: Award },
     { name: 'My Marksheets', path: '/student/marksheets', icon: ClipboardList },
     { name: 'My Fee Details', path: '/student/fees', icon: CreditCard },
+    { name: 'Notifications', path: '/student/notifications', icon: Bell },
   ];
 
   const currentLinks =

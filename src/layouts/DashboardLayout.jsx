@@ -2,8 +2,9 @@ import { useState } from 'react';
 import { Outlet, Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import Sidebar from '../components/Sidebar';
+import NotificationBell from '../components/NotificationBell';
 import StudentAppLockModal from '../components/StudentAppLockModal';
-import { Menu, Bell, User, Sparkles } from 'lucide-react';
+import { Menu } from 'lucide-react';
 
 export default function DashboardLayout({ allowedRoles }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -65,6 +66,8 @@ export default function DashboardLayout({ allowedRoles }) {
               <span className="h-2 w-2 rounded-full bg-emerald-500 animate-ping"></span>
               <span className="capitalize">{user.role} Mode</span>
             </div>
+
+            <NotificationBell />
 
             <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#0b3c68] text-white font-bold text-xs shadow">
               {user.name.charAt(0).toUpperCase()}

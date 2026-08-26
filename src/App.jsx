@@ -35,6 +35,7 @@ import UploadQuestionBank from "./pages/admin/exams/UploadQuestionBank";
 import ScheduleExamForm from "./pages/admin/exams/ScheduleExamForm";
 import CertificatesManagement from "./pages/admin/CertificatesManagement";
 import MarksheetsManagement from "./pages/admin/MarksheetsManagement";
+import AdminNotifications from "./pages/admin/Notifications";
 
 // Student Portal Pages
 import StudentDashboard from "./pages/student/StudentDashboard";
@@ -49,6 +50,7 @@ import StudentExams from "./pages/student/StudentExams";
 import StudentCertificates from "./pages/student/StudentCertificates";
 import StudentMarksheets from "./pages/student/StudentMarksheets";
 import StudentFees from "./pages/student/StudentFees";
+import StudentNotifications from "./pages/student/Notifications";
 
 export default function App() {
   return (
@@ -153,6 +155,7 @@ export default function App() {
 
             <Route path="certificates" element={<CertificatesManagement />} />
             <Route path="marksheets" element={<MarksheetsManagement />} />
+            <Route path="notifications" element={<AdminNotifications role="admin" />} />
           </Route>
 
           {/* Student Protected Portal */}
@@ -172,6 +175,7 @@ export default function App() {
             <Route path="certificates" element={<StudentCertificates />} />
             <Route path="marksheets" element={<StudentMarksheets />} />
             <Route path="fees" element={<StudentFees />} />
+            <Route path="notifications" element={<StudentNotifications />} />
           </Route>
 
           {/* 404 Page */}

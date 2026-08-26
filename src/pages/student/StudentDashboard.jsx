@@ -3,12 +3,10 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { apiRequest } from '../../utils/api';
 import {
-  BookOpen,
   Video,
   FileText,
   Sparkles,
   Award,
-  CreditCard,
   CheckCircle2,
   Clock,
   ArrowRight,
@@ -17,12 +15,12 @@ import {
 
 export default function StudentDashboard() {
   const { user } = useAuth();
-  const [courses, setCourses] = useState([]);
+  const [, setCourses] = useState([]);
   const [activeCourse, setActiveCourse] = useState(null);
   const [videos, setVideos] = useState([]);
   const [liveSessions, setLiveSessions] = useState([]);
   const [feeDoc, setFeeDoc] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchStudentHub = async () => {
@@ -34,8 +32,8 @@ export default function StudentDashboard() {
           setActiveCourse(first);
 
           const [vRes, lRes] = await Promise.all([
-            apiRequest(`/lms/courses/${first._id}/videos`),
-            apiRequest(`/lms/courses/${first._id}/live-sessions`)
+            apiRequest('/lms/courses/' + first._id + '/videos'),
+            apiRequest('/lms/live/my')
           ]);
           if (vRes.success) setVideos(vRes.videos || []);
           if (lRes.success) setLiveSessions(lRes.sessions || []);
@@ -189,26 +187,34 @@ export default function StudentDashboard() {
             <Sparkles className="h-4 w-4 text-purple-700 animate-pulse" />
           </div>
 
-          {liveSessions.length > 0 ? (
-            <div className="space-y-3">
-              <h3 className="font-display text-sm font-bold text-slate-900">
-                {liveSessions[0].title}
-              </h3>
-              <p className="text-xs text-slate-600 flex items-center gap-1.5 font-medium">
-                <Clock className="h-3.5 w-3.5 text-purple-700" />
-                {liveSessions[0].startTime} - {liveSessions[0].endTime}
-              </p>
-              <a
-                href={liveSessions[0].meetLink}
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-purple-700 py-2.5 text-xs font-bold text-white shadow hover:bg-purple-800 transition"
-              >
-                <ExternalLink className="h-3.5 w-3.5" /> Join GMeet Class
-              </a>
-            </div>
-          ) : (
-            <p className="text-xs text-slate-500 italic py-4">No live classes scheduled for today.</p>
+          {liveSessions.length > 0 ? (() => {
+            const liveNow = liveSessions.find(s => s.status === 'Live');
+            const next = liveNow || liveSessions[0];
+            const isLive = next.status === 'Live';
+            return (
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <h3 className="font-display text-sm font-bold text-slate-900">{next.title}</h3>
+                  {isLive && <span className="h-2 w-2 rounded-full bg-red-500 animate-pulse" />}
+                </div>
+                {next.courseId?.name && <p className="text-[10px] text-purple-600 font-semibold">{next.courseId.name}</p>}
+                <p className="text-xs text-slate-600 flex items-center gap-1.5 font-medium">
+                  <Clock className="h-3.5 w-3.5 text-purple-700" />
+                  {next.startTime} - {next.endTime}
+                </p>
+                {isLive ? (
+                  <a href={next.meetLink} target="_blank" rel="noreferrer" className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-red-600 py-2.5 text-xs font-bold text-white shadow-lg shadow-red-200 hover:bg-red-700 transition animate-pulse">
+                    <ExternalLink className="h-3.5 w-3.5" /> Join Live Now
+                  </a>
+                ) : (
+                  <Link to="/student/live-classes" className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-purple-700 py-2.5 text-xs font-bold text-white shadow hover:bg-purple-800 transition">
+                    View All Sessions
+                  </Link>
+                )}
+              </div>
+            );
+          })() : (
+            <p className="text-xs text-slate-500 italic py-4">No live classes scheduled.</p>
           )}
 
           {/* Fee summary pill */}
