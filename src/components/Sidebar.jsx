@@ -15,7 +15,8 @@ import {
   ChevronRight,
   Sparkles,
   Layers,
-  Lock
+  Lock,
+  ClipboardList
 } from 'lucide-react';
 
 export default function Sidebar({ isOpen, setIsOpen }) {
@@ -40,6 +41,7 @@ export default function Sidebar({ isOpen, setIsOpen }) {
     { name: 'Practical Assignments', path: '/admin/assignments', icon: Clock },
     { name: 'Question Bank & Exams', path: '/admin/exams', icon: HelpCircle },
     { name: 'Issue Certificates', path: '/admin/certificates', icon: Award },
+    { name: 'Marksheets', path: '/admin/marksheets', icon: ClipboardList },
   ];
 
   const receptionistLinks = [
@@ -57,6 +59,7 @@ export default function Sidebar({ isOpen, setIsOpen }) {
     { name: 'Live Classes (GMeet)', path: '/student/live-classes', icon: Sparkles },
     { name: 'Online Assessments', path: '/student/exams', icon: HelpCircle },
     { name: 'Certificates & Credentials', path: '/student/certificates', icon: Award },
+    { name: 'My Marksheets', path: '/student/marksheets', icon: ClipboardList },
     { name: 'My Fee Details', path: '/student/fees', icon: CreditCard },
   ];
 

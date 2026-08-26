@@ -34,6 +34,7 @@ import ExamManagement from "./pages/admin/ExamManagement";
 import UploadQuestionBank from "./pages/admin/exams/UploadQuestionBank";
 import ScheduleExamForm from "./pages/admin/exams/ScheduleExamForm";
 import CertificatesManagement from "./pages/admin/CertificatesManagement";
+import MarksheetsManagement from "./pages/admin/MarksheetsManagement";
 
 // Student Portal Pages
 import StudentDashboard from "./pages/student/StudentDashboard";
@@ -46,6 +47,7 @@ import StudentAssignments from "./pages/student/StudentAssignments";
 import StudentLiveClasses from "./pages/student/StudentLiveClasses";
 import StudentExams from "./pages/student/StudentExams";
 import StudentCertificates from "./pages/student/StudentCertificates";
+import StudentMarksheets from "./pages/student/StudentMarksheets";
 import StudentFees from "./pages/student/StudentFees";
 
 export default function App() {
@@ -150,6 +152,7 @@ export default function App() {
             <Route path="exams/schedule" element={<ScheduleExamForm />} />
 
             <Route path="certificates" element={<CertificatesManagement />} />
+            <Route path="marksheets" element={<MarksheetsManagement />} />
           </Route>
 
           {/* Student Protected Portal */}
@@ -167,6 +170,7 @@ export default function App() {
             <Route path="live-classes" element={<StudentLiveClasses />} />
             <Route path="exams" element={<StudentExams />} />
             <Route path="certificates" element={<StudentCertificates />} />
+            <Route path="marksheets" element={<StudentMarksheets />} />
             <Route path="fees" element={<StudentFees />} />
           </Route>
 
