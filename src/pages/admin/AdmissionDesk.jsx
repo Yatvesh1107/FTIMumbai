@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { apiRequest } from '../../utils/api';
 import {
@@ -11,7 +11,10 @@ import {
   Trash2,
   ArrowRight,
   ArrowLeft,
-  GraduationCap
+  GraduationCap,
+  Search,
+  Users,
+  X
 } from 'lucide-react';
 
 export default function AdmissionDesk() {
@@ -24,6 +27,16 @@ export default function AdmissionDesk() {
 
   // Step wizard: 1. Course & Dynamic Price Negotiation, 2. Personal & Guardian, 3. Academic & ID, 4. Down Payment & Installments
   const [currentStep, setCurrentStep] = useState(1);
+
+  // Admission mode: new student vs existing student (add another course)
+  const [admissionMode, setAdmissionMode] = useState('new');
+  const [existingStudent, setExistingStudent] = useState(null);
+  const [existingAdmissions, setExistingAdmissions] = useState([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
+  const [searching, setSearching] = useState(false);
+  const [showSearchDropdown, setShowSearchDropdown] = useState(false);
+  const searchRef = useRef(null);
 
   // Form State
   const [selectedCourseId, setSelectedCourseId] = useState('');
@@ -236,6 +249,82 @@ export default function AdmissionDesk() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Debounced student search
+  useEffect(() => {
+    if (!searchQuery || searchQuery.trim().length < 2) {
+      const timer = setTimeout(() => {
+        setSearchResults([]);
+        setShowSearchDropdown(false);
+      }, 0);
+      return () => clearTimeout(timer);
+    }
+    const timer = setTimeout(() => {
+      (async () => {
+        setSearching(true);
+        try {
+          const res = await apiRequest(`/admissions/student/search?q=${encodeURIComponent(searchQuery.trim())}`);
+          if (res.success) {
+            setSearchResults(res.students);
+            setShowSearchDropdown(true);
+          }
+        } catch {
+          setSearchResults([]);
+        } finally {
+          setSearching(false);
+        }
+      })();
+    }, 350);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  // Close search dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (searchRef.current && !searchRef.current.contains(e.target)) {
+        setShowSearchDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleSelectExistingStudent = (student) => {
+    setExistingStudent(student);
+    setExistingAdmissions(student.admissions || []);
+    setShowSearchDropdown(false);
+    setSearchQuery('');
+    // Pre-fill formData from existing student
+    setFormData({
+      fullName: student.fullName || '',
+      gender: student.gender || 'Male',
+      dob: student.dob ? new Date(student.dob).toISOString().split('T')[0] : '',
+      bloodGroup: student.bloodGroup || '',
+      mobile: student.mobile || '',
+      whatsappMobile: student.whatsappMobile || student.mobile || '',
+      email: student.email || '',
+      currentAddress: student.currentAddress || '',
+      permanentAddress: student.permanentAddress || '',
+      guardianName: student.guardianName || '',
+      guardianRelation: student.guardianRelation || 'Parent',
+      guardianMobile: student.guardianMobile || '',
+      guardianOccupation: student.guardianOccupation || '',
+      highestQualification: student.highestQualification || '12th Pass',
+      schoolOrCollege: student.schoolOrCollege || '',
+      passingYear: student.passingYear || 2024,
+      idProofType: student.idProofType || 'Aadhar Card',
+      idProofNumber: student.idProofNumber || '',
+      batchTiming: 'Morning (10:00 AM - 12:00 PM)',
+      joiningDate: new Date().toISOString().split('T')[0],
+      remarks: ''
+    });
+  };
+
+  const handleClearExistingStudent = () => {
+    setExistingStudent(null);
+    setExistingAdmissions([]);
+    setCurrentStep(1);
+  };
+
   const handleInstallmentDateChange = (index, newDate) => {
     setInstallmentsList(installmentsList.map((inst, i) => (i === index ? { ...inst, dueDate: newDate } : inst)));
   };
@@ -295,6 +384,29 @@ export default function AdmissionDesk() {
           : installmentsList.map((inst, i) => ({ installmentNo: i + 1, amount: Number(inst.amount), dueDate: inst.dueDate }))
       };
 
+      // For existing student, only send studentId (skip personal details creation)
+      if (existingStudent) {
+        payload.studentId = existingStudent._id;
+        delete payload.fullName;
+        delete payload.mobile;
+        delete payload.email;
+        delete payload.gender;
+        delete payload.dob;
+        delete payload.bloodGroup;
+        delete payload.whatsappMobile;
+        delete payload.currentAddress;
+        delete payload.permanentAddress;
+        delete payload.guardianName;
+        delete payload.guardianRelation;
+        delete payload.guardianMobile;
+        delete payload.guardianOccupation;
+        delete payload.highestQualification;
+        delete payload.schoolOrCollege;
+        delete payload.passingYear;
+        delete payload.idProofType;
+        delete payload.idProofNumber;
+      }
+
       const res = await apiRequest('/admissions', 'POST', payload);
       if (res.success) {
         setSuccessData(res);
@@ -325,7 +437,7 @@ export default function AdmissionDesk() {
           Admission Registered Successfully!
         </h2>
         <p className="mt-1 text-sm text-slate-500 font-medium">
-          Student file created & portal login credentials dispatched.
+          {existingStudent ? 'New course added to existing student account.' : 'Student file created & portal login credentials dispatched.'}
         </p>
 
         <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-5 text-left space-y-2 text-xs">
@@ -380,6 +492,9 @@ export default function AdmissionDesk() {
             onClick={() => {
               setSuccessData(null);
               setCurrentStep(1);
+              if (existingStudent) {
+                handleClearExistingStudent();
+              }
             }}
             className="rounded-xl border border-slate-300 bg-white px-5 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-50"
           >
@@ -405,16 +520,34 @@ export default function AdmissionDesk() {
             <UserPlus className="h-3.5 w-3.5" /> Receptionist & Admission Desk
           </div>
           <h1 className="mt-2 font-display text-2xl font-black tracking-tight text-white">
-            New Student Course Admission
+            {existingStudent ? `Add Course to ${existingStudent.fullName}` : 'New Student Course Admission'}
           </h1>
           <p className="text-xs text-slate-300">
-            Select course, apply authorized fee discounts within allowable floor limits, and set installment plans.
+            {existingStudent
+              ? 'Select a new course and configure the fee plan for this student.'
+              : 'Select course, apply authorized fee discounts within allowable floor limits, and set installment plans.'
+            }
           </p>
         </div>
 
         {/* Step Indicator */}
         <div className="flex items-center gap-2 bg-white/10 rounded-xl p-2 backdrop-blur">
-          {[1, 2, 3, 4].map((step) => (
+          {existingStudent ? [1, 2].map((step) => {
+            const label = step === 1 ? 1 : 4;
+            const isActive = (step === 1 && currentStep === 1) || (step === 2 && currentStep === 4);
+            const isDone = (step === 1 && currentStep === 4);
+            return (
+              <div
+                key={step}
+                onClick={() => setCurrentStep(label)}
+                className={`flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg text-xs font-bold transition ${
+                  isActive ? 'bg-sky-400 text-slate-950 font-black shadow' : isDone ? 'bg-emerald-500 text-white' : 'bg-white/20 text-slate-300'
+                }`}
+              >
+                {step}
+              </div>
+            );
+          }) : [1, 2, 3, 4].map((step) => (
             <div
               key={step}
               onClick={() => setCurrentStep(step)}
@@ -439,6 +572,120 @@ export default function AdmissionDesk() {
         </div>
       )}
 
+      {/* ADMISSION MODE TOGGLE + STUDENT SEARCH (only when no existing student selected) */}
+      {!existingStudent && (
+        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+            <div className="flex rounded-xl border border-slate-200 bg-slate-50 p-1">
+              <button
+                onClick={() => setAdmissionMode('new')}
+                className={`rounded-lg px-4 py-2 text-xs font-bold transition ${
+                  admissionMode === 'new' ? 'bg-[#0b3c68] text-white shadow' : 'text-slate-600 hover:bg-white'
+                }`}
+              >
+                <UserPlus className="inline h-3.5 w-3.5 mr-1.5" />
+                New Student
+              </button>
+              <button
+                onClick={() => setAdmissionMode('existing')}
+                className={`rounded-lg px-4 py-2 text-xs font-bold transition ${
+                  admissionMode === 'existing' ? 'bg-[#0b3c68] text-white shadow' : 'text-slate-600 hover:bg-white'
+                }`}
+              >
+                <Users className="inline h-3.5 w-3.5 mr-1.5" />
+                Existing Student
+              </button>
+            </div>
+
+            {admissionMode === 'existing' && (
+              <div className="relative flex-1" ref={searchRef}>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                  <input
+                    type="text"
+                    placeholder="Search by name, mobile, or enrollment number..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onFocus={() => { if (searchResults.length > 0) setShowSearchDropdown(true); }}
+                    className="w-full rounded-xl border border-slate-300 bg-white pl-10 pr-4 py-2.5 text-sm font-medium focus:border-[#0b3c68] focus:outline-none"
+                    autoFocus
+                  />
+                  {searching && (
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-[#0b3c68] border-t-transparent" />
+                    </div>
+                  )}
+                </div>
+
+                {showSearchDropdown && searchResults.length > 0 && (
+                  <div className="absolute z-50 mt-1 w-full max-h-72 overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-xl">
+                    {searchResults.map((s) => (
+                      <button
+                        key={s._id}
+                        onClick={() => handleSelectExistingStudent(s)}
+                        className="w-full text-left px-4 py-3 hover:bg-blue-50 border-b border-slate-100 last:border-0 transition"
+                      >
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <span className="font-bold text-sm text-slate-900">{s.fullName}</span>
+                            <span className="ml-2 text-[10px] text-slate-400">{s.enrollmentNo}</span>
+                          </div>
+                          <span className="text-[10px] font-semibold text-slate-400">
+                            {s.mobile}
+                          </span>
+                        </div>
+                        {s.admissions && s.admissions.length > 0 && (
+                          <div className="text-[10px] text-slate-500 mt-0.5">
+                            Enrolled in: {s.admissions.map((a) => a.courseId?.name).filter(Boolean).join(', ')}
+                          </div>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {showSearchDropdown && searchResults.length === 0 && !searching && searchQuery.trim().length >= 2 && (
+                  <div className="absolute z-50 mt-1 w-full rounded-xl border border-slate-200 bg-white p-4 text-center shadow-xl">
+                    <p className="text-xs text-slate-500 font-semibold">No students found matching "{searchQuery}"</p>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* EXISTING STUDENT INFO CARD (shown when student is selected) */}
+      {existingStudent && (
+        <div className="flex items-center justify-between rounded-xl border border-blue-200 bg-blue-50 px-4 py-3">
+          <div className="flex items-center gap-3">
+            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-100 text-blue-600">
+              <Users className="h-4 w-4" />
+            </div>
+            <div>
+              <span className="text-sm font-bold text-slate-900">{existingStudent.fullName}</span>
+              <span className="ml-2 text-[10px] text-slate-500">{existingStudent.enrollmentNo} &middot; {existingStudent.mobile}</span>
+              {existingAdmissions.length > 0 && (
+                <div className="mt-1 flex flex-wrap gap-1">
+                  {existingAdmissions.map((adm) => (
+                    <span key={adm._id} className="rounded bg-blue-100 px-1.5 py-0.5 text-[10px] font-bold text-blue-700">
+                      {adm.courseId?.name || 'Course'}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+          <button
+            onClick={handleClearExistingStudent}
+            className="rounded-lg p-1.5 text-slate-400 hover:bg-white hover:text-red-600 transition"
+            title="Clear selection"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      )}
+
       {/* STEP 1: COURSE SELECTION & DYNAMIC FLOOR NEGOTIATION MATRIX */}
       {currentStep === 1 && (
         <div className="space-y-6">
@@ -455,21 +702,32 @@ export default function AdmissionDesk() {
               {courses.map((c) => {
                 const isSelected = selectedCourseId === c._id;
                 const maxDiscount = c.standardFee - c.minFloorFee;
+                const isAlreadyEnrolled = existingStudent && existingAdmissions.some((a) => a.courseId?._id === c._id);
                 return (
                   <div
                     key={c._id}
-                    onClick={() => handleCourseSelect(c)}
-                    className={`cursor-pointer rounded-2xl border p-4 transition-all ${
-                      isSelected
-                        ? 'border-[#0b3c68] bg-sky-50/40 ring-2 ring-[#0b3c68]/20 shadow-md'
-                        : 'border-slate-200 bg-white hover:border-slate-300 hover:shadow-sm'
+                    onClick={() => !isAlreadyEnrolled && handleCourseSelect(c)}
+                    className={`rounded-2xl border p-4 transition-all ${
+                      isAlreadyEnrolled
+                        ? 'border-slate-200 bg-slate-50 opacity-50 cursor-not-allowed'
+                        : `cursor-pointer ${
+                          isSelected
+                            ? 'border-[#0b3c68] bg-sky-50/40 ring-2 ring-[#0b3c68]/20 shadow-md'
+                            : 'border-slate-200 bg-white hover:border-slate-300 hover:shadow-sm'
+                        }`
                     }`}
                   >
                     <div className="flex items-center justify-between">
                       <span className="rounded-md bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-600">
                         {c.courseCode}
                       </span>
-                      <span className="text-[11px] font-bold text-[#8a6a5b]">{c.duration}</span>
+                      {isAlreadyEnrolled ? (
+                        <span className="rounded-md bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-700">
+                          Already Enrolled
+                        </span>
+                      ) : (
+                        <span className="text-[11px] font-bold text-[#8a6a5b]">{c.duration}</span>
+                      )}
                     </div>
 
                     <h4 className="mt-2 font-display text-sm font-bold text-slate-900 line-clamp-1">{c.name}</h4>
@@ -573,10 +831,10 @@ export default function AdmissionDesk() {
             <button
               type="button"
               disabled={isFloorBreached || !selectedCourse}
-              onClick={() => setCurrentStep(2)}
+              onClick={() => existingStudent ? setCurrentStep(4) : setCurrentStep(2)}
               className="flex items-center gap-2 rounded-xl bg-[#0b3c68] px-6 py-3 text-xs font-bold text-white shadow-md hover:bg-[#12518a] transition disabled:opacity-40"
             >
-              Next: Student Details <ArrowRight className="h-4 w-4" />
+              {existingStudent ? 'Next: Payment & Installments' : 'Next: Student Details'} <ArrowRight className="h-4 w-4" />
             </button>
           </div>
         </div>
@@ -1066,10 +1324,10 @@ export default function AdmissionDesk() {
           <div className="flex justify-between">
             <button
               type="button"
-              onClick={() => setCurrentStep(3)}
+              onClick={() => existingStudent ? setCurrentStep(1) : setCurrentStep(3)}
               className="flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-5 py-3 text-xs font-bold text-slate-700 hover:bg-slate-50"
             >
-              <ArrowLeft className="h-4 w-4" /> Back to Academic Info
+              <ArrowLeft className="h-4 w-4" /> {existingStudent ? 'Back to Pricing' : 'Back to Academic Info'}
             </button>
             <button
               type="submit"
