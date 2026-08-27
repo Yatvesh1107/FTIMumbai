@@ -36,6 +36,7 @@ import ScheduleExamForm from "./pages/admin/exams/ScheduleExamForm";
 import CertificatesManagement from "./pages/admin/CertificatesManagement";
 import MarksheetsManagement from "./pages/admin/MarksheetsManagement";
 import AdminNotifications from "./pages/admin/Notifications";
+import StaffManagement from "./pages/admin/StaffManagement";
 
 // Student Portal Pages
 import StudentDashboard from "./pages/student/StudentDashboard";
@@ -156,6 +157,7 @@ export default function App() {
             <Route path="certificates" element={<CertificatesManagement />} />
             <Route path="marksheets" element={<MarksheetsManagement />} />
             <Route path="notifications" element={<AdminNotifications role="admin" />} />
+            <Route path="staff" element={<StaffManagement />} />
           </Route>
 
           {/* Student Protected Portal */}

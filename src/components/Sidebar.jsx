@@ -4,6 +4,7 @@ import {
   LayoutDashboard,
   UserPlus,
   Users,
+  UserCog,
   BookOpen,
   CreditCard,
   Video,
@@ -44,6 +45,7 @@ export default function Sidebar({ isOpen, setIsOpen }) {
     { name: 'Issue Certificates', path: '/admin/certificates', icon: Award },
     { name: 'Marksheets', path: '/admin/marksheets', icon: ClipboardList },
     { name: 'Notifications', path: '/admin/notifications', icon: Bell },
+    { name: 'Receptionists & Staff', path: '/admin/staff', icon: UserCog },
   ];
 
   const receptionistLinks = [

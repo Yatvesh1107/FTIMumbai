@@ -785,6 +785,7 @@ export default function AdmissionDesk() {
                       <input
                         type="number"
                         value={agreedFee}
+                        min={selectedCourse.minFloorFee}
                         onChange={(e) => handleAgreedFeeChange(e.target.value)}
                         className={`w-full rounded-xl border py-3 pl-8 pr-4 text-base font-bold transition focus:outline-none ${
                           isFloorBreached

@@ -68,17 +68,6 @@ export default function Login() {
             </button>
             <button
               type="button"
-              onClick={() => selectPreset('reception@ftimumbai.com', 'reception123')}
-              className={`flex-1 rounded-xl py-2 text-[11px] font-bold transition ${
-                identifier === 'reception@ftimumbai.com'
-                  ? 'bg-[#0b3c68] text-white shadow-sm'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              Reception
-            </button>
-            <button
-              type="button"
               onClick={() => selectPreset('9632587410', '587410')}
               className={`flex-1 rounded-xl py-2 text-[11px] font-bold transition ${
                 identifier === '9632587410'
