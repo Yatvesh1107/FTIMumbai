@@ -147,6 +147,24 @@ export default function AdmissionDesk() {
     }
   };
 
+  // On blur: never allow an empty or below-floor fee (backspace / clear protection)
+  const handleAgreedFeeBlur = () => {
+    if (!selectedCourse) return;
+    const floor = Number(selectedCourse.minFloorFee);
+    if (!agreedFee || Number.isNaN(agreedFee) || agreedFee < floor) {
+      setAgreedFee(floor);
+      setDiscountAmount(Math.max(0, selectedCourse.standardFee - floor));
+      if (paymentType === 'full') {
+        setDownPayment(floor);
+        setInstallmentsList([]);
+      } else {
+        const received = downPayment > floor ? floor : downPayment;
+        setDownPayment(received);
+        setInstallmentsList(buildDefaultSchedule(Math.max(0, floor - received), nextDueDate));
+      }
+    }
+  };
+
   // Payment Type switch: full locks the received amount to the final fee (Magma-style)
   const handlePaymentTypeChange = (type) => {
     setPaymentType(type);
@@ -787,6 +805,7 @@ export default function AdmissionDesk() {
                         value={agreedFee}
                         min={selectedCourse.minFloorFee}
                         onChange={(e) => handleAgreedFeeChange(e.target.value)}
+                        onBlur={handleAgreedFeeBlur}
                         className={`w-full rounded-xl border py-3 pl-8 pr-4 text-base font-bold transition focus:outline-none ${
                           isFloorBreached
                             ? 'border-red-500 bg-red-50/50 text-red-900 ring-2 ring-red-300'
