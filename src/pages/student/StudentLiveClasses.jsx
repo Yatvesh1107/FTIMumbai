@@ -56,6 +56,19 @@ export default function StudentLiveClasses() {
     return new Date(d).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', weekday: 'short' });
   };
 
+  const formatTime = (t) => {
+    if (!t) return '';
+    const clean = String(t).trim();
+    if (clean.toUpperCase().includes('AM') || clean.toUpperCase().includes('PM')) return clean;
+    const parts = clean.split(':');
+    if (parts.length < 2) return clean;
+    let h = parseInt(parts[0], 10) || 0;
+    const m = parseInt(parts[1], 10) || 0;
+    const suffix = h >= 12 ? 'PM' : 'AM';
+    h = h % 12 || 12;
+    return h + ':' + String(m).padStart(2, '0') + ' ' + suffix;
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 px-4 py-6 sm:p-8">
       <div className="max-w-5xl mx-auto">
@@ -136,7 +149,7 @@ export default function StudentLiveClasses() {
                           <Calendar className="h-3.5 w-3.5" /> {formatDate(session.scheduledDate)}
                         </span>
                         <span className="inline-flex items-center gap-1.5 text-xs text-slate-500">
-                          <Clock className="h-3.5 w-3.5" /> {session.startTime} - {session.endTime}
+                          <Clock className="h-3.5 w-3.5" /> {formatTime(session.startTime)} - {formatTime(session.endTime)}
                         </span>
                         {session.batchTiming && session.batchTiming !== 'All Batches' && (
                           <span className="rounded-full bg-purple-100 px-2.5 py-0.5 text-[10px] font-bold text-purple-700">{session.batchTiming}</span>
