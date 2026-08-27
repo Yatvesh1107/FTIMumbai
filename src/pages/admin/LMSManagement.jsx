@@ -194,7 +194,7 @@ export default function LMSManagement() {
     setLiveForm({
       title: '', agenda: '', meetLink: '',
       scheduledDate: new Date().toISOString().split('T')[0],
-      startTime: '10:00 AM', endTime: '11:30 AM',
+      startTime: '10:00', endTime: '11:30',
       targetType: 'all', targetBatches: [], targetStudents: []
     });
   };
@@ -494,7 +494,7 @@ export default function LMSManagement() {
               <div>
                 <label className="block text-slate-400 uppercase text-[10px] mb-1">Google Meet Link *</label>
                 <div className="flex gap-2">
-                  <input type="url" value={liveForm.meetLink} onChange={(e) => setLiveForm({ ...liveForm, meetLink: e.target.value })} placeholder="https://meet.google.com/xxx-xxxx-xxx" className="flex-1 rounded-xl border border-slate-300 p-2.5 text-xs font-mono" />
+                  <input type="text" value={liveForm.meetLink} onChange={(e) => setLiveForm({ ...liveForm, meetLink: e.target.value })} placeholder="https://meet.google.com/xxx-xxxx-xxx" className="flex-1 rounded-xl border border-slate-300 p-2.5 text-xs font-mono" />
                   {googleLinked && (
                     <button type="button" onClick={handleAutoGenerate} disabled={generatingLink} className="shrink-0 rounded-xl bg-purple-700 px-3 py-2 text-[10px] font-bold text-white hover:bg-purple-800 disabled:opacity-50 transition">
                       {generatingLink ? <Loader2 className="h-4 w-4 animate-spin" /> : <Link2 className="h-4 w-4" />}
@@ -513,11 +513,11 @@ export default function LMSManagement() {
                 </div>
                 <div>
                   <label className="block text-slate-400 uppercase text-[10px] mb-1">Start Time *</label>
-                  <input type="text" required value={liveForm.startTime} onChange={(e) => setLiveForm({ ...liveForm, startTime: e.target.value })} placeholder="10:00 AM" className="w-full rounded-xl border border-slate-300 p-2 text-xs" />
+                  <input type="time" required value={liveForm.startTime} onChange={(e) => setLiveForm({ ...liveForm, startTime: e.target.value })} className="w-full rounded-xl border border-slate-300 p-2 text-xs" />
                 </div>
                 <div>
                   <label className="block text-slate-400 uppercase text-[10px] mb-1">End Time *</label>
-                  <input type="text" required value={liveForm.endTime} onChange={(e) => setLiveForm({ ...liveForm, endTime: e.target.value })} placeholder="11:30 AM" className="w-full rounded-xl border border-slate-300 p-2 text-xs" />
+                  <input type="time" required value={liveForm.endTime} onChange={(e) => setLiveForm({ ...liveForm, endTime: e.target.value })} className="w-full rounded-xl border border-slate-300 p-2 text-xs" />
                 </div>
               </div>
 
