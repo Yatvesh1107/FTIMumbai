@@ -55,6 +55,19 @@ export default function StudentDashboard() {
   const watchedCount = videos.filter((v) => v.progress?.isWatched).length;
   const progressPercent = videos.length > 0 ? Math.round((watchedCount / videos.length) * 100) : 0;
 
+  const formatTime = (t) => {
+    if (!t) return '';
+    const clean = String(t).trim();
+    if (clean.toUpperCase().includes('AM') || clean.toUpperCase().includes('PM')) return clean;
+    const parts = clean.split(':');
+    if (parts.length < 2) return clean;
+    let h = parseInt(parts[0], 10) || 0;
+    const m = parseInt(parts[1], 10) || 0;
+    const suffix = h >= 12 ? 'PM' : 'AM';
+    h = h % 12 || 12;
+    return h + ':' + String(m).padStart(2, '0') + ' ' + suffix;
+  };
+
   return (
     <div className="space-y-6">
       {/* Student Welcome Banner */}
@@ -200,7 +213,7 @@ export default function StudentDashboard() {
                 {next.courseId?.name && <p className="text-[10px] text-purple-600 font-semibold">{next.courseId.name}</p>}
                 <p className="text-xs text-slate-600 flex items-center gap-1.5 font-medium">
                   <Clock className="h-3.5 w-3.5 text-purple-700" />
-                  {next.startTime} - {next.endTime}
+                  {formatTime(next.startTime)} - {formatTime(next.endTime)}
                 </p>
                 {isLive ? (
                   <a href={next.meetLink} target="_blank" rel="noreferrer" className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-red-600 py-2.5 text-xs font-bold text-white shadow-lg shadow-red-200 hover:bg-red-700 transition animate-pulse">
