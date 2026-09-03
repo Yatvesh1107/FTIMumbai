@@ -148,7 +148,7 @@ export default function Home() {
       {/* ---------- Why Choose Us ---------- */}
       <section className="bg-white py-16 text-center">
         <div className="mx-auto max-w-6xl px-6">
-          <SectionHeading>Why Choose Us</SectionHeading>
+          <h2 className='mb-8 font-display inline-block border-b-4 border-terracotta pb-1 text-3xl font-bold text-navy sm:text-4xl'>Why Choose Us</h2>
           <img
             src={whyDesktop}
             alt="Why choose FTI Mumbai"
@@ -156,11 +156,11 @@ export default function Home() {
             className="mx-auto mt-10 hidden w-[60%] md:block"
           />
           <img
-            src={whyMobile}
-            alt="Why choose FTI Mumbai"
-            loading="lazy"
-            className="mx-auto mt-8 w-[90%] md:hidden"
-          />
+    src={whyDesktop}
+    alt="Why choose FTI Mumbai"
+    loading="lazy"
+    className="mx-auto mt-8 w-[90%] scale-160 md:hidden ml-[28px]"
+/>
         </div>
       </section>
 
