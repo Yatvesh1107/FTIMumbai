@@ -7,16 +7,16 @@ const cards = [
   {
     title: "Address",
     lines: [
-      "Shop no 201 /202,",
-      "Gold crest 369, above Zudio,",
-      "Near New ViVa college, above zudio,",
-      "Virar West, Maharashtra 401303",
+      "Mahalaxmi Center, 207-208,",
+      "S.V Rd, opp. Balbharati School,",
+      "Kandivali West, Mumbai,",
+      
     ],
     icon: "M12 2a7 7 0 0 0-7 7c0 5.25 7 13 7 13s7-7.75 7-13a7 7 0 0 0-7-7Zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5Z",
   },
   {
     title: "Email Us",
-    lines: ["info@ftimumbai.com"],
+    lines: ["ftiofmumbai@gmail.com"],
     icon: "M20 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2Zm0 4-8 5-8-5V6l8 5 8-5v2Z",
   },
 ];
@@ -55,7 +55,7 @@ export default function ContactUs() {
       <div className="mx-auto mt-14 w-[90%] max-w-5xl">
         <iframe
           title="FTI Mumbai location"
-          src="https://www.google.com/maps?q=Virar%20West%2C%20Maharashtra%20401303&output=embed"
+          src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3767.881161909116!2d72.84603157520853!3d19.20039218203003!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3be7b6df01d928e1%3A0x209871c25e92b7fc!2s340%20Mahalaxmi%20Centre%20Premises%20CSLtd!5e0!3m2!1sen!2sin!4v1788441886966!5m2!1sen!2sin"
           width="100%"
           height="350"
           style={{ border: 0 }}

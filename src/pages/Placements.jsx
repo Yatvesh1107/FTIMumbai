@@ -72,10 +72,10 @@ export default function Placements() {
             For <strong className="text-navy">Placement Enquiries,</strong>{" "}
             contact us on{" "}
             <a
-              href="mailto:info@ftimumbai.com"
+              href="mailto:ftiofmumbai@gmail.com"
               className="break-all font-bold text-navy underline decoration-terracotta decoration-2 underline-offset-4 transition hover:text-terracotta"
             >
-              info@ftimumbai.com
+              ftiofmumbai@gmail.com
             </a>
             {" / "}
             <a
