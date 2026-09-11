@@ -18,7 +18,8 @@ import {
   Layers,
   Lock,
   ClipboardList,
-  Bell
+  Bell,
+  PhoneCall
 } from 'lucide-react';
 
 export default function Sidebar({ isOpen, setIsOpen }) {
@@ -33,6 +34,7 @@ export default function Sidebar({ isOpen, setIsOpen }) {
 
   const adminLinks = [
     { name: 'Admin Dashboard', path: '/admin/dashboard', icon: LayoutDashboard },
+    { name: 'Enquiries & Follow-ups', path: '/admin/enquiries', icon: PhoneCall, highlight: true },
     { name: 'Admission Desk', path: '/admin/admissions/new', icon: UserPlus, highlight: true },
     { name: 'Students Register', path: '/admin/admissions', icon: Users },
     { name: 'Courses & Pricing Matrix', path: '/admin/courses', icon: BookOpen },
@@ -50,6 +52,7 @@ export default function Sidebar({ isOpen, setIsOpen }) {
 
   const receptionistLinks = [
     { name: 'Reception Dashboard', path: '/admin/dashboard', icon: LayoutDashboard },
+    { name: 'Enquiries & Follow-ups', path: '/admin/enquiries', icon: PhoneCall, highlight: true },
     { name: 'Admission Desk', path: '/admin/admissions/new', icon: UserPlus, highlight: true },
     { name: 'Students Register', path: '/admin/admissions', icon: Users },
     { name: 'Fee Counter & Receipts', path: '/admin/fees', icon: CreditCard },

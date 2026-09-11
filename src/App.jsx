@@ -37,6 +37,10 @@ import CertificatesManagement from "./pages/admin/CertificatesManagement";
 import MarksheetsManagement from "./pages/admin/MarksheetsManagement";
 import AdminNotifications from "./pages/admin/Notifications";
 import StaffManagement from "./pages/admin/StaffManagement";
+import EnquiryManagement from "./pages/admin/EnquiryManagement";
+import EnquiryNewForm from "./pages/admin/EnquiryNewForm";
+import EnquiryDetail from "./pages/admin/EnquiryDetail";
+import EnquiryEditForm from "./pages/admin/EnquiryEditForm";
 
 // Student Portal Pages
 import StudentDashboard from "./pages/student/StudentDashboard";
@@ -132,6 +136,10 @@ export default function App() {
             <Route path="dashboard" element={<AdminDashboard />} />
             <Route path="admissions/new" element={<AdmissionDesk />} />
             <Route path="admissions" element={<AdmissionsList />} />
+            <Route path="enquiries" element={<EnquiryManagement />} />
+            <Route path="enquiries/new" element={<EnquiryNewForm />} />
+            <Route path="enquiries/:id/edit" element={<EnquiryEditForm />} />
+            <Route path="enquiries/:id" element={<EnquiryDetail />} />
             <Route path="courses" element={<CoursesManagement />} />
             <Route path="batches" element={<BatchManagement />} />
             <Route path="fees" element={<FeeManagement />} />

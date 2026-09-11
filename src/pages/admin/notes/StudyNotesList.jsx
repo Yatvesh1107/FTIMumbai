@@ -221,7 +221,7 @@ export default function StudyNotesList() {
                             className="rounded-lg bg-indigo-50 px-2.5 py-1.5 text-xs font-bold text-indigo-700 hover:bg-indigo-100 transition inline-flex items-center gap-1"
                             title="View Student Tracking"
                           >
-                            <Users className="h-3.5 w-3.5" /> Tracking
+                            <Users className="h-3.5 w-3.5" /> View Details
                           </Link>
                         </div>
                       </td>

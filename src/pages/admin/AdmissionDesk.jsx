@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { apiRequest } from '../../utils/api';
 import {
   UserPlus,
@@ -14,18 +14,20 @@ import {
   GraduationCap,
   Search,
   Users,
-  X
+  X,
+  Target
 } from 'lucide-react';
 
 export default function AdmissionDesk() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [successData, setSuccessData] = useState(null);
   const [error, setError] = useState('');
 
-  // Step wizard: 1. Course & Dynamic Price Negotiation, 2. Personal & Guardian, 3. Academic & ID, 4. Down Payment & Installments
+  // Step wizard: 1. Student Details, 2. Course & Fee, 3. Academic & Batch, 4. Payment & Installments
   const [currentStep, setCurrentStep] = useState(1);
 
   // Admission mode: new student vs existing student (add another course)
@@ -37,6 +39,11 @@ export default function AdmissionDesk() {
   const [searching, setSearching] = useState(false);
   const [showSearchDropdown, setShowSearchDropdown] = useState(false);
   const searchRef = useRef(null);
+
+// Enquiry (from Enquiry Desk "Convert to Admission" OR picked from enquiry dropdown below)
+  const [enquiryId, setEnquiryId] = useState(searchParams.get('enquiryId') || '');
+  const [enquiries, setEnquiries] = useState([]);
+  const [selectedEnquiryId, setSelectedEnquiryId] = useState(searchParams.get('enquiryId') || '');
 
   // Form State
   const [selectedCourseId, setSelectedCourseId] = useState('');
@@ -106,7 +113,7 @@ export default function AdmissionDesk() {
     }
   };
 
-  // When course selected, initialize negotiation pricing & default installments
+  // When course selected from dropdown, auto-fill fee at standard MRP & default 30% down payment
   const handleCourseSelect = (course) => {
     setSelectedCourseId(course._id);
     setSelectedCourse(course);
@@ -116,7 +123,6 @@ export default function AdmissionDesk() {
     setNextDueDate(calculateNextDueDate(formData.joiningDate));
     fetchCourseBatches(course._id);
 
-    // Default received amount = 30% of standard fee rounded to 500s (locked to full fee in Full Payment mode)
     const defaultDp = paymentType === 'full'
       ? course.standardFee
       : Math.min(course.standardFee, Math.round((course.standardFee * 0.3) / 500) * 500);
@@ -253,8 +259,18 @@ export default function AdmissionDesk() {
         const res = await apiRequest('/courses');
         if (res.success) {
           setCourses(res.courses);
+
+          // Enquiry conversion pre-fill: match the enquiry's course interest
+          const enquiryCourse = searchParams.get('courseInterest') || '';
+          let matched = null;
+          if (enquiryCourse.trim()) {
+            matched = res.courses.find((c) =>
+              enquiryCourse.toLowerCase().includes(c.name.toLowerCase()) ||
+              c.name.toLowerCase().includes(enquiryCourse.toLowerCase())
+            );
+          }
           if (res.courses.length > 0) {
-            handleCourseSelect(res.courses[0]);
+            handleCourseSelect(matched || res.courses[0]);
           }
         }
       } catch {
@@ -263,7 +279,33 @@ export default function AdmissionDesk() {
         setLoading(false);
       }
     };
+
+// Pre-fill student details from enquiry URL params
+    const enquiryName = searchParams.get('studentName');
+    const enquiryMobile = searchParams.get('mobile');
+    const enquiryEmail = searchParams.get('email');
+    if (enquiryName || enquiryMobile || enquiryEmail) {
+      setFormData((prev) => ({
+        ...prev,
+        fullName: enquiryName || prev.fullName,
+        mobile: enquiryMobile || prev.mobile,
+        email: enquiryEmail || prev.email
+      }));
+      setAdmissionMode('new');
+    }
+
+    // Load open enquiries for the enquiry dropdown (exclude already-converted leads)
+    const fetchEnquiries = async () => {
+      try {
+        const res = await apiRequest('/enquiries');
+        if (res.success) {
+          setEnquiries((res.enquiries || []).filter((e) => e.status !== 'converted'));
+        }
+      } catch {}
+    };
+
     fetchCourses();
+    fetchEnquiries();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -337,10 +379,38 @@ export default function AdmissionDesk() {
     });
   };
 
-  const handleClearExistingStudent = () => {
+const handleClearExistingStudent = () => {
     setExistingStudent(null);
     setExistingAdmissions([]);
     setCurrentStep(1);
+  };
+
+  // Pick an enquiry from the dropdown -> auto-fill student details + course
+  const handleEnquirySelect = (enquiry) => {
+    if (!enquiry) {
+      setSelectedEnquiryId('');
+      setEnquiryId('');
+      return;
+    }
+    setSelectedEnquiryId(enquiry._id);
+    setEnquiryId(enquiry._id);
+    setAdmissionMode('new');
+    setExistingStudent(null);
+    setExistingAdmissions([]);
+    setCurrentStep(1);
+    setFormData((prev) => ({
+      ...prev,
+      fullName: enquiry.name || prev.fullName,
+      mobile: enquiry.mobile || prev.mobile,
+      email: enquiry.email || prev.email
+    }));
+    if (enquiry.courseInterest && courses.length > 0) {
+      const matched = courses.find((c) =>
+        enquiry.courseInterest.toLowerCase().includes(c.name.toLowerCase()) ||
+        c.name.toLowerCase().includes(enquiry.courseInterest.toLowerCase())
+      );
+      if (matched) handleCourseSelect(matched);
+    }
   };
 
   const handleInstallmentDateChange = (index, newDate) => {
@@ -427,6 +497,17 @@ export default function AdmissionDesk() {
 
       const res = await apiRequest('/admissions', 'POST', payload);
       if (res.success) {
+        // Mark linked enquiry as converted
+        if (enquiryId) {
+          try {
+            await apiRequest(`/enquiries/${enquiryId}/convert`, 'PUT', {
+              studentId: res.student._id,
+              admissionId: res.admission._id
+            });
+          } catch (convErr) {
+            console.error('Enquiry conversion error:', convErr.message);
+          }
+        }
         setSuccessData(res);
       }
     } catch (err) {
@@ -434,9 +515,7 @@ export default function AdmissionDesk() {
     } finally {
       setSubmitting(false);
     }
-  };
-
-  if (loading) {
+  };  if (loading) {
     return (
       <div className="flex h-96 items-center justify-center">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#0b3c68] border-t-transparent"></div>
@@ -456,6 +535,7 @@ export default function AdmissionDesk() {
         </h2>
         <p className="mt-1 text-sm text-slate-500 font-medium">
           {existingStudent ? 'New course added to existing student account.' : 'Student file created & portal login credentials dispatched.'}
+          {enquiryId && <span className="text-emerald-600 font-bold"> Linked enquiry marked as converted.</span>}
         </p>
 
         <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 p-5 text-left space-y-2 text-xs">
@@ -479,7 +559,7 @@ export default function AdmissionDesk() {
             <span className="text-slate-500 font-semibold">Agreed Fee:</span>
             <span className="font-bold text-emerald-700">₹{successData.admission.agreedTotalFee.toLocaleString('en-IN')}</span>
           </div>
-          <div className="flex justify-between py-1">
+          <div className="flex justify-between py-1 border-b border-slate-200">
             <span className="text-slate-500 font-semibold">Payment Type:</span>
             <span className={`font-bold ${successData.admission.paymentType === 'full' ? 'text-emerald-600' : 'text-[#0b3c68]'}`}>
               {successData.admission.paymentType === 'full' ? 'Full Payment' : 'Installment'}
@@ -543,17 +623,17 @@ export default function AdmissionDesk() {
           <p className="text-xs text-slate-300">
             {existingStudent
               ? 'Select a new course and configure the fee plan for this student.'
-              : 'Select course, apply authorized fee discounts within allowable floor limits, and set installment plans.'
-            }
+              : 'Enter student details, select a course (fee auto-fills), then set the payment plan.'}
           </p>
         </div>
 
         {/* Step Indicator */}
         <div className="flex items-center gap-2 bg-white/10 rounded-xl p-2 backdrop-blur">
-          {existingStudent ? [1, 2].map((step) => {
-            const label = step === 1 ? 1 : 4;
-            const isActive = (step === 1 && currentStep === 1) || (step === 2 && currentStep === 4);
-            const isDone = (step === 1 && currentStep === 4);
+          {existingStudent ? [2, 4].map((step, idx) => {
+            const label = step;
+            const num = idx + 1;
+            const isActive = currentStep === label;
+            const isDone = idx === 0 && currentStep === 4;
             return (
               <div
                 key={step}
@@ -562,7 +642,7 @@ export default function AdmissionDesk() {
                   isActive ? 'bg-sky-400 text-slate-950 font-black shadow' : isDone ? 'bg-emerald-500 text-white' : 'bg-white/20 text-slate-300'
                 }`}
               >
-                {step}
+                {num}
               </div>
             );
           }) : [1, 2, 3, 4].map((step) => (
@@ -587,6 +667,13 @@ export default function AdmissionDesk() {
         <div className="flex items-center gap-3 rounded-xl border border-red-300 bg-red-50 p-4 text-xs font-bold text-red-800 shadow-sm">
           <AlertCircle className="h-5 w-5 shrink-0 text-red-600" />
           <span>{error}</span>
+        </div>
+      )}
+
+      {enquiryId && (
+        <div className="flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-xs font-semibold text-emerald-800">
+          <Target className="h-4 w-4 text-emerald-600" />
+          Admission is linked to an enquiry. On success, the enquiry will be marked as <b>Converted</b>.
         </div>
       )}
 
@@ -704,169 +791,49 @@ export default function AdmissionDesk() {
         </div>
       )}
 
-      {/* STEP 1: COURSE SELECTION & DYNAMIC FLOOR NEGOTIATION MATRIX */}
+      {/* STEP 1: STUDENT PERSONAL & GUARDIAN DETAILS (first step for new students) */}
       {currentStep === 1 && (
         <div className="space-y-6">
-          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h3 className="font-display text-base font-bold text-slate-800 flex items-center gap-2">
-              <BookOpen className="h-5 w-5 text-[#0b3c68]" /> 1. Select Course & Configure Fee Negotiation
+          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-6">
+<h3 className="font-display text-base font-bold text-slate-800 flex items-center gap-2">
+              <UserPlus className="h-5 w-5 text-[#0b3c68]" /> 1. Student Personal & Guardian Details
             </h3>
-            <p className="mt-1 text-xs text-slate-500">
-              Each course has an official MRP and an authorized minimum negotiable floor price set by the Admin.
-            </p>
 
-            {/* Course Cards Grid */}
-            <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {courses.map((c) => {
-                const isSelected = selectedCourseId === c._id;
-                const maxDiscount = c.standardFee - c.minFloorFee;
-                const isAlreadyEnrolled = existingStudent && existingAdmissions.some((a) => a.courseId?._id === c._id);
-                return (
-                  <div
-                    key={c._id}
-                    onClick={() => !isAlreadyEnrolled && handleCourseSelect(c)}
-                    className={`rounded-2xl border p-4 transition-all ${
-                      isAlreadyEnrolled
-                        ? 'border-slate-200 bg-slate-50 opacity-50 cursor-not-allowed'
-                        : `cursor-pointer ${
-                          isSelected
-                            ? 'border-[#0b3c68] bg-sky-50/40 ring-2 ring-[#0b3c68]/20 shadow-md'
-                            : 'border-slate-200 bg-white hover:border-slate-300 hover:shadow-sm'
-                        }`
-                    }`}
+            {/* ENQUIRY LINK: pick an existing enquiry to auto-fill details */}
+            {enquiries.length > 0 && (
+              <div className="rounded-xl border border-dashed border-[#0b3c68]/40 bg-[#0b3c68]/5 p-4">
+                <label className="flex items-center gap-2 text-xs font-black text-[#0b3c68] uppercase tracking-wider">
+                  <Target className="h-3.5 w-3.5" /> Pick from Enquiry (auto-fills student details & course)
+                </label>
+                <div className="mt-2 flex gap-2">
+                  <select
+                    value={selectedEnquiryId}
+                    onChange={(e) => {
+                      const enq = enquiries.find((en) => en._id === e.target.value);
+                      handleEnquirySelect(enq);
+                    }}
+                    className="w-full rounded-xl border border-slate-300 bg-white p-2.5 text-sm font-medium focus:border-[#0b3c68] focus:outline-none"
                   >
-                    <div className="flex items-center justify-between">
-                      <span className="rounded-md bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-600">
-                        {c.courseCode}
-                      </span>
-                      {isAlreadyEnrolled ? (
-                        <span className="rounded-md bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-700">
-                          Already Enrolled
-                        </span>
-                      ) : (
-                        <span className="text-[11px] font-bold text-[#8a6a5b]">{c.duration}</span>
-                      )}
-                    </div>
-
-                    <h4 className="mt-2 font-display text-sm font-bold text-slate-900 line-clamp-1">{c.name}</h4>
-
-                    <div className="mt-3 space-y-1 rounded-xl bg-slate-50 p-2.5 text-xs">
-                      <div className="flex justify-between">
-                        <span className="text-slate-500">Standard MRP:</span>
-                        <span className="font-bold text-slate-800">₹{c.standardFee.toLocaleString('en-IN')}</span>
-                      </div>
-                      <div className="flex justify-between border-t border-slate-200/60 pt-1">
-                        <span className="text-slate-500 font-semibold">Min Floor Limit:</span>
-                        <span className="font-bold text-amber-700">₹{c.minFloorFee.toLocaleString('en-IN')}</span>
-                      </div>
-                      <div className="flex justify-between text-[11px] text-emerald-700">
-                        <span>Max Disc. Allowed:</span>
-                        <span className="font-bold">₹{maxDiscount.toLocaleString('en-IN')}</span>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* Selected Course Pricing & Negotiation Calculator */}
-            {selectedCourse && (
-              <div className="mt-6 rounded-2xl border-2 border-slate-200 bg-slate-50/70 p-6 space-y-5">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-slate-200 pb-4">
-                  <div>
-                    <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Selected Program</span>
-                    <h3 className="text-lg font-bold text-slate-900 font-display">{selectedCourse.name}</h3>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="text-right">
-                      <span className="text-[11px] text-slate-400 block font-semibold">Standard MRP Fee</span>
-                      <span className="text-base font-black text-slate-700 line-through">₹{selectedCourse.standardFee.toLocaleString('en-IN')}</span>
-                    </div>
-                    <div className="text-right">
-                      <span className="text-[11px] text-amber-600 block font-bold">Authorized Floor Limit</span>
-                      <span className="text-base font-black text-amber-700">₹{selectedCourse.minFloorFee.toLocaleString('en-IN')}</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Negotiation Input & Real-time Validation */}
-                <div className="grid gap-6 sm:grid-cols-2">
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
-                      Negotiated Final Course Fee (₹)
-                    </label>
-                    <p className="text-[11px] text-slate-500 mb-1.5">
-                      Amount agreed with student during counseling.
-                    </p>
-                    <div className="relative">
-                      <span className="absolute inset-y-0 left-0 flex items-center pl-3.5 font-bold text-slate-500">₹</span>
-                      <input
-                        type="number"
-                        value={agreedFee}
-                        min={selectedCourse.minFloorFee}
-                        onChange={(e) => handleAgreedFeeChange(e.target.value)}
-                        onBlur={handleAgreedFeeBlur}
-                        className={`w-full rounded-xl border py-3 pl-8 pr-4 text-base font-bold transition focus:outline-none ${
-                          isFloorBreached
-                            ? 'border-red-500 bg-red-50/50 text-red-900 ring-2 ring-red-300'
-                            : 'border-slate-300 bg-white text-slate-900 focus:border-[#0b3c68] focus:ring-2 focus:ring-[#0b3c68]/20'
-                        }`}
-                      />
-                    </div>
-
-                    {isFloorBreached ? (
-                      <p className="mt-2 text-xs font-bold text-red-600 flex items-center gap-1.5 animate-pulse">
-                        <AlertCircle className="h-4 w-4 shrink-0" />
-                        Discount Exceeds Limit! Minimum bottom price allowed is ₹{selectedCourse.minFloorFee.toLocaleString('en-IN')}.
-                      </p>
-                    ) : (
-                      <p className="mt-2 text-xs font-semibold text-emerald-700 flex items-center gap-1.5">
-                        <CheckCircle2 className="h-4 w-4 shrink-0" />
-                        Within authorized limit. (Discount Offered: ₹{discountAmount.toLocaleString('en-IN')})
-                      </p>
-                    )}
-                  </div>
-
-                  <div className="rounded-xl border border-slate-200 bg-white p-4 space-y-2 text-xs">
-                    <span className="font-bold text-slate-800 uppercase tracking-wider text-[10px] block">Fee Breakdown Preview</span>
-                    <div className="flex justify-between text-slate-600">
-                      <span>Standard Course Fee:</span>
-                      <span className="font-bold text-slate-800">₹{selectedCourse.standardFee.toLocaleString('en-IN')}</span>
-                    </div>
-                    <div className="flex justify-between text-emerald-700">
-                      <span>Discount Given:</span>
-                      <span className="font-bold">- ₹{discountAmount.toLocaleString('en-IN')}</span>
-                    </div>
-                    <div className="flex justify-between border-t border-slate-100 pt-2 font-bold text-sm text-[#0b3c68]">
-                      <span>Total Agreed Amount:</span>
-                      <span>₹{agreedFee.toLocaleString('en-IN')}</span>
-                    </div>
-                  </div>
+                    <option value="">— Select an enquiry —</option>
+                    {enquiries.map((enq) => (
+                      <option key={enq._id} value={enq._id}>
+                        {enq.name} ({enq.mobile}) — {enq.courseInterest || 'No course specified'}
+                      </option>
+                    ))}
+                  </select>
+                  {selectedEnquiryId && (
+                    <button
+                      type="button"
+                      onClick={() => handleEnquirySelect(null)}
+                      className="shrink-0 rounded-xl border border-slate-300 bg-white px-3 text-slate-500 hover:text-red-600 transition"
+                      title="Unlink enquiry"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  )}
                 </div>
               </div>
             )}
-          </div>
-
-          <div className="flex justify-end">
-            <button
-              type="button"
-              disabled={isFloorBreached || !selectedCourse}
-              onClick={() => existingStudent ? setCurrentStep(4) : setCurrentStep(2)}
-              className="flex items-center gap-2 rounded-xl bg-[#0b3c68] px-6 py-3 text-xs font-bold text-white shadow-md hover:bg-[#12518a] transition disabled:opacity-40"
-            >
-              {existingStudent ? 'Next: Payment & Installments' : 'Next: Student Details'} <ArrowRight className="h-4 w-4" />
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* STEP 2: STUDENT PERSONAL & GUARDIAN DETAILS */}
-      {currentStep === 2 && (
-        <div className="space-y-6">
-          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-6">
-            <h3 className="font-display text-base font-bold text-slate-800 flex items-center gap-2">
-              <UserPlus className="h-5 w-5 text-[#0b3c68]" /> 2. Student Personal & Guardian Details
-            </h3>
 
             {/* Personal Info Grid */}
             <div className="grid gap-4 sm:grid-cols-3">
@@ -980,27 +947,160 @@ export default function AdmissionDesk() {
             </div>
           </div>
 
-          <div className="flex justify-between">
-            <button
-              type="button"
-              onClick={() => setCurrentStep(1)}
-              className="flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-5 py-3 text-xs font-bold text-slate-700 hover:bg-slate-50"
-            >
-              <ArrowLeft className="h-4 w-4" /> Back to Pricing
-            </button>
+          <div className="flex justify-end">
             <button
               type="button"
               disabled={!formData.fullName || !formData.mobile || !formData.email}
-              onClick={() => setCurrentStep(3)}
+              onClick={() => setCurrentStep(2)}
               className="flex items-center gap-2 rounded-xl bg-[#0b3c68] px-6 py-3 text-xs font-bold text-white shadow-md hover:bg-[#12518a] transition disabled:opacity-40"
             >
-              Next: Academic & ID <ArrowRight className="h-4 w-4" />
+              Next: Select Course <ArrowRight className="h-4 w-4" />
             </button>
           </div>
         </div>
       )}
 
-      {/* STEP 3: ACADEMIC BACKGROUND & ID PROOF */}
+      {/* STEP 2: COURSE SELECTION (DROPDOWN) & DYNAMIC FLOOR NEGOTIATION */}
+      {currentStep === 2 && (
+        <div className="space-y-6">
+          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+            <h3 className="font-display text-base font-bold text-slate-800 flex items-center gap-2">
+              <BookOpen className="h-5 w-5 text-[#0b3c68]" /> 2. Select Course & Configure Fee
+            </h3>
+            <p className="mt-1 text-xs text-slate-500">
+              Pick a course from the list (fee auto-fills at the standard MRP). You can negotiate down to the authorized floor.
+            </p>
+
+            {/* Course Dropdown */}
+            <div className="mt-5">
+              <label className="block text-xs font-bold text-slate-700 uppercase mb-2">Choose Course *</label>
+              <select
+                value={selectedCourseId || ''}
+                onChange={(e) => {
+                  const course = courses.find((c) => c._id === e.target.value);
+                  if (course) handleCourseSelect(course);
+                }}
+                className="w-full rounded-xl border border-slate-300 bg-white p-3.5 text-sm font-bold text-[#0b3c68] focus:border-[#0b3c68] focus:outline-none"
+              >
+                <option value="" disabled>— Select a course —</option>
+                {courses.map((c) => {
+                  const isEnrolled = existingStudent && existingAdmissions.some((a) => a.courseId?._id === c._id);
+                  return (
+                    <option key={c._id} value={c._id} disabled={isEnrolled}>
+                      {c.name} [{c.courseCode}] {isEnrolled ? '— Already Enrolled' : `— ${c.duration}`}
+                    </option>
+                  );
+                })}
+              </select>
+              {selectedCourse && (
+                <div className="mt-2 flex flex-wrap gap-2">
+                  <span className="rounded-md bg-slate-100 px-2 py-1 text-[10px] font-bold text-slate-600">{selectedCourse.courseCode}</span>
+                  <span className="rounded-md bg-slate-100 px-2 py-1 text-[10px] font-bold text-slate-600">{selectedCourse.duration}</span>
+                  {selectedCourse.category && (
+                    <span className="rounded-md bg-slate-100 px-2 py-1 text-[10px] font-bold text-slate-600">{selectedCourse.category}</span>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Selected Course Pricing & Negotiation Calculator */}
+            {selectedCourse && (
+              <div className="mt-6 rounded-2xl border-2 border-slate-200 bg-slate-50/70 p-6 space-y-5">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-slate-200 pb-4">
+                  <div>
+                    <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Selected Program</span>
+                    <h3 className="text-lg font-bold text-slate-900 font-display">{selectedCourse.name}</h3>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="text-right">
+                      <span className="text-[11px] text-slate-400 block font-semibold">Standard MRP Fee</span>
+                      <span className="text-base font-black text-slate-700 line-through">₹{selectedCourse.standardFee.toLocaleString('en-IN')}</span>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-[11px] text-amber-600 block font-bold">Authorized Floor Limit</span>
+                      <span className="text-base font-black text-amber-700">₹{selectedCourse.minFloorFee.toLocaleString('en-IN')}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Negotiation Input & Real-time Validation */}
+                <div className="grid gap-6 sm:grid-cols-2">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                      Negotiated Final Course Fee (₹)
+                    </label>
+                    <p className="text-[11px] text-slate-500 mb-1.5">
+                      Auto-filled at MRP. Amount agreed with student during counseling.
+                    </p>
+                    <div className="relative">
+                      <span className="absolute inset-y-0 left-0 flex items-center pl-3.5 font-bold text-slate-500">₹</span>
+                      <input
+                        type="number"
+                        value={agreedFee}
+                        min={selectedCourse.minFloorFee}
+                        onChange={(e) => handleAgreedFeeChange(e.target.value)}
+                        onBlur={handleAgreedFeeBlur}
+                        className={`w-full rounded-xl border py-3 pl-8 pr-4 text-base font-bold transition focus:outline-none ${
+                          isFloorBreached
+                            ? 'border-red-500 bg-red-50/50 text-red-900 ring-2 ring-red-300'
+                            : 'border-slate-300 bg-white text-slate-900 focus:border-[#0b3c68] focus:ring-2 focus:ring-[#0b3c68]/20'
+                        }`}
+                      />
+                    </div>
+
+                    {isFloorBreached ? (
+                      <p className="mt-2 text-xs font-bold text-red-600 flex items-center gap-1.5 animate-pulse">
+                        <AlertCircle className="h-4 w-4 shrink-0" />
+                        Discount Exceeds Limit! Minimum bottom price allowed is ₹{selectedCourse.minFloorFee.toLocaleString('en-IN')}.
+                      </p>
+                    ) : (
+                      <p className="mt-2 text-xs font-semibold text-emerald-700 flex items-center gap-1.5">
+                        <CheckCircle2 className="h-4 w-4 shrink-0" />
+                        Within authorized limit. (Discount Offered: ₹{discountAmount.toLocaleString('en-IN')})
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="rounded-xl border border-slate-200 bg-white p-4 space-y-2 text-xs">
+                    <span className="font-bold text-slate-800 uppercase tracking-wider text-[10px] block">Fee Breakdown Preview</span>
+                    <div className="flex justify-between text-slate-600">
+                      <span>Standard Course Fee:</span>
+                      <span className="font-bold text-slate-800">₹{selectedCourse.standardFee.toLocaleString('en-IN')}</span>
+                    </div>
+                    <div className="flex justify-between text-emerald-700">
+                      <span>Discount Given:</span>
+                      <span className="font-bold">- ₹{discountAmount.toLocaleString('en-IN')}</span>
+                    </div>
+                    <div className="flex justify-between border-t border-slate-100 pt-2 font-bold text-sm text-[#0b3c68]">
+                      <span>Total Agreed Amount:</span>
+                      <span>₹{agreedFee.toLocaleString('en-IN')}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="flex justify-between">
+            <button
+              type="button"
+              onClick={() => existingStudent ? handleClearExistingStudent() : setCurrentStep(1)}
+              className="flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-5 py-3 text-xs font-bold text-slate-700 hover:bg-slate-50"
+            >
+              <ArrowLeft className="h-4 w-4" /> {existingStudent ? 'Back to Student Search' : 'Back to Student Details'}
+            </button>
+            <button
+              type="button"
+              disabled={isFloorBreached || !selectedCourse}
+              onClick={() => existingStudent ? setCurrentStep(4) : setCurrentStep(3)}
+              className="flex items-center gap-2 rounded-xl bg-[#0b3c68] px-6 py-3 text-xs font-bold text-white shadow-md hover:bg-[#12518a] transition disabled:opacity-40"
+            >
+              {existingStudent ? 'Next: Payment & Installments' : 'Next: Academic & Batch'} <ArrowRight className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+      )}
+      {/* STEP 3: ACADEMIC BACKGROUND, BATCH & ID PROOF */}
       {currentStep === 3 && (
         <div className="space-y-6">
           <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-6">
@@ -1104,7 +1204,7 @@ export default function AdmissionDesk() {
               onClick={() => setCurrentStep(2)}
               className="flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-5 py-3 text-xs font-bold text-slate-700 hover:bg-slate-50"
             >
-              <ArrowLeft className="h-4 w-4" /> Back to Student Details
+              <ArrowLeft className="h-4 w-4" /> Back to Course Selection
             </button>
             <button
               type="button"
@@ -1344,10 +1444,10 @@ export default function AdmissionDesk() {
           <div className="flex justify-between">
             <button
               type="button"
-              onClick={() => existingStudent ? setCurrentStep(1) : setCurrentStep(3)}
+              onClick={() => existingStudent ? setCurrentStep(2) : setCurrentStep(3)}
               className="flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-5 py-3 text-xs font-bold text-slate-700 hover:bg-slate-50"
             >
-              <ArrowLeft className="h-4 w-4" /> {existingStudent ? 'Back to Pricing' : 'Back to Academic Info'}
+              <ArrowLeft className="h-4 w-4" /> {existingStudent ? 'Back to Course Selection' : 'Back to Academic Info'}
             </button>
             <button
               type="submit"
