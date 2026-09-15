@@ -45,14 +45,14 @@ export default function Navbar() {
 
           <div className="flex items-center gap-2">
             <Link
-              to="/courses"
+              to="/enquiry"
               className="hidden items-center gap-2 rounded-full border border-terracotta/30 bg-terracotta/10 px-3.5 py-1.5 text-[12px] font-[600] text-terracotta transition hover:bg-terracotta/20 xl:inline-flex"
             >
               <span className="relative flex h-2 w-2">
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-terracotta opacity-75" />
                 <span className="relative inline-flex h-2 w-2 rounded-full bg-terracotta" />
               </span>
-              Admissions Open
+              Enquire now
             </Link>
             <Link
               to="/courses"
@@ -100,9 +100,16 @@ export default function Navbar() {
               ))}
             </ul>
             <Link
+              to="/enquiry"
+              onClick={closeMenu}
+              className="mt-2 block rounded-2xl border border-terracotta/40 bg-terracotta/10 px-4 py-3 text-center text-sm font-bold text-terracotta"
+            >
+              Enquire Now
+            </Link>
+            <Link
               to="/courses"
               onClick={closeMenu}
-              className="mt-2 block rounded-2xl bg-navy-dark px-4 py-3 text-center text-sm font-bold text-white"
+              className="mt-1 block rounded-2xl bg-navy-dark px-4 py-3 text-center text-sm font-bold text-white"
             >
               Our Courses
             </Link>

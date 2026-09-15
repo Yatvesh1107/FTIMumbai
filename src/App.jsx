@@ -14,6 +14,7 @@ import Courses from "./pages/Courses";
 import CourseDetails from "./pages/CourseDetails";
 import Placements from "./pages/Placements";
 import ContactUs from "./pages/ContactUs";
+import EnquiryForm from "./pages/EnquiryForm";
 import Login from "./pages/Login";
 
 // Layout & Dashboard Pages
@@ -171,6 +172,18 @@ export default function App() {
                 <Navbar />
                 <div className="flex-1">
                   <ContactUs />
+                </div>
+                <Footer />
+              </div>
+            }
+          />
+          <Route
+            path="/enquiry"
+            element={
+              <div className="flex min-h-svh flex-col">
+                <Navbar />
+                <div className="flex-1">
+                  <EnquiryForm />
                 </div>
                 <Footer />
               </div>
