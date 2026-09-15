@@ -24,7 +24,7 @@ const cards = [
 export default function ContactUs() {
   return (
     <main className="bg-white pb-16 text-center">
-      <h1 className="font-display pt-10 pb-8 text-center text-3xl font-semibold text-navy sm:text-4xl">
+      <h1 className="font-display pt-10 pb-8 text-center text-[34px] font-[600] text-[#21191B] sm:text-4xl">
         LET'S CONNECT
       </h1>
 

@@ -1,194 +1,114 @@
 import { useState } from "react";
 import { Link, NavLink } from "react-router-dom";
+import { User, Menu, X } from "lucide-react";
 import Logo from "./Logo";
-import EnquiryModal from "./EnquiryModal";
-import courseIndex from "../data/courseIndex.json";
-
-const CATEGORY_COURSES = {};
-for (const [course, cat] of Object.entries(courseIndex)) {
-  (CATEGORY_COURSES[cat] ||= []).push(course);
-}
-const GROUPS = Object.entries(CATEGORY_COURSES);
 
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
-  const [dropdown, setDropdown] = useState(false);
-  const [openCat, setOpenCat] = useState(null);
-  const [enquiryOpen, setEnquiryOpen] = useState(false);
 
-  const closeAll = () => {
-    setMenuOpen(false);
-    setDropdown(false);
-    setOpenCat(null);
-  };
+  const links = [
+    { to: "/about", label: "About Us" },
+    { to: "/for-students", label: "For Students" },
+    { to: "/for-graduates", label: "For Graduates" },
+    { to: "/for-professionals", label: "For Professionals" },
+  ];
+
+  const closeMenu = () => setMenuOpen(false);
 
   return (
     <>
-      <nav className="sticky top-0 z-[1000] w-full border-b border-slate-200/80 bg-cream/95 backdrop-blur">
-        <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-4 sm:px-6">
-          <Link to="/" onClick={closeAll} aria-label="FTI Mumbai home">
-            <Logo className="h-12" />
+      <header className="sticky top-0 z-[1000] px-4 pt-3 sm:px-6">
+        <nav className="mx-auto flex max-w-6xl items-center justify-between rounded-full border border-slate-200/80 bg-white/85 py-2 pr-2 pl-4 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.9),0_16px_40px_-16px_rgba(11,60,104,0.28)] backdrop-blur-xl sm:pl-5">
+          <Link to="/" onClick={closeMenu} aria-label="FTI Mumbai — home">
+            <Logo className="h-9 w-auto" />
           </Link>
 
-          <ul
-            className={`${
-              menuOpen
-                ? "flex"
-                : "hidden lg:flex"
-            } fixed inset-x-0 top-20 z-[999] max-h-[calc(100vh-5rem)] flex-col gap-2 overflow-y-auto border-b border-slate-200 bg-cream px-6 py-6 shadow-lg lg:static lg:flex lg:flex-row lg:items-center lg:gap-8 lg:overflow-visible lg:border-0 lg:bg-transparent lg:p-0 lg:shadow-none`}
-          >
-            <li
-              className="relative"
-              onMouseEnter={() => setDropdown(true)}
-              onMouseLeave={() => {
-                setDropdown(false);
-                setOpenCat(null);
-              }}
-            >
-              <button
-                className="flex items-center gap-1 py-2 text-base font-semibold text-slate-800 transition hover:text-navy"
-                onClick={() => setDropdown((d) => !d)}
-              >
-                Courses
-                <svg
-                  viewBox="0 0 24 24"
-                  className={`h-4 w-4 transition-transform ${dropdown ? "rotate-180" : ""}`}
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.5"
+          {/* Desktop links */}
+          <ul className="mx-2 hidden items-center gap-1 lg:flex">
+            {links.map((link) => (
+              <li key={link.to}>
+                <NavLink
+                  to={link.to}
+                  className={({ isActive }) =>
+                    `rounded-full px-4 py-2 text-[15px] font-[500] transition ${
+                      isActive
+                        ? "bg-navy/10 font-semibold text-navy"
+                        : "text-slate-600 hover:bg-slate-100 hover:text-navy"
+                    }`
+                  }
                 >
-                  <path d="m6 9 6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </button>
-
-              {/* Level 1: main course categories */}
-              {dropdown && (
-                <ul className="mt-2 w-full space-y-0.5 rounded-xl border border-slate-100 bg-white p-2 shadow-lift lg:absolute lg:top-full lg:left-0 lg:mt-0 lg:w-64">
-                  {GROUPS.map(([cat, courses], i) => (
-                    <li key={cat} className="group/cat relative">
-                      <button
-                        onClick={() => {
-                          if (window.innerWidth <= 1023)
-                            setOpenCat(openCat === i ? null : i);
-                        }}
-                        className="flex w-full items-center justify-between gap-2 rounded-lg px-3 py-2 text-left text-sm font-semibold text-slate-700 transition hover:bg-cream hover:text-navy"
-                      >
-                        <span>{cat}</span>
-                        <svg
-                          viewBox="0 0 24 24"
-                          className="h-3.5 w-3.5 shrink-0 text-slate-400"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2.5"
-                        >
-                          <path d="m9 6 6 6-6 6" strokeLinecap="round" strokeLinejoin="round" />
-                        </svg>
-                      </button>
-
-                      {/* Mobile: inline expand */}
-                      {openCat === i && (
-                        <ul className="mb-2 ml-3 mt-1 space-y-0.5 border-l-2 border-terracotta/40 pl-3 lg:hidden">
-                          {courses.map((c) => (
-                            <li key={c}>
-                              <Link
-                                to="/coursedetails"
-                                state={{ course: c }}
-                                onClick={closeAll}
-                                className="block rounded px-2 py-1.5 text-xs text-slate-600 transition hover:bg-cream hover:text-navy"
-                              >
-                                {c}
-                              </Link>
-                            </li>
-                          ))}
-                        </ul>
-                      )}
-
-                      {/* Desktop: flyout beside */}
-                      <ul className="absolute left-full top-0 z-10 ml-1 hidden max-h-[70vh] w-72 space-y-0.5 overflow-y-auto rounded-xl border border-slate-100 bg-white p-2 shadow-lift lg:group-hover/cat:block">
-                        {courses.map((c) => (
-                          <li key={c}>
-                            <Link
-                              to="/coursedetails"
-                              state={{ course: c }}
-                              onClick={closeAll}
-                              className="flex items-start gap-2 rounded-lg px-2 py-1.5 text-sm text-slate-700 transition hover:bg-cream hover:text-navy"
-                            >
-                              <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-terracotta" />
-                              {c}
-                            </Link>
-                          </li>
-                        ))}
-                      </ul>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </li>
-
-            <li>
-              <NavLink
-                to="/placement"
-                onClick={closeAll}
-                className={({ isActive }) =>
-                  `block py-2 text-base font-semibold transition hover:text-navy ${
-                    isActive ? "text-navy" : "text-slate-800"
-                  }`
-                }
-              >
-                Placements
-              </NavLink>
-            </li>
-            <li>
-              <NavLink
-                to="/contactus"
-                onClick={closeAll}
-                className={({ isActive }) =>
-                  `block py-2 text-base font-semibold transition hover:text-navy ${
-                    isActive ? "text-navy" : "text-slate-800"
-                  }`
-                }
-              >
-                Contact Us
-              </NavLink>
-            </li>
-            <li className="lg:pl-2 flex flex-col sm:flex-row items-center gap-2">
-              <Link
-                to="/login"
-                onClick={closeAll}
-                className="w-full text-center rounded-full border border-navy/30 bg-white px-5 py-2 text-xs font-bold text-navy shadow-sm hover:bg-slate-50 transition lg:w-auto"
-              >
-                Portal Login
-              </Link>
-              <button
-                onClick={() => {
-                  setMenuOpen(false);
-                  setEnquiryOpen(true);
-                }}
-                className="w-full rounded-full bg-gradient-to-r from-navy to-navy-light px-5 py-2 text-xs font-bold text-white shadow-md transition hover:shadow-lift hover:brightness-110 lg:w-auto"
-              >
-                Enquire Now
-              </button>
-            </li>
+                  {link.label}
+                </NavLink>
+              </li>
+            ))}
           </ul>
 
-          <button
-            className="flex h-10 w-10 flex-col items-center justify-center gap-1.5 rounded-lg border border-slate-200 lg:hidden"
-            onClick={() => setMenuOpen((o) => !o)}
-            aria-label="Toggle navigation"
-          >
-            {menuOpen ? (
-              <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="#0B3C68" strokeWidth="2.5">
-                <path d="M18 6 6 18M6 6l12 12" strokeLinecap="round" />
-              </svg>
-            ) : (
-              <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="#0B3C68" strokeWidth="2.5">
-                <path d="M3 6h18M3 12h18M3 18h18" strokeLinecap="round" />
-              </svg>
-            )}
-          </button>
-        </div>
-      </nav>
-      <EnquiryModal open={enquiryOpen} onClose={() => setEnquiryOpen(false)} />
+          <div className="flex items-center gap-2">
+            <Link
+              to="/courses"
+              className="hidden items-center gap-2 rounded-full border border-terracotta/30 bg-terracotta/10 px-3.5 py-1.5 text-[12px] font-[600] text-terracotta transition hover:bg-terracotta/20 xl:inline-flex"
+            >
+              <span className="relative flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-terracotta opacity-75" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-terracotta" />
+              </span>
+              Admissions Open
+            </Link>
+            <Link
+              to="/courses"
+              className="hidden items-center rounded-full bg-navy-dark px-5 py-2 text-[14px] font-[600] text-white transition hover:bg-navy active:scale-[0.98] sm:inline-flex"
+            >
+              Our Courses
+            </Link>
+            <Link
+              to="/login"
+              aria-label="Login"
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-300 text-navy transition hover:border-terracotta hover:text-terracotta"
+            >
+              <User className="h-5 w-5" />
+            </Link>
+            <button
+              onClick={() => setMenuOpen((v) => !v)}
+              aria-label="Toggle menu"
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-300 text-navy lg:hidden"
+            >
+              {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </button>
+          </div>
+        </nav>
+
+        {/* Mobile menu */}
+        {menuOpen && (
+          <div className="mx-auto mt-2 max-w-6xl rounded-3xl border border-slate-200 bg-white/95 p-3 shadow-[0_24px_48px_-16px_rgba(11,60,104,0.3)] backdrop-blur-xl lg:hidden">
+            <ul className="space-y-1">
+              {links.map((link) => (
+                <li key={link.to}>
+                  <NavLink
+                    to={link.to}
+                    onClick={closeMenu}
+                    className={({ isActive }) =>
+                      `block rounded-2xl px-4 py-3 text-sm font-medium transition ${
+                        isActive
+                          ? "bg-navy/10 font-semibold text-navy"
+                          : "text-slate-700 hover:bg-slate-50"
+                      }`
+                    }
+                  >
+                    {link.label}
+                  </NavLink>
+                </li>
+              ))}
+            </ul>
+            <Link
+              to="/courses"
+              onClick={closeMenu}
+              className="mt-2 block rounded-2xl bg-navy-dark px-4 py-3 text-center text-sm font-bold text-white"
+            >
+              Our Courses
+            </Link>
+          </div>
+        )}
+      </header>
     </>
   );
 }

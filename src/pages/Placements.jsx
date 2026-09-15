@@ -23,7 +23,7 @@ export default function Placements() {
         <h1 className="font-display order-2 text-center text-3xl leading-snug font-medium text-slate-600 sm:text-4xl lg:order-1 lg:w-3/5 lg:text-left lg:text-[2.75rem] lg:leading-[1.35]">
           Our customized courses &amp; employment focused training have helped
           our students get placed in{" "}
-          <span className="font-bold text-navy">top companies!</span>
+          <span className="font-[600] text-navy">top companies!</span>
         </h1>
         <img
           src={studentsImg}
@@ -87,7 +87,7 @@ export default function Placements() {
           </p>
           <Link
             to="/contactus"
-            className="mt-6 inline-block rounded-full bg-gradient-to-r from-navy to-navy-light px-9 py-3 text-sm font-semibold text-white shadow-md transition hover:shadow-lift hover:brightness-110"
+            className="mt-6 inline-block rounded-[40px] bg-gradient-to-r from-navy to-navy-light px-9 py-3 text-sm font-semibold text-white shadow-md transition hover:shadow-lift hover:brightness-110 active:scale-95"
           >
             Contact Us
           </Link>

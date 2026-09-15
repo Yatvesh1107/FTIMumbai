@@ -6,6 +6,10 @@ import ScrollToTop from "./components/ScrollToTop";
 
 // Public Pages
 import Home from "./pages/Home";
+import About from "./pages/About";
+import ForStudents from "./pages/ForStudents";
+import ForGraduates from "./pages/ForGraduates";
+import ForProfessionals from "./pages/ForProfessionals";
 import Courses from "./pages/Courses";
 import CourseDetails from "./pages/CourseDetails";
 import Placements from "./pages/Placements";
@@ -71,6 +75,54 @@ export default function App() {
                 <Navbar />
                 <div className="flex-1">
                   <Home />
+                </div>
+                <Footer />
+              </div>
+            }
+          />
+          <Route
+            path="/about"
+            element={
+              <div className="flex min-h-svh flex-col">
+                <Navbar />
+                <div className="flex-1">
+                  <About />
+                </div>
+                <Footer />
+              </div>
+            }
+          />
+          <Route
+            path="/for-students"
+            element={
+              <div className="flex min-h-svh flex-col">
+                <Navbar />
+                <div className="flex-1">
+                  <ForStudents />
+                </div>
+                <Footer />
+              </div>
+            }
+          />
+          <Route
+            path="/for-graduates"
+            element={
+              <div className="flex min-h-svh flex-col">
+                <Navbar />
+                <div className="flex-1">
+                  <ForGraduates />
+                </div>
+                <Footer />
+              </div>
+            }
+          />
+          <Route
+            path="/for-professionals"
+            element={
+              <div className="flex min-h-svh flex-col">
+                <Navbar />
+                <div className="flex-1">
+                  <ForProfessionals />
                 </div>
                 <Footer />
               </div>

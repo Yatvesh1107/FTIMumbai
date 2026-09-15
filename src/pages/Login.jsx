@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Lock, Mail, GraduationCap, ShieldCheck, ArrowRight, UserCheck } from 'lucide-react';
+import { Lock, Mail, ArrowRight } from 'lucide-react';
 import Logo from '../components/Logo';
 
 export default function Login() {
-  const [identifier, setIdentifier] = useState('admin@ftimumbai.com');
-  const [password, setPassword] = useState('admin123');
+  const [identifier, setIdentifier] = useState('');
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const { login } = useAuth();
@@ -28,13 +28,6 @@ export default function Login() {
     }
   };
 
-  // Quick Preset Selector for Fast Role Switching
-  const selectPreset = (pId, pPass) => {
-    setIdentifier(pId);
-    setPassword(pPass);
-    setError('');
-  };
-
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-[#082c4d] via-[#0b3c68] to-[#12518a] px-4 py-12">
       <div className="w-full max-w-md">
@@ -51,32 +44,6 @@ export default function Login() {
             <p className="mt-1 text-xs text-slate-500 font-medium">
               Super Admin, Receptionist, or Student Learning Workspace
             </p>
-          </div>
-
-          {/* Quick Switch Role Buttons (3 Panels) */}
-          <div className="mt-6 rounded-2xl bg-slate-100 p-1.5 flex gap-1">
-            <button
-              type="button"
-              onClick={() => selectPreset('admin@ftimumbai.com', 'admin123')}
-              className={`flex-1 rounded-xl py-2 text-[11px] font-bold transition ${
-                identifier === 'admin@ftimumbai.com'
-                  ? 'bg-[#0b3c68] text-white shadow-sm'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              Admin
-            </button>
-            <button
-              type="button"
-              onClick={() => selectPreset('9632587410', '587410')}
-              className={`flex-1 rounded-xl py-2 text-[11px] font-bold transition ${
-                identifier === '9632587410'
-                  ? 'bg-[#0b3c68] text-white shadow-sm'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              Student
-            </button>
           </div>
 
           {error && (
@@ -98,7 +65,7 @@ export default function Login() {
                 <input
                   type="text"
                   required
-                  placeholder="e.g. rajdubey76890@gmail.com or 9632587410"
+                  placeholder=""
                   value={identifier}
                   onChange={(e) => setIdentifier(e.target.value)}
                   className="w-full rounded-xl border border-slate-300 bg-white py-2.5 pl-10 pr-4 text-xs font-bold text-slate-900 focus:border-[#0b3c68] focus:outline-none"
@@ -115,7 +82,7 @@ export default function Login() {
                 <input
                   type="password"
                   required
-                  placeholder="••••••••"
+                  placeholder=""
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="w-full rounded-xl border border-slate-300 bg-white py-2.5 pl-10 pr-4 text-xs font-bold text-slate-900 focus:border-[#0b3c68] focus:outline-none"

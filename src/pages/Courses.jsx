@@ -1,111 +1,188 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { Link, useLocation } from "react-router-dom";
+import { ArrowRight, ArrowUpRight, ChevronDown } from "lucide-react";
 import { categories } from "../data/content";
-import courseIndex from "../data/courseIndex.json";
-
-// Map data categories (e.g. "Cyber security", "DevOPS") onto our card names
-const alias = {
-  "Cyber security": "Cyber Security",
-  DevOPS: "DevOps",
-  JAVA: "Full Stack Web Development",
-};
+import { categoryCourses } from "../data/courseGroups";
+import ProgramCard from "../components/ProgramCard";
 
 export default function Courses() {
   const location = useLocation();
-  const requested = location.state && location.state.category;
+  const requested =
+    location.state && location.state.category
+      ? location.state.category
+      : null;
 
-  const byCategory = useMemo(() => {
-    const map = {};
-    for (const [name, cat] of Object.entries(courseIndex)) {
-      const key = alias[cat] || cat;
-      (map[key] = map[key] || []).push(name);
+  const groups = useMemo(
+    () =>
+      categories.map((cat) => ({
+        ...cat,
+        courses: categoryCourses(cat.category),
+      })),
+    [],
+  );
+
+  const groupRefs = useRef({});
+
+  useEffect(() => {
+    if (requested && groupRefs.current[requested]) {
+      groupRefs.current[requested].scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
     }
-    return map;
-  }, []);
+  }, [requested]);
 
-  const initial =
-    requested && byCategory[requested] ? requested : categories[0].category;
-  const [active, setActive] = useState(initial);
-
-  const activeCat = categories.find((c) => c.category === active);
-  const courseList = byCategory[active] || [];
+  const scrollTo = (category) => {
+    const el = groupRefs.current[category];
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
 
   return (
-    <main className="mx-auto max-w-7xl px-6 py-12">
-      <h1 className="font-display text-center text-3xl font-extrabold text-navy sm:text-4xl">
-        Explore our courses below!
-      </h1>
+    <main>
+      {/* Hero */}
+      <section className="relative overflow-hidden bg-white py-16 lg:py-24">
+        <div className="pointer-events-none absolute -top-32 left-1/3 h-96 w-96 rounded-full bg-terracotta/10 blur-3xl" />
+        <div className="relative mx-auto max-w-7xl px-4 text-center sm:px-6">
+          <span className="inline-block rounded-full border border-slate-200 bg-white px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-terracotta shadow-card">
+            Our Courses
+          </span>
+          <h1 className="font-display mt-6 text-[36px] font-[600] leading-tight text-[#21191B] sm:text-5xl">
+            Explore our courses below!
+          </h1>
+          <p className="mx-auto mt-5 max-w-2xl text-lg text-slate-600">
+            Find the right program for you — 60+ practical, job oriented
+            courses with placement assistance on paper.
+          </p>
+        </div>
+      </section>
 
-      <div className="mt-10 flex flex-col gap-8 lg:flex-row">
-        {/* Sidebar */}
-        <aside className="lg:w-72 lg:shrink-0">
-          <div className="flex flex-row flex-wrap gap-2 rounded-2xl bg-navy p-3 shadow-card lg:max-h-[70vh] lg:flex-col lg:flex-nowrap lg:overflow-y-auto">
-            {categories.map((cat) => (
+      {/* Find the right program for you */}
+      <section className="bg-slate-50 py-16 lg:py-20">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6">
+          <div className="mb-10 text-center">
+            <p className="text-xs font-bold uppercase tracking-[0.2em] text-terracotta">
+              Explore by domain
+            </p>
+            <h2 className="font-display mt-2 text-[28px] font-[600] text-[#21191B] sm:text-4xl">
+              Find the right program for you
+            </h2>
+            <p className="mt-3 text-slate-600">Choose Your Area of Interest</p>
+          </div>
+
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {groups.map((g) => (
               <button
-                key={cat.id}
-                onClick={() => setActive(cat.category)}
-                className={`rounded-lg px-4 py-3 text-left text-sm font-semibold transition ${
-                  active === cat.category
-                    ? "bg-terracotta text-white"
-                    : "text-white/80 hover:bg-white/10"
-                }`}
+                key={g.category}
+                onClick={() => scrollTo(g.category)}
+                className="group overflow-hidden rounded-[24px] border border-[#E5E5E5] bg-white text-left transition-all duration-300 hover:-translate-y-1 hover:border-terracotta hover:bg-[#fbf7f5] hover:shadow-card"
               >
-                {cat.category}
+                <div className="relative h-40 overflow-hidden border-b border-slate-100">
+                  <img
+                    src={g.image}
+                    alt={g.category}
+                    className="h-full w-full object-cover object-top transition duration-500 group-hover:scale-105"
+                  />
+                </div>
+                <div className="flex items-center justify-between gap-3 p-5">
+                  <div>
+                    <h3 className="font-display text-base font-[600] text-[#21191B]">
+                      {g.category}
+                    </h3>
+                    <p className="mt-1 text-xs text-[#544D4F]">
+                      {g.courses.length} Courses
+                    </p>
+                  </div>
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-cream text-navy ring-1 ring-slate-200 transition group-hover:bg-terracotta group-hover:text-white">
+                    <ArrowUpRight className="h-4 w-4" />
+                  </span>
+                </div>
               </button>
             ))}
           </div>
-        </aside>
-
-        {/* Course list */}
-        <div key={active} className="animate-fade-up flex-1">
-          {activeCat && (
-            <div className="mb-6 flex items-start gap-5 rounded-2xl bg-navy p-6 shadow-card">
-              <img
-                src={activeCat.image}
-                alt={activeCat.category}
-                className="hidden h-20 w-32 shrink-0 rounded-xl object-cover object-top sm:block"
-              />
-              <div>
-                <h2 className="font-display text-2xl font-bold text-white">
-                  {activeCat.category}
-                </h2>
-                <p className="mt-1 text-sm text-white/60">
-                  {courseList.length} courses available · Practical training
-                  with placement assistance
-                </p>
-              </div>
-            </div>
-          )}
-
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-            {courseList.map((name) => (
-              <div
-                key={name}
-                className="flex flex-col justify-between rounded-2xl bg-white p-6 shadow-card ring-1 ring-slate-100 transition hover:-translate-y-1 hover:shadow-lift"
-              >
-                <h3 className="font-display font-bold leading-snug text-navy">
-                  {name}
-                </h3>
-                <div className="mt-4 flex items-center justify-between gap-3 border-t border-slate-100 pt-4">
-                  <Link
-                    to="/coursedetails"
-                    state={{ course: name }}
-                    className="text-sm font-bold tracking-wide text-terracotta transition hover:text-navy"
-                  >
-                    KNOW MORE →
-                  </Link>
-                  <Link
-                    to="/contactus"
-                    className="rounded-full bg-cream px-4 py-1.5 text-xs font-semibold text-navy ring-1 ring-slate-200 transition hover:bg-navy hover:text-white"
-                  >
-                    ENQUIRE
-                  </Link>
-                </div>
-              </div>
-            ))}
-          </div>
         </div>
-      </div>
+      </section>
+
+      {/* Course sections */}
+      <section className="bg-white py-16 lg:py-20">
+        <div className="mx-auto max-w-7xl space-y-16 px-4 sm:px-6">
+          {groups.map((g) => (
+            <div
+              key={g.category}
+              ref={(el) => (groupRefs.current[g.category] = el)}
+              className="scroll-mt-24"
+            >
+              <div className="flex flex-wrap items-end justify-between gap-4">
+                <div>
+                  <h2 className="font-display text-2xl font-[600] text-[#21191B]">
+                    {g.category}
+                  </h2>
+                  <p className="mt-1 text-sm text-slate-500">
+                    {g.courses.length} specialized programs
+                  </p>
+                </div>
+                <Link
+                  to="/contactus"
+                  className="rounded-full border-2 border-navy px-5 py-2 text-xs font-bold text-navy transition hover:bg-navy hover:text-white"
+                >
+                  Enquire
+                </Link>
+              </div>
+
+              <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                {g.courses.slice(0, 6).map((name) => (
+                  <ProgramCard
+                    key={name}
+                    course={{ name, category: g.category }}
+                  />
+                ))}
+              </div>
+
+              {g.courses.length > 6 && (
+                <Link
+                  to="/courses"
+                  onClick={() => {
+                    setTimeout(() => scrollTo(g.category), 0);
+                    return false;
+                  }}
+                  className="mt-6 inline-flex items-center gap-2 rounded-[40px] bg-gradient-to-r from-terracotta to-terracotta-dark px-6 py-2.5 text-xs font-bold text-white transition hover:brightness-110"
+                >
+                  View All Courses in {g.category}
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </Link>
+              )}
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* CTA */}
+      <section className="relative overflow-hidden bg-navy-dark">
+        <div
+          className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-6 px-4 py-14 text-center sm:px-6 lg:flex-row lg:text-left"
+          style={{
+            background:
+              "linear-gradient(120deg, #082c4d 0%, #0b3c68 55%, #6f5347 160%)",
+          }}
+        >
+          <div>
+            <h3 className="font-display text-2xl font-[600] text-white sm:text-3xl">
+              Not sure which program fits you best?
+            </h3>
+            <p className="mt-2 text-white/70">
+              Talk to our counsellors — we'll help you pick the right course.
+            </p>
+          </div>
+          <Link
+            to="/contactus"
+            className="inline-flex items-center gap-2 rounded-[40px] border border-terracotta bg-terracotta px-8 py-3.5 text-sm font-bold text-white shadow-lg shadow-terracotta/30 transition hover:bg-terracotta-dark active:scale-95"
+          >
+            Talk To A Counsellor <ArrowRight className="h-4 w-4" />
+          </Link>
+        </div>
+        <span className="absolute right-8 top-6 hidden lg:block">
+          <ChevronDown className="h-8 w-8 text-white/20" />
+        </span>
+      </section>
     </main>
   );
 }
