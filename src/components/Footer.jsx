@@ -33,12 +33,13 @@ const columns = [
     ],
   },
   {
-    title: "Community",
+    title: "Our Schools",
     links: [
-      { label: "For Students", to: "/for-students" },
-      { label: "For Graduates", to: "/for-graduates" },
-      { label: "For Professionals", to: "/for-professionals" },
-      { label: "Success Stories", to: "/" },
+      { label: "Code & Data Careers", to: "/code-data-careers" },
+      { label: "Enterprise Tech", to: "/enterprise-tech" },
+      { label: "Deep Tech", to: "/deep-tech" },
+      { label: "Engineering Design & Drafting", to: "/engineering-design-drafting" },
+      { label: "AI-led Supply Chain & Procurement", to: "/ai-supply-chain" },
     ],
   },
 ];

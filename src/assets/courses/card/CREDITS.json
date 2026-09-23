@@ -1,0 +1,173 @@
+{
+  "full-stack-web-development": {
+    "file": "G:/CodeHub/FTI/FTIMumbai/src/assets/courses/card\\full-stack-web-development.jpg",
+    "title": "Software developer programming code black",
+    "creator": "Markus Spiske",
+    "license": "cc0",
+    "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "https://www.rawpixel.com/image/593193/programmer-code-screen",
+    "score": 17.866666666666667
+  },
+  "python-data-science-ml": {
+    "file": "G:/CodeHub/FTI/FTIMumbai/src/assets/courses/card\\python-data-science-ml.jpg",
+    "title": "Artificial Intelligence & AI & Machine Learning - 30212411048",
+    "creator": "mikemacmarketing",
+    "license": "by",
+    "license_url": "https://creativecommons.org/licenses/by/2.0/",
+    "source": "https://commons.wikimedia.org/w/index.php?curid=95608113",
+    "score": 14.7
+  },
+  "data-analytics": {
+    "file": "G:/CodeHub/FTI/FTIMumbai/src/assets/courses/card\\data-analytics.jpg",
+    "title": "Data Analytics and Visual to Address Energy-Water-Food Risk, K22/K23_6",
+    "creator": "worldwaterweek",
+    "license": "by",
+    "license_url": "https://creativecommons.org/licenses/by/2.0/",
+    "source": "https://www.flickr.com/photos/53569401@N04/9678915992",
+    "score": 13.363434903047091
+  },
+  "software-testing": {
+    "file": "G:/CodeHub/FTI/FTIMumbai/src/assets/courses/card\\software-testing.jpg",
+    "title": "Quality Assurance",
+    "creator": "The Preiser Project",
+    "license": "by",
+    "license_url": "https://creativecommons.org/licenses/by/2.0/",
+    "source": "https://www.flickr.com/photos/113196745@N04/12148182186",
+    "score": 14.533333333333333
+  },
+  "mobile-app-development": {
+    "file": "G:/CodeHub/FTI/FTIMumbai/src/assets/courses/card\\mobile-app-development.jpg",
+    "title": "Tucia Mobile App on iPhone",
+    "creator": "Tucia",
+    "license": "by",
+    "license_url": "https://creativecommons.org/licenses/by/2.0/",
+    "source": "https://www.flickr.com/photos/38861831@N07/5645129663",
+    "score": 15.180276134122288
+  },
+  "cybersecurity": {
+    "file": "G:/CodeHub/FTI/FTIMumbai/src/assets/courses/card\\cybersecurity.jpg",
+    "title": "Computer security old school",
+    "creator": "sridgway",
+    "license": "by",
+    "license_url": "https://creativecommons.org/licenses/by/2.0/",
+    "source": "https://www.flickr.com/photos/68132273@N00/5695096585",
+    "score": 13.533333333333333
+  },
+  "applied-ai-business-analytics": {
+    "file": "G:/CodeHub/FTI/FTIMumbai/src/assets/courses/card\\applied-ai-business-analytics.jpg",
+    "title": "Android robot",
+    "creator": "Google",
+    "license": "by",
+    "license_url": "https://creativecommons.org/licenses/by/3.0/",
+    "source": "https://commons.wikimedia.org/w/index.php?curid=16368533",
+    "score": 15.51855500821018
+  },
+  "internet-of-things": {
+    "file": "G:/CodeHub/FTI/FTIMumbai/src/assets/courses/card\\internet-of-things.jpg",
+    "title": "Smart Home 1",
+    "creator": "orijinal",
+    "license": "by",
+    "license_url": "https://creativecommons.org/licenses/by/2.0/",
+    "source": "https://www.flickr.com/photos/48600098077@N01/3235056635",
+    "score": 13.533333333333333
+  },
+  "sap-career-track": {
+    "file": "G:/CodeHub/FTI/FTIMumbai/src/assets/courses/card\\sap-career-track.jpg",
+    "title": "Caledos Runner - How did it go? button preview",
+    "creator": "Nicola since 1972",
+    "license": "by",
+    "license_url": "https://creativecommons.org/licenses/by/2.0/",
+    "source": "https://www.flickr.com/photos/15216811@N06/8494378643",
+    "score": 14.303515625
+  },
+  "sap-fast-track": {
+    "file": "G:/CodeHub/FTI/FTIMumbai/src/assets/courses/card\\sap-fast-track.jpg",
+    "title": "IMG_0714",
+    "creator": "Nicola since 1972",
+    "license": "by",
+    "license_url": "https://creativecommons.org/licenses/by/2.0/",
+    "source": "https://www.flickr.com/photos/15216811@N06/15253276480",
+    "score": 13.201464128843337
+  },
+  "semiconductor-workshop": {
+    "file": "G:/CodeHub/FTI/FTIMumbai/src/assets/courses/card\\semiconductor-workshop.jpg",
+    "title": "Apple Lisa Teardown",
+    "creator": "eevblog",
+    "license": "by",
+    "license_url": "https://creativecommons.org/licenses/by/2.0/",
+    "source": "https://www.flickr.com/photos/58072483@N02/16065585926",
+    "score": 16.53333333333333
+  },
+  "industry-certification": {
+    "file": "G:/CodeHub/FTI/FTIMumbai/src/assets/courses/card\\industry-certification.jpg",
+    "title": "green circuit board II",
+    "creator": "BotheredByBees",
+    "license": "by",
+    "license_url": "https://creativecommons.org/licenses/by/2.0/",
+    "source": "https://www.flickr.com/photos/87273935@N00/2389301870",
+    "score": 16.53333333333333
+  },
+  "skill-project-course": {
+    "file": "G:/CodeHub/FTI/FTIMumbai/src/assets/courses/card\\skill-project-course.jpg",
+    "title": "Integrated circuit design",
+    "creator": "Linear77",
+    "license": "by",
+    "license_url": "https://creativecommons.org/licenses/by/3.0/",
+    "source": "https://commons.wikimedia.org/w/index.php?curid=18276753",
+    "score": 16.085829030407343
+  },
+  "project-based-competency": {
+    "file": "G:/CodeHub/FTI/FTIMumbai/src/assets/courses/card\\project-based-competency.jpg",
+    "title": "electronic circuit",
+    "creator": "mdxdt",
+    "license": "by",
+    "license_url": "https://creativecommons.org/licenses/by/2.0/",
+    "source": "https://www.flickr.com/photos/74624435@N00/177749388",
+    "score": 15.22325581395349
+  },
+  "competency-building": {
+    "file": "G:/CodeHub/FTI/FTIMumbai/src/assets/courses/card\\competency-building.jpg",
+    "title": "Microchip DSPIC33FJ06",
+    "creator": "Travis Goodspeed",
+    "license": "by",
+    "license_url": "https://creativecommons.org/licenses/by/2.0/",
+    "source": "https://www.flickr.com/photos/27388680@N05/5658331975",
+    "score": 12.680934809348093
+  },
+  "instrumentation-design": {
+    "file": "G:/CodeHub/FTI/FTIMumbai/src/assets/courses/card\\instrumentation-design.jpg",
+    "title": "Auxiliary Spring Pressure Gauge",
+    "creator": "perpetualplum",
+    "license": "by",
+    "license_url": "https://creativecommons.org/licenses/by/2.0/",
+    "source": "https://www.flickr.com/photos/14277117@N03/3014103151",
+    "score": 15.241015625
+  },
+  "electrical-design": {
+    "file": "G:/CodeHub/FTI/FTIMumbai/src/assets/courses/card\\electrical-design.jpg",
+    "title": "Electrical Engineering Test Motors",
+    "creator": "Wesley Fryer",
+    "license": "by",
+    "license_url": "https://creativecommons.org/licenses/by/2.0/",
+    "source": "https://www.flickr.com/photos/31442459@N00/6577748715",
+    "score": 13.522875816993464
+  },
+  "caips-certification": {
+    "file": "G:/CodeHub/FTI/FTIMumbai/src/assets/courses/card\\caips-certification.jpg",
+    "title": "Sealey Forklift",
+    "creator": "toolstop",
+    "license": "by",
+    "license_url": "https://creativecommons.org/licenses/by/2.0/",
+    "source": "https://www.flickr.com/photos/42408834@N06/4325153724",
+    "score": 16.19265785609398
+  },
+  "ai-supply-chain": {
+    "file": "G:/CodeHub/FTI/FTIMumbai/src/assets/courses/card\\ai-supply-chain.jpg",
+    "title": "Container Port Of Felixstowe",
+    "creator": "Martin Pettitt",
+    "license": "by",
+    "license_url": "https://creativecommons.org/licenses/by/2.0/",
+    "source": "https://www.flickr.com/photos/95012874@N00/2637950881",
+    "score": 13.21021897810219
+  }
+}

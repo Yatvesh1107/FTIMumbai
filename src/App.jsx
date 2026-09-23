@@ -7,9 +7,11 @@ import ScrollToTop from "./components/ScrollToTop";
 // Public Pages
 import Home from "./pages/Home";
 import About from "./pages/About";
-import ForStudents from "./pages/ForStudents";
-import ForGraduates from "./pages/ForGraduates";
-import ForProfessionals from "./pages/ForProfessionals";
+import CodeDataCareers from "./pages/CodeDataCareers";
+import EnterpriseTech from "./pages/EnterpriseTech";
+import DeepTech from "./pages/DeepTech";
+import EngineeringDesign from "./pages/EngineeringDesign";
+import SupplyChainAI from "./pages/SupplyChainAI";
 import Courses from "./pages/Courses";
 import CourseDetails from "./pages/CourseDetails";
 import Placements from "./pages/Placements";
@@ -94,36 +96,60 @@ export default function App() {
             }
           />
           <Route
-            path="/for-students"
+            path="/code-data-careers"
             element={
               <div className="flex min-h-svh flex-col">
                 <Navbar />
                 <div className="flex-1">
-                  <ForStudents />
+                  <CodeDataCareers />
                 </div>
                 <Footer />
               </div>
             }
           />
           <Route
-            path="/for-graduates"
+            path="/enterprise-tech"
             element={
               <div className="flex min-h-svh flex-col">
                 <Navbar />
                 <div className="flex-1">
-                  <ForGraduates />
+                  <EnterpriseTech />
                 </div>
                 <Footer />
               </div>
             }
           />
           <Route
-            path="/for-professionals"
+            path="/deep-tech"
             element={
               <div className="flex min-h-svh flex-col">
                 <Navbar />
                 <div className="flex-1">
-                  <ForProfessionals />
+                  <DeepTech />
+                </div>
+                <Footer />
+              </div>
+            }
+          />
+          <Route
+            path="/engineering-design-drafting"
+            element={
+              <div className="flex min-h-svh flex-col">
+                <Navbar />
+                <div className="flex-1">
+                  <EngineeringDesign />
+                </div>
+                <Footer />
+              </div>
+            }
+          />
+          <Route
+            path="/ai-supply-chain"
+            element={
+              <div className="flex min-h-svh flex-col">
+                <Navbar />
+                <div className="flex-1">
+                  <SupplyChainAI />
                 </div>
                 <Footer />
               </div>

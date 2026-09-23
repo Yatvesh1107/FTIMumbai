@@ -6,11 +6,17 @@ import ftiLogo from "../assets/logo/FTI-logo.png";
 
 export default function ProgramCard({ course }) {
   const category = categories.find((c) => c.category === course.category);
-  const meta = programMeta[course.category] || {
-    duration: "Flexible",
-    mode: "Classroom",
-    nextBatch: "Admissions Open",
+  const metaByCategory = programMeta[course.category];
+  const meta = {
+    duration: course.duration || (metaByCategory && metaByCategory.duration) || "Flexible",
+    mode: course.mode || (metaByCategory && metaByCategory.mode) || "Classroom",
+    nextBatch:
+      course.nextBatch ||
+      (metaByCategory && metaByCategory.nextBatch) ||
+      "Admissions Open",
   };
+  const provider = course.provider || "FTI Mumbai";
+  const image = course.image || (category && category.image);
 
   const isAdmission = meta.nextBatch === "Admissions Open";
   const batchDate = isAdmission
@@ -25,7 +31,7 @@ export default function ProgramCard({ course }) {
     >
       <div className="relative overflow-hidden rounded-[34px]">
         <img
-          src={category.image}
+          src={image}
           alt={course.category}
           loading="lazy"
           className="w-full object-cover object-top transition duration-500 group-hover:scale-105"
@@ -33,12 +39,12 @@ export default function ProgramCard({ course }) {
         <div className="absolute inset-0 bg-gradient-to-t from-navy-dark/60 via-navy-dark/0 to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
         <div className="absolute left-4 top-4 flex items-center gap-2 rounded-full bg-white/95 px-3 py-1.5 shadow-md backdrop-blur">
           <img src={ftiLogo} alt="FTI Mumbai" className="h-5 w-5 object-contain" />
-          <span className="text-[11px] font-bold text-slate-800">FTI Mumbai</span>
+          <span className="text-[11px] font-bold text-slate-800">{provider}</span>
         </div>
       </div>
 
       <p className="mt-[16px] text-center font-display text-[14px] font-[600] leading-[24px] text-navy transition-colors duration-300 group-hover:text-white">
-        FTI Mumbai
+        {provider}
       </p>
 
       <div className="min-h-[88px] px-1">

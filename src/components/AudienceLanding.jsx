@@ -13,15 +13,19 @@ export default function AudienceLanding({
   background,
   featureIcon: FeatureIcon,
   features,
+  courses,
 }) {
-  const groups = useMemo(
-    () =>
-      categories.map((cat) => ({
-        ...cat,
-        courses: categoryCourses(cat.category).slice(0, 6),
-      })),
-    [],
-  );
+  const groups = useMemo(() => {
+    if (courses && courses.length) {
+      return [{ category: eyebrow, courses }];
+    }
+    return categories.map((cat) => ({
+      ...cat,
+      courses: categoryCourses(cat.category)
+        .slice(0, 6)
+        .map((name) => ({ name, category: cat.category })),
+    }));
+  }, [courses, eyebrow]);
 
   return (
     <>
@@ -118,11 +122,8 @@ export default function AudienceLanding({
                 </div>
 
                 <div className="mt-6 grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
-                  {g.courses.map((name) => (
-                    <ProgramCard
-                      key={name}
-                      course={{ name, category: g.category }}
-                    />
+                  {g.courses.map((courseItem) => (
+                    <ProgramCard key={courseItem.name} course={courseItem} />
                   ))}
                 </div>
               </div>

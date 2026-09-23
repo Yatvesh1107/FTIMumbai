@@ -8,9 +8,11 @@ export default function Navbar() {
 
   const links = [
     { to: "/about", label: "About Us" },
-    { to: "/for-students", label: "For Students" },
-    { to: "/for-graduates", label: "For Graduates" },
-    { to: "/for-professionals", label: "For Professionals" },
+    { to: "/code-data-careers", label: "Code & Data" },
+    { to: "/enterprise-tech", label: "Enterprise Tech" },
+    { to: "/deep-tech", label: "Deep Tech" },
+    { to: "/engineering-design-drafting", label: "Engineering Design" },
+    { to: "/ai-supply-chain", label: "Supply Chain AI" },
   ];
 
   const closeMenu = () => setMenuOpen(false);
@@ -24,13 +26,13 @@ export default function Navbar() {
           </Link>
 
           {/* Desktop links */}
-          <ul className="mx-2 hidden items-center gap-1 lg:flex">
+          <ul className="mx-2 hidden items-center gap-0.5 lg:flex">
             {links.map((link) => (
               <li key={link.to}>
                 <NavLink
                   to={link.to}
                   className={({ isActive }) =>
-                    `rounded-full px-4 py-2 text-[15px] font-[500] transition ${
+                    `whitespace-nowrap rounded-full px-2.5 py-2 text-[14px] font-[500] transition ${
                       isActive
                         ? "bg-navy/10 font-semibold text-navy"
                         : "text-slate-600 hover:bg-slate-100 hover:text-navy"
