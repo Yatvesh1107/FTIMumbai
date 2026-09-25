@@ -1,23 +1,32 @@
 const cards = [
   {
-    title: "Call us at",
-    lines: ["+91 90000 00000"],
+    title: "Call or WhatsApp",
+    lines: ["+91 97699 33844", "+91 79774 75658"],
     icon: "M6.62 10.79a15.05 15.05 0 0 0 6.59 6.59l2.2-2.2a1 1 0 0 1 1.02-.24c1.12.37 2.33.57 3.57.57a1 1 0 0 1 1 1V20a1 1 0 0 1-1 1C10.61 21 3 13.39 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.24.2 2.45.57 3.57a1 1 0 0 1-.25 1.02l-2.2 2.2Z",
   },
   {
     title: "Address",
     lines: [
-      "Mahalaxmi Center, 207-208,",
-      "S.V Rd, opp. Balbharati School,",
-      "Kandivali West, Mumbai,",
-      
+      "Office 207/208, Mahalaxmi Centre,",
+      "Opp. Balbharti School, S.V. Road,",
+      "Kandivali (W), Mumbai, MH - 400067",
     ],
     icon: "M12 2a7 7 0 0 0-7 7c0 5.25 7 13 7 13s7-7.75 7-13a7 7 0 0 0-7-7Zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5Z",
   },
   {
     title: "Email Us",
-    lines: ["ftiofmumbai@gmail.com"],
+    lines: ["hello@ftimumbai.com"],
     icon: "M20 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2Zm0 4-8 5-8-5V6l8 5 8-5v2Z",
+  },
+  {
+    title: "Timings",
+    lines: ["09:00 AM – 09:00 PM", "Counselling by appointment,", "Monday to Saturday"],
+    icon: "M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm0 18a8 8 0 1 1 0-16 8 8 0 0 1 0 16Zm5-8h-4V7a1 1 0 1 0-2 0v5a1 1 0 0 0 1 1h5a1 1 0 1 0 0-2Z",
+  },
+  {
+    title: "Website & Social",
+    lines: ["www.ftimumbai.com", "@ftimumbai on Instagram, Facebook, LinkedIn, YouTube"],
+    icon: "M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm6.9 6h-3.1c-.3-1.2-.7-2.3-1.3-3.3A8 8 0 0 1 18.9 8ZM12 4.2c.9 1.1 1.6 2.4 1.9 3.8h-3.8c.3-1.4 1-2.7 1.9-3.8ZM4.4 11a7.6 7.6 0 0 1 .4-1.5h4.3c-.2 1-.2 1.9 0 2.9H4.9a7.6 7.6 0 0 1-.5-1.4Zm.5 1.5h4.3c.2 1 .3 2 .3 3H5.2a8 8 0 0 1-.3-3Zm1.2 4.5h4.1c.3 1.2.7 2.3 1.3 3.3A8 8 0 0 1 6.1 17Zm7.9 3.8c-.9-1.1-1.6-2.4-1.9-3.8h3.8c-.3 1.4-1 2.7-1.9 3.8Zm2-7.3h-2v-2h2a8 8 0 0 1 0 2Zm.1 1.5h-4.1a12.5 12.5 0 0 1 0-6h4a8 8 0 0 1 .1 6Z",
   },
 ];
 

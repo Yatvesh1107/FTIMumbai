@@ -19,6 +19,11 @@ const socials = [
     href: "https://www.facebook.com/profile.php?id=61593583155642",
     path: "M24 12c0-6.63-5.37-12-12-12S0 5.37 0 12c0 5.99 4.39 10.95 10.13 11.85v-8.38H7.08v-3.47h3.05V9.43c0-3.01 1.79-4.67 4.53-4.67 1.31 0 2.68.24 2.68.24v2.97h-1.51c-1.49 0-1.95.93-1.95 1.88v2.26h3.33l-.53 3.47h-2.8v8.38C19.61 22.95 24 17.99 24 12Z",
   },
+  {
+    label: "YouTube",
+    href: "https://www.youtube.com/@ftimumbai",
+    path: "M23.5 6.2c-.3-1.1-1.1-1.9-2.2-2.2C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.3.5C1.6 4.3.8 5.1.5 6.2 0 8 0 12 0 12s0 4 .5 5.8c.3 1.1 1.1 1.9 2.2 2.2 1.8.5 9.3.5 9.3.5s7.5 0 9.3-.5c1.1-.3 1.9-1.1 2.2-2.2.5-1.8.5-5.8.5-5.8s0-4-.5-5.8ZM9.6 15.6V8.4l6.2 3.6-6.2 3.6Z",
+  },
 ];
 
 const columns = [
@@ -118,32 +123,47 @@ export default function Footer() {
               </h2>
               <ul className="mt-5 space-y-3 text-[14px] leading-5">
                 <li className="text-[#848081]">
-                  Call Us:{" "}
+                  Call or WhatsApp:
                   <a
-                    href="tel:+919000000000"
+                    href="tel:+919769933844"
                     className="block font-medium text-[#9D999A] transition hover:text-terracotta-light"
                   >
-                    +91 90000 00000
+                    +91 97699 33844
+                  </a>
+                  <a
+                    href="tel:+917977475658"
+                    className="block font-medium text-[#9D999A] transition hover:text-terracotta-light"
+                  >
+                    +91 79774 75658
                   </a>
                 </li>
                 <li className="text-[#848081]">
                   Email:{" "}
                   <a
-                    href="mailto:ftiofmumbai@gmail.com"
+                    href="mailto:hello@ftimumbai.com"
                     className="block break-all font-medium text-[#9D999A] transition hover:text-terracotta-light"
                   >
-                    ftiofmumbai@gmail.com
+                    hello@ftimumbai.com
                   </a>
                 </li>
                 <li className="text-[#848081]">
                   Address:
                   <span className="mt-1 block leading-relaxed text-[#9D999A]">
-                    Mahalaxmi Center, 207-208
+                    Office 207/208, Mahalaxmi Centre,
                     <br />
-                    S.V Rd, opp. Balbharati School,
+                    Opp. Balbharti School, S.V. Road,
                     <br />
-                    Kandivali West, Mumbai,
+                    Kandivali (W), Mumbai, MH - 400067
                   </span>
+                </li>
+                <li className="text-[#848081]">
+                  Website:{" "}
+                  <a
+                    href="https://www.ftimumbai.com"
+                    className="block font-medium text-[#9D999A] transition hover:text-terracotta-light"
+                  >
+                    www.ftimumbai.com
+                  </a>
                 </li>
               </ul>
             </div>

@@ -14,6 +14,7 @@ export default function AudienceLanding({
   featureIcon: FeatureIcon,
   features,
   courses,
+  slug,
 }) {
   const groups = useMemo(() => {
     if (courses && courses.length) {
@@ -114,7 +115,7 @@ export default function AudienceLanding({
                   </h3>
                   <Link
                     to="/courses"
-                    state={{ category: g.category }}
+                    state={{ schoolSlug: slug || g.category }}
                     className="inline-flex items-center gap-1 rounded-[40px] bg-gradient-to-r from-terracotta to-terracotta-dark px-5 py-2 text-xs font-bold text-white transition hover:brightness-110 active:scale-95"
                   >
                     View All Courses in {g.category} <ArrowRight className="h-3.5 w-3.5" />

@@ -1,9 +1,12 @@
 import AudienceLanding from "../components/AudienceLanding";
-import { schools } from "../data/schools";
-
-const school = schools.find((s) => s.slug === "deep-tech");
+import { useSchools } from "../hooks/useSchools";
 
 export default function DeepTech() {
+  const { schools } = useSchools();
+  const school = schools.find((s) => s.slug === "deep-tech");
+
+  if (!school) return null;
+
   return (
     <AudienceLanding
       eyebrow={school.eyebrow}
@@ -14,6 +17,7 @@ export default function DeepTech() {
       featureIcon={school.featureIcon}
       features={school.features}
       courses={school.courses}
+      slug={school.slug}
     />
   );
 }

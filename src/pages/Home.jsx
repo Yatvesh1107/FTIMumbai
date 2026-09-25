@@ -10,9 +10,13 @@ import {
   GraduationCap,
   Briefcase,
 } from "lucide-react";
-import { categories, testimonials } from "../data/content";
-import { categoryCourses } from "../data/courseGroups";
+import { testimonials } from "../data/content";
 import ProgramCard from "../components/ProgramCard";
+import { useSchoolCourses } from "../hooks/useSchoolCourses";
+import CareerTracks from "../components/CareerTracks";
+import TalentCorridor from "../components/TalentCorridor";
+import FtiStandard from "../components/FtiStandard";
+import PartnersGrid from "../components/PartnersGrid";
 import ftiLogo from "../assets/logo/FTI-logo.png";
 
 import wipro from "../assets/companies/wipro.png";
@@ -29,15 +33,6 @@ import statGuarantee from "../assets/stat-guarantee.jpg";
 import statDrives from "../assets/stat-drives.jpg";
 
 const logos = [wipro, cleanify, xyst, asap, codehub, oracle];
-
-const popularCourses = [
-  { name: "MERN Stack Web Development Training", category: "Full Stack Web Development" },
-  { name: "Python Full Stack Web Development Training", category: "Full Stack Web Development" },
-  { name: "Data Science Training", category: "Data Science" },
-  { name: "Machine Learning Training", category: "Data Science" },
-  { name: "Flutter App Development Training", category: "Mobile App Development" },
-  { name: "Java Full Stack Training Course", category: "Full Stack Web Development" },
-];
 
 const heroStats = [
   { value: "250+", label: "Graduates Placed in Top Companies", image: statPlaced },
@@ -81,8 +76,12 @@ const lightYears = [
 
 export default function Home() {
   const [storyIdx, setStoryIdx] = useState(0);
-  const [domain, setDomain] = useState(categories[0]);
+  const { groups, courses } = useSchoolCourses();
+  const [selectedSlug, setSelectedSlug] = useState("code-data-careers");
   const [domainMenuOpen, setDomainMenuOpen] = useState(false);
+
+  const domain = groups.find((g) => g.slug === selectedSlug) || groups[0];
+  const popularCourses = courses.slice(0, 6);
 
   const handlePrev = () =>
     setStoryIdx((i) => (i + testimonials.length - 1) % testimonials.length);
@@ -292,57 +291,9 @@ export default function Home() {
       </section>
 
       {/* ============================================================
-          FIND THE RIGHT PROGRAM / CHOOSE YOUR AREA OF INTEREST
+          FIVE CAREER TRACKS (brochure p.02)
       ============================================================ */}
-      <section className="mx-auto md:mt-[104px] mt-[81px] rounded-[40px] bg-[linear-gradient(0deg,rgba(255,255,255,0)_0%,#f6e2dd_110.6%)] px-[16px] md:rounded-[0px] md:bg-none">
-        <div className="mx-auto max-w-[1280px]">
-          <h2 className="text-center font-display text-[28px] font-[600] text-[#000000] md:text-[40px]">
-            Find the right program for you
-          </h2>
-
-          <div className="mt-[24px] rounded-[16px] bg-white px-[11px] pb-[24px] md:rounded-[48px] md:px-[50px] md:pb-[56px]">
-            <p className="pt-[24px] pb-[24px] text-center font-display text-[22px] font-[600] text-[#000000] md:pt-[48px] md:pb-[40px] md:text-[32px]">
-              Choose Your Area of Interest
-            </p>
-
-            <div
-              id="right-program-list"
-              className="grid grid-cols-1 gap-[20px] md:grid-cols-2 md:gap-[32px] xl:grid-cols-3"
-            >
-              {categories.map((cat) => (
-                <Link
-                  key={cat.id}
-                  to="/courses"
-                  state={{ category: cat.category }}
-                  className="group flex cursor-pointer justify-between rounded-[20px] border border-[#E5E5E5] pl-[16px] pt-[16px] pr-[13px] pb-[13px] transition-all duration-300 hover:border-terracotta hover:bg-[#fbf7f5] md:rounded-[24px] md:pr-[8px] md:pb-[8px]"
-                >
-                  <div>
-                    <h3 className="font-display text-[16px] font-[600] leading-[24px] text-[#21191B] transition-all duration-300 group-hover:text-terracotta md:leading-[32px] md:text-[18px]">
-                      {cat.category}
-                    </h3>
-                    <p className="mt-[8px] font-display text-[14px] font-[500] text-[#544D4F] md:mt-[4px] md:text-[16px]">
-                      {categoryCourses(cat.category).length} Courses
-                    </p>
-                  </div>
-                  <span className="mt-[22px] flex h-[56px] w-[56px] shrink-0 origin-bottom-right items-center justify-center self-end rounded-[16px] bg-cream text-navy ring-1 ring-slate-200 transition-all duration-500 group-hover:scale-110 group-hover:bg-gradient-to-br group-hover:from-terracotta group-hover:to-terracotta-dark group-hover:text-white md:mt-[28px] md:h-[64px] md:w-[64px]">
-                    <svg viewBox="0 0 24 24" fill="currentColor" className="h-7 w-7">
-                      <path d={cat.icon} />
-                    </svg>
-                  </span>
-                </Link>
-              ))}
-            </div>
-
-            <Link
-              to="/courses"
-              className="mx-auto mt-[24px] flex w-fit items-center gap-[6px] font-display text-[16px] font-[600] text-terracotta md:hidden"
-            >
-              View More
-              <ChevronDown className="h-4 w-4" />
-            </Link>
-          </div>
-        </div>
-      </section>
+      <CareerTracks />
 
       {/* ============================================================
           CHOOSE FROM THE DOMAINS WE TEACH (sticky tabs)
@@ -356,17 +307,17 @@ export default function Home() {
           {/* Desktop tab bar */}
           <div className="scrollbar-hide sticky top-[72px] z-10 mt-[32px] hidden overflow-x-auto border-b border-[#E5E5E5] bg-white md:block">
             <div className="flex px-6 lg:px-16">
-              {categories.map((cat) => (
+              {groups.map((g) => (
                 <button
-                  key={cat.category}
-                  onClick={() => setDomain(cat)}
+                  key={g.slug}
+                  onClick={() => setSelectedSlug(g.slug)}
                   className={`min-h-[68px] px-6 py-3 font-display text-[15px] font-medium whitespace-nowrap transition lg:text-[18px] ${
-                    domain.category === cat.category
+                    domain && domain.slug === g.slug
                       ? "border-b-4 border-terracotta bg-[linear-gradient(180deg,rgba(246,217,223,0)_24.07%,#f6d9df_100%)] text-terracotta"
                       : "text-[#888384] hover:text-navy"
                   }`}
                 >
-                  {cat.category}
+                  {g.name}
                 </button>
               ))}
             </div>
@@ -378,25 +329,25 @@ export default function Home() {
               onClick={() => setDomainMenuOpen((v) => !v)}
               className="flex h-[56px] w-full items-center justify-between rounded-[48px] border-[1.5px] border-terracotta px-6 font-display text-[16px] font-semibold text-terracotta"
             >
-              {domain.category}
+              {domain ? domain.name : "Select school"}
               <ChevronDown className={`h-5 w-5 transition-transform ${domainMenuOpen ? "rotate-180" : ""}`} />
             </button>
             {domainMenuOpen && (
               <ul className="mt-2 max-h-72 overflow-y-auto rounded-[24px] border border-slate-200 bg-white p-2 shadow-card">
-                {categories.map((cat) => (
-                  <li key={cat.category}>
+                {groups.map((g) => (
+                  <li key={g.slug}>
                     <button
                       onClick={() => {
-                        setDomain(cat);
+                        setSelectedSlug(g.slug);
                         setDomainMenuOpen(false);
                       }}
                       className={`w-full rounded-[16px] px-4 py-2.5 text-left font-display text-sm transition ${
-                        domain.category === cat.category
+                        domain && domain.slug === g.slug
                           ? "bg-terracotta/10 font-semibold text-terracotta"
                           : "text-slate-700"
                       }`}
                     >
-                      {cat.category}
+                      {g.name}
                     </button>
                   </li>
                 ))}
@@ -406,43 +357,45 @@ export default function Home() {
 
           {/* Content */}
           <div className="isolate relative px-[16px] pb-[48px] md:px-[24px]">
-            <div className="relative mt-[16px] h-auto overflow-hidden rounded-[32px] md:mt-[24px]">
-              <img
-                src={domain.image}
-                alt={domain.category}
-                loading="lazy"
-                className="h-[420px] w-full object-cover object-bottom md:h-[480px]"
-              />
-              <div
-                className="absolute inset-0"
-                style={{
-                  background:
-                    "linear-gradient(0deg, rgba(8,44,77,0.55) -52.65%, rgba(8,44,77,0.35) 108.56%)",
-                }}
-              />
+            {domain && (
+              <div className="relative mt-[16px] h-auto overflow-hidden rounded-[32px] md:mt-[24px]">
+                <img
+                  src={domain.heroImage}
+                  alt={domain.name}
+                  loading="lazy"
+                  className="h-[420px] w-full object-cover object-bottom md:h-[480px]"
+                />
+                <div
+                  className="absolute inset-0"
+                  style={{
+                    background:
+                      "linear-gradient(0deg, rgba(8,44,77,0.55) -52.65%, rgba(8,44,77,0.35) 108.56%)",
+                  }}
+                />
 
-              <div className="absolute inset-0 flex flex-col items-center justify-end px-6 pb-10 text-center">
-                <div className="mx-auto flex max-w-[160px] items-center justify-center rounded-[24px] bg-white px-[14px] py-[8px] shadow-card">
-                  <img src={ftiLogo} alt="FTI Mumbai" className="h-12 w-auto object-contain" />
+                <div className="absolute inset-0 flex flex-col items-center justify-end px-6 pb-10 text-center">
+                  <div className="mx-auto flex max-w-[160px] items-center justify-center rounded-[24px] bg-white px-[14px] py-[8px] shadow-card">
+                    <img src={ftiLogo} alt="FTI Mumbai" className="h-12 w-auto object-contain" />
+                  </div>
+                  <h3 className="mt-5 font-display text-[26px] font-[700] text-white md:text-[32px]">
+                    {domain.name}
+                  </h3>
+                  <p className="mt-1 font-display text-[15px] font-[400] text-white/85">
+                    {domain.poweredBy ? `${domain.poweredBy} · ` : ""}
+                    {domain.courses.length} job-oriented programs
+                  </p>
+                  <Link
+                    to={`/${domain.slug}`}
+                    className="group mt-6 flex cursor-pointer items-center justify-center gap-2 rounded-[40px] border border-terracotta bg-terracotta px-5 py-3 transition-all hover:bg-terracotta-dark active:scale-95"
+                  >
+                    <span className="font-display text-[16px] font-[600] tracking-[0.16px] text-white">
+                      Explore this school
+                    </span>
+                    <ArrowRight className="h-4 w-4 text-white" />
+                  </Link>
                 </div>
-                <h3 className="mt-5 font-display text-[26px] font-[700] text-white md:text-[32px]">
-                  {domain.category}
-                </h3>
-                <p className="mt-1 font-display text-[15px] font-[400] text-white/85">
-                  {categoryCourses(domain.category).length} job-oriented programs
-                </p>
-                <Link
-                  to="/courses"
-                  state={{ category: domain.category }}
-                  className="group mt-6 flex cursor-pointer items-center justify-center gap-2 rounded-[40px] border border-terracotta bg-terracotta px-5 py-3 transition-all hover:bg-terracotta-dark active:scale-95"
-                >
-                  <span className="font-display text-[16px] font-[600] tracking-[0.16px] text-white">
-                    View All Courses
-                  </span>
-                  <ArrowRight className="h-4 w-4 text-white" />
-                </Link>
               </div>
-            </div>
+            )}
           </div>
         </div>
       </section>
@@ -472,16 +425,15 @@ export default function Home() {
                   scrollbarWidth: "none",
                 }}
               >
-                {[...categories, ...categories].map((cat, i) => (
+                {[...groups, ...groups].map((g, i) => (
                   <Link
-                    key={`${cat.id}-${i}`}
-                    to="/courses"
-                    state={{ category: cat.category }}
+                    key={`${g.slug}-${i}`}
+                    to={`/${g.slug}`}
                     className="block h-full snap-center overflow-hidden md:w-[360px]"
                   >
                     <img
-                      src={cat.image}
-                      alt={cat.category}
+                      src={g.heroImage}
+                      alt={g.name}
                       loading="lazy"
                       className="pointer-events-none h-full w-full object-cover object-top transition duration-500 hover:scale-105"
                     />
@@ -691,6 +643,21 @@ export default function Home() {
           })}
         </div>
       </section>
+
+      {/* ============================================================
+          TALENT CORRIDOR & ABOUT (brochure p.04)
+      ============================================================ */}
+      <TalentCorridor />
+
+      {/* ============================================================
+          THE FTI MODEL & STANDARD (brochure p.08)
+      ============================================================ */}
+      <FtiStandard />
+
+      {/* ============================================================
+          VENTURE & ECOSYSTEM PARTNERS (brochure p.35)
+      ============================================================ */}
+      <PartnersGrid />
 
       {/* ============================================================
           FTI IN SPOTLIGHT

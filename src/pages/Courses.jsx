@@ -1,25 +1,17 @@
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useRef } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { ArrowRight, ArrowUpRight, ChevronDown } from "lucide-react";
-import { categories } from "../data/content";
-import { categoryCourses } from "../data/courseGroups";
 import ProgramCard from "../components/ProgramCard";
+import CareerTracks from "../components/CareerTracks";
+import FtiStandard from "../components/FtiStandard";
+import { useSchoolCourses } from "../hooks/useSchoolCourses";
 
 export default function Courses() {
   const location = useLocation();
   const requested =
-    location.state && location.state.category
-      ? location.state.category
-      : null;
+    (location.state && (location.state.schoolSlug || location.state.category)) || null;
 
-  const groups = useMemo(
-    () =>
-      categories.map((cat) => ({
-        ...cat,
-        courses: categoryCourses(cat.category),
-      })),
-    [],
-  );
+  const { groups } = useSchoolCourses();
 
   const groupRefs = useRef({});
 
@@ -32,10 +24,12 @@ export default function Courses() {
     }
   }, [requested]);
 
-  const scrollTo = (category) => {
-    const el = groupRefs.current[category];
+  const scrollTo = (key) => {
+    const el = groupRefs.current[key];
     if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
   };
+
+  const totalCourses = groups.reduce((sum, g) => sum + g.courses.length, 0);
 
   return (
     <main>
@@ -50,18 +44,24 @@ export default function Courses() {
             Explore our courses below!
           </h1>
           <p className="mx-auto mt-5 max-w-2xl text-lg text-slate-600">
-            Find the right program for you — 60+ practical, job oriented
-            courses with placement assistance on paper.
+            Five schools of future skills, {totalCourses || "20+"} industry-built
+            programmes — each one co-owned by a company that does the work, with
+            placement assistance on paper.
           </p>
         </div>
       </section>
 
-      {/* Find the right program for you */}
-      <section className="bg-slate-50 py-16 lg:py-20">
+      {/* Five career tracks (brochure p.02) */}
+      <div className="bg-slate-50">
+        <CareerTracks />
+      </div>
+
+      {/* Explore by school */}
+      <section className="bg-white py-16 lg:py-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
           <div className="mb-10 text-center">
             <p className="text-xs font-bold uppercase tracking-[0.2em] text-terracotta">
-              Explore by domain
+              Explore by school
             </p>
             <h2 className="font-display mt-2 text-[28px] font-[600] text-[#21191B] sm:text-4xl">
               Find the right program for you
@@ -72,21 +72,21 @@ export default function Courses() {
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {groups.map((g) => (
               <button
-                key={g.category}
-                onClick={() => scrollTo(g.category)}
+                key={g.slug}
+                onClick={() => scrollTo(g.slug)}
                 className="group overflow-hidden rounded-[24px] border border-[#E5E5E5] bg-white text-left transition-all duration-300 hover:-translate-y-1 hover:border-terracotta hover:bg-[#fbf7f5] hover:shadow-card"
               >
                 <div className="relative h-40 overflow-hidden border-b border-slate-100">
                   <img
-                    src={g.image}
-                    alt={g.category}
+                    src={g.heroImage}
+                    alt={g.name}
                     className="h-full w-full object-cover object-top transition duration-500 group-hover:scale-105"
                   />
                 </div>
                 <div className="flex items-center justify-between gap-3 p-5">
                   <div>
                     <h3 className="font-display text-base font-[600] text-[#21191B]">
-                      {g.category}
+                      {g.name}
                     </h3>
                     <p className="mt-1 text-xs text-[#544D4F]">
                       {g.courses.length} Courses
@@ -102,21 +102,24 @@ export default function Courses() {
         </div>
       </section>
 
-      {/* Course sections */}
-      <section className="bg-white py-16 lg:py-20">
+      {/* Course sections, grouped by school (admin-driven) */}
+      <section className="bg-slate-50 py-16 lg:py-20">
         <div className="mx-auto max-w-7xl space-y-16 px-4 sm:px-6">
           {groups.map((g) => (
             <div
-              key={g.category}
-              ref={(el) => (groupRefs.current[g.category] = el)}
+              key={g.slug}
+              ref={(el) => (groupRefs.current[g.slug] = el)}
               className="scroll-mt-24"
             >
               <div className="flex flex-wrap items-end justify-between gap-4">
                 <div>
-                  <h2 className="font-display text-2xl font-[600] text-[#21191B]">
-                    {g.category}
+                  <p className="text-xs font-bold uppercase tracking-[0.2em] text-terracotta">
+                    {g.poweredBy ? `Powered by ${g.poweredBy}` : "School of future skills"}
+                  </p>
+                  <h2 className="font-display mt-1 text-2xl font-[600] text-[#21191B]">
+                    {g.name}
                   </h2>
-                  <p className="mt-1 text-sm text-slate-500">
+                  <p className="mt-1 max-w-2xl text-sm text-slate-500">
                     {g.courses.length} specialized programs
                   </p>
                 </div>
@@ -129,31 +132,25 @@ export default function Courses() {
               </div>
 
               <div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                {g.courses.slice(0, 6).map((name) => (
-                  <ProgramCard
-                    key={name}
-                    course={{ name, category: g.category }}
-                  />
+                {g.courses.slice(0, 6).map((course) => (
+                  <ProgramCard key={course.courseId || course.name} course={course} />
                 ))}
               </div>
 
-              {g.courses.length > 6 && (
-                <Link
-                  to="/courses"
-                  onClick={() => {
-                    setTimeout(() => scrollTo(g.category), 0);
-                    return false;
-                  }}
-                  className="mt-6 inline-flex items-center gap-2 rounded-[40px] bg-gradient-to-r from-terracotta to-terracotta-dark px-6 py-2.5 text-xs font-bold text-white transition hover:brightness-110"
-                >
-                  View All Courses in {g.category}
-                  <ArrowRight className="h-3.5 w-3.5" />
-                </Link>
-              )}
+              <Link
+                to={`/${g.slug}`}
+                className="mt-6 inline-flex items-center gap-2 rounded-[40px] bg-gradient-to-r from-terracotta to-terracotta-dark px-6 py-2.5 text-xs font-bold text-white transition hover:brightness-110"
+              >
+                View {g.name}
+                <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
             </div>
           ))}
         </div>
       </section>
+
+      {/* The FTI standard (brochure p.08) */}
+      <FtiStandard />
 
       {/* CTA */}
       <section className="relative overflow-hidden bg-navy-dark">
@@ -169,7 +166,7 @@ export default function Courses() {
               Not sure which program fits you best?
             </h3>
             <p className="mt-2 text-white/70">
-              Talk to our counsellors — we'll help you pick the right course.
+              Talk to our counsellors — we&apos;ll help you pick the right course.
             </p>
           </div>
           <Link

@@ -1,5 +1,9 @@
 import { Link } from "react-router-dom";
 import { Target, Users, Award, HeartHandshake, ArrowRight } from "lucide-react";
+import TalentCorridor from "../components/TalentCorridor";
+import FtiStandard from "../components/FtiStandard";
+import PartnersGrid from "../components/PartnersGrid";
+import { welcomeTagline } from "../data/brochure";
 
 const values = [
   {
@@ -24,6 +28,29 @@ const values = [
   },
 ];
 
+const gapFacts = [
+  {
+    value: "12M",
+    label: "India adds roughly 12 million people to its working-age population every year. The skills they carry decide what that becomes.",
+    source: "World Bank",
+  },
+  {
+    value: "39%",
+    label: "Employers expect 39% of workers' core skills to change by 2030. A degree earned today is already being rewritten.",
+    source: "WEF Future of Jobs Report 2025",
+  },
+  {
+    value: "~28 yrs",
+    label: "India has one of the world's youngest workforces, with a median age of about 28. Skill is what turns that into an advantage.",
+    source: "UN World Population Prospects",
+  },
+  {
+    value: "1.5L+",
+    label: "India has more than 1.5 lakh startups recognised by DPIIT, making it one of the three largest startup ecosystems in the world.",
+    source: "DPIIT, 2025",
+  },
+];
+
 export default function About() {
   return (
     <main>
@@ -33,76 +60,64 @@ export default function About() {
         <div className="pointer-events-none absolute bottom-0 -left-20 h-80 w-80 rounded-full bg-navy/5 blur-3xl" />
         <div className="relative mx-auto max-w-7xl px-4 text-center sm:px-6">
           <span className="inline-block rounded-full border border-slate-200 bg-white px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-terracotta shadow-card">
-            About Us
+            About FTI
           </span>
-          <h1 className="font-display mx-auto mt-6 max-w-3xl text-[36px] font-[600] leading-tight text-[#21191B] sm:text-5xl">
-            Empowering Careers,
+          <h1 className="font-display mx-auto mt-6 max-w-4xl text-[36px] font-[600] leading-tight text-[#21191B] sm:text-5xl">
+            Five career tracks.
             <br />
             <span className="bg-gradient-to-r from-navy to-terracotta bg-clip-text text-transparent">
-              One Student At A Time
+              One institute.
             </span>
           </h1>
           <p className="mx-auto mt-6 max-w-2xl text-lg text-slate-600">
-            FTI Mumbai is a job-oriented certification institute helping
-            students and professionals master in-demand skills and land the
-            careers they deserve.
+            {welcomeTagline}
           </p>
         </div>
       </section>
 
-      {/* The FTI Mumbai Story */}
-      <section className="bg-slate-50 py-16 lg:py-24">
-        <div className="mx-auto grid max-w-7xl items-center gap-12 px-4 sm:px-6 lg:grid-cols-2">
-          <div>
+      {/* About FTI + Talent Corridor (brochure p.04) */}
+      <TalentCorridor />
+
+      {/* The gap nobody teaches (brochure p.03 / 05 / 06) */}
+      <section className="bg-white py-16 lg:py-24">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6">
+          <div className="max-w-3xl">
             <p className="text-xs font-bold uppercase tracking-[0.2em] text-terracotta">
-              The FTI Mumbai Story
+              The gap nobody teaches
             </p>
-            <h2 className="font-display mt-3 text-3xl font-[600] text-slate-900 sm:text-4xl">
-              Built on a simple idea — training that actually gets you hired
+            <h2 className="font-display mt-3 text-3xl font-[600] leading-tight text-slate-900 sm:text-4xl">
+              From your degree to your career, mapped
             </h2>
-            <div className="mt-6 space-y-4 leading-relaxed text-slate-600">
-              <p>
-                FTI Mumbai started with a single mission: bridge the gap
-                between what colleges teach and what companies actually need.
-                What began as a small classroom of motivated learners has grown
-                into one of Mumbai's most trusted job-oriented training
-                institutes.
-              </p>
-              <p>
-                Today we run practical, project-driven programs across web
-                development, data science, digital marketing, design, testing
-                and cyber security — loved equally by students, graduates and
-                working professionals looking for a career change.
-              </p>
-              <p>
-                Every course ends where it matters most: interviews with real
-                companies. That is why every FTI student gets 100% placement
-                assistance guaranteed on paper.
-              </p>
-            </div>
+            <p className="mt-5 space-y-4 text-slate-600 leading-relaxed">
+              Degrees certify what you know. Careers depend on what you can do.
+              Somewhere between the syllabus and the job description lives the gap
+              nobody teaches — and that is precisely where FTI works: real projects,
+              real mentors and a corridor that can take your skills anywhere in the
+              world.
+            </p>
           </div>
 
-          <div className="grid grid-cols-3 gap-4">
-            {[
-              { stat: "250+", label: "Graduates" },
-              { stat: "100%", label: "Placement Assistance" },
-              { stat: "60+", label: "Programs" },
-            ].map((s) => (
-              <div
-                key={s.label}
-                className="rounded-2xl bg-gradient-to-br from-navy to-navy-dark p-6 text-center text-white shadow-lift"
+          <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            {gapFacts.map((f) => (
+              <article
+                key={f.value}
+                className="rounded-[32px] border border-slate-200 bg-slate-50 p-6"
               >
-                <p className="font-display bg-gradient-to-r from-terracotta-light to-white bg-clip-text text-3xl font-extrabold text-transparent sm:text-4xl">
-                  {s.stat}
+                <p className="font-display text-4xl font-black text-terracotta">
+                  {f.value}
                 </p>
-                <p className="mt-2 text-xs font-medium text-white/75">
-                  {s.label}
+                <p className="mt-3 text-sm leading-relaxed text-slate-600">{f.label}</p>
+                <p className="mt-3 text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                  {f.source}
                 </p>
-              </div>
+              </article>
             ))}
           </div>
         </div>
       </section>
+
+      {/* The FTI model & standard (brochure p.08) */}
+      <FtiStandard />
 
       {/* Values / mission */}
       <section className="bg-white py-16 lg:py-24">
@@ -136,6 +151,9 @@ export default function About() {
         </div>
       </section>
 
+      {/* Partners (brochure p.35) */}
+      <PartnersGrid />
+
       {/* CTA */}
       <section
         className="bg-navy-dark"
@@ -147,10 +165,10 @@ export default function About() {
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-6 px-4 py-14 text-center sm:px-6 lg:flex-row lg:text-left">
           <div>
             <h3 className="font-display text-2xl font-[600] text-white sm:text-3xl">
-              Ready to write your own success story?
+              Ready to start building what people actually use?
             </h3>
             <p className="mt-2 text-white/70">
-              Explore 60+ job oriented programs at FTI Mumbai.
+              Explore the programmes across FTI's five schools of future skills.
             </p>
           </div>
           <Link

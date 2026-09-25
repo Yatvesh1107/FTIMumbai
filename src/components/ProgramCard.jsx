@@ -26,7 +26,17 @@ export default function ProgramCard({ course }) {
   return (
     <Link
       to="/coursedetails"
-      state={{ course: course.name }}
+      state={{
+        course: {
+          name: course.name,
+          category: course.category,
+          duration: meta.duration,
+          mode: meta.mode,
+          image,
+          provider,
+          description: course.description,
+        },
+      }}
       className="group relative isolate block w-full overflow-hidden rounded-[48px] border border-[#E4E4E4] bg-white p-[16px] shadow-course transition-all duration-300 hover:-translate-y-1 hover:border-navy-light hover:shadow-[0_30px_50px_-20px_rgba(11,60,104,0.35)] after:absolute after:inset-0 after:z-[-1] after:origin-bottom-right after:scale-0 after:rounded-[48px] after:bg-gradient-to-br after:from-navy-light after:to-navy-dark after:opacity-0 after:transition-all after:duration-500 hover:after:scale-100 hover:after:opacity-100 md:mb-0"
     >
       <div className="relative overflow-hidden rounded-[34px]">

@@ -19,7 +19,8 @@ import {
   Lock,
   ClipboardList,
   Bell,
-  PhoneCall
+  PhoneCall,
+  School
 } from 'lucide-react';
 
 export default function Sidebar({ isOpen, setIsOpen }) {
@@ -38,6 +39,7 @@ export default function Sidebar({ isOpen, setIsOpen }) {
     { name: 'Admission Desk', path: '/admin/admissions/new', icon: UserPlus, highlight: true },
     { name: 'Students Register', path: '/admin/admissions', icon: Users },
     { name: 'Courses & Pricing Matrix', path: '/admin/courses', icon: BookOpen },
+    { name: 'Schools & Products', path: '/admin/schools', icon: School },
     { name: 'Batches & Cohorts', path: '/admin/batches', icon: Layers },
     { name: 'Fee & Overdue Ledger', path: '/admin/fees', icon: CreditCard },
     { name: 'LMS Videos & GMeet Studio', path: '/admin/lms', icon: Video },

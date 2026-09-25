@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import { testimonials } from "../data/content";
+import { useSchools } from "../hooks/useSchools";
 import blurBg from "../assets/blur-bg.png";
 import processDesktop from "../assets/detail-process-desktop.png";
 import processMobile from "../assets/detail-process-mobile.png";
@@ -29,7 +30,8 @@ const headingClass =
 
 export default function CourseDetails() {
   const location = useLocation();
-  const state = location.state || {};
+  const state = useMemo(() => location.state || {}, [location.state]);
+  const { schools } = useSchools();
   const [all, setAll] = useState(null);
 
   useEffect(() => {
@@ -46,7 +48,61 @@ export default function CourseDetails() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [state.course]);
 
-  if (!all) {
+  const resolved = useMemo(() => {
+    const raw = state.course;
+    const directObj = raw && typeof raw === "object" ? raw : null;
+    const requestName = directObj ? raw.name : raw;
+    const names = all ? Object.keys(all) : [];
+
+    // 1. Full course object passed straight from a card
+    if (directObj && requestName) {
+      const legacy = all && all[requestName];
+      return {
+        courseName: requestName,
+        data: {
+          category: directObj.category || (legacy && legacy.category) || "",
+          description: directObj.description || (legacy && legacy.description) || "",
+          image: directObj.image || "",
+          mode: directObj.mode || "",
+          duration: directObj.duration || "",
+          provider: directObj.provider || "",
+          wywl: (legacy && legacy.wywl) || [],
+          content: (legacy && legacy.content) || [],
+          skills: (legacy && legacy.skills) || [],
+        },
+      };
+    }
+
+    // 2. Exact match in the legacy catalog
+    if (requestName && all && all[requestName]) {
+      return { courseName: requestName, data: all[requestName] };
+    }
+
+    // 3. Backend course (present in one of the schools)
+    if (requestName) {
+      let found = null;
+      for (const s of schools) {
+        const match = (s.courses || []).find((c) => c.name === requestName);
+        if (match) {
+          found = { ...match, wywl: [], content: [], skills: [] };
+          break;
+        }
+      }
+      if (found) return { courseName: found.name, data: found };
+      if (all) return { courseName: requestName, data: all[requestName] || {} };
+    }
+
+    // 4. Legacy fallback (default first course of matching category)
+    if (all) {
+      const fallbackName =
+        names.find((n) => !state.category || all[n].category === state.category) || names[0];
+      return { courseName: fallbackName, data: all[fallbackName] || {} };
+    }
+
+    return null;
+  }, [all, schools, state]);
+
+  if (!resolved) {
     return (
       <div className="flex min-h-[50vh] items-center justify-center">
         <div className="h-12 w-12 animate-spin rounded-full border-4 border-navy/20 border-t-navy" />
@@ -54,12 +110,7 @@ export default function CourseDetails() {
     );
   }
 
-  const names = Object.keys(all);
-  const courseName =
-    (state.course && all[state.course] && state.course) ||
-    names.find((n) => !state.category || all[n].category === state.category) ||
-    names[0];
-  const data = all[courseName] || {};
+  const { courseName, data } = resolved;
 
   return (
     <main>

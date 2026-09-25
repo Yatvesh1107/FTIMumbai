@@ -27,6 +27,7 @@ import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdmissionDesk from "./pages/admin/AdmissionDesk";
 import AdmissionsList from "./pages/admin/AdmissionsList";
 import CoursesManagement from "./pages/admin/CoursesManagement";
+import SchoolsManagement from "./pages/admin/SchoolsManagement";
 import BatchManagement from "./pages/admin/batches/BatchManagement";
 import FeeManagement from "./pages/admin/FeeManagement";
 import LMSManagement from "./pages/admin/LMSManagement";
@@ -232,6 +233,7 @@ export default function App() {
             <Route path="enquiries/:id/edit" element={<EnquiryEditForm />} />
             <Route path="enquiries/:id" element={<EnquiryDetail />} />
             <Route path="courses" element={<CoursesManagement />} />
+            <Route path="schools" element={<SchoolsManagement />} />
             <Route path="batches" element={<BatchManagement />} />
             <Route path="fees" element={<FeeManagement />} />
             <Route path="lms" element={<LMSManagement />} />

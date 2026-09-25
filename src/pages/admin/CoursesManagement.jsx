@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { apiRequest } from '../../utils/api';
+import { apiRequest, assetUrl, uploadImage } from '../../utils/api';
 import {
   BookOpen,
   Plus,
@@ -9,27 +9,36 @@ import {
   Clock,
   CheckCircle,
   AlertCircle,
-  X
+  X,
+  Upload,
+  ImageIcon
 } from 'lucide-react';
 
 export default function CoursesManagement() {
   const [courses, setCourses] = useState([]);
+  const [schools, setSchools] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingCourse, setEditingCourse] = useState(null);
   const [error, setError] = useState('');
   const [formLoading, setFormLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
 
   const [formData, setFormData] = useState({
     name: '',
     courseCode: '',
     category: 'Web Development',
+    durationMonths: '3',
     duration: '3 Months',
     durationInDays: 90,
     standardFee: 25000,
     minFloorFee: 18000,
     description: '',
-    status: 'Active'
+    status: 'Active',
+    schoolId: '',
+    mode: '',
+    provider: '',
+    image: ''
   });
 
   const fetchCourses = async () => {
@@ -38,6 +47,10 @@ export default function CoursesManagement() {
       const res = await apiRequest('/courses');
       if (res.success) {
         setCourses(res.courses || []);
+      }
+      const schoolRes = await apiRequest('/schools');
+      if (schoolRes.success) {
+        setSchools(schoolRes.schools || []);
       }
     } catch (err) {
       console.error(err);
@@ -56,12 +69,17 @@ export default function CoursesManagement() {
       name: '',
       courseCode: '',
       category: 'Web Development',
+      durationMonths: '3',
       duration: '3 Months',
       durationInDays: 90,
       standardFee: 25000,
       minFloorFee: 18000,
       description: '',
-      status: 'Active'
+      status: 'Active',
+      schoolId: '',
+      mode: '',
+      provider: '',
+      image: ''
     });
     setError('');
     setShowModal(true);
@@ -73,15 +91,50 @@ export default function CoursesManagement() {
       name: course.name,
       courseCode: course.courseCode,
       category: course.category || 'General',
+      durationMonths: monthsFromDuration(course.duration) || monthsFromDuration(course.durationInDays),
       duration: course.duration,
       durationInDays: course.durationInDays || 90,
       standardFee: course.standardFee,
       minFloorFee: course.minFloorFee,
       description: course.description || '',
-      status: course.status
+      status: course.status,
+      schoolId: course.schoolId || '',
+      mode: course.mode || '',
+      provider: course.provider || 'FTI Mumbai',
+      image: course.image || ''
     });
     setError('');
     setShowModal(true);
+  };
+
+  const handleUploadImage = async (file) => {
+    if (!file) return;
+    try {
+      setUploading(true);
+      setError('');
+      const url = await uploadImage(file);
+      setFormData((prev) => ({ ...prev, image: url }));
+    } catch (err) {
+      setError(err.message || 'Image upload failed.');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const monthsFromDuration = (duration) => {
+    const m = String(duration || '').match(/\d+(?:\.\d+)?/);
+    return m ? m[0] : '';
+  };
+
+  const handleDurationChange = (e) => {
+    const raw = e.target.value.replace(/[^\d.]/g, '');
+    const num = raw ? parseFloat(raw) : NaN;
+    setFormData((prev) => ({
+      ...prev,
+      durationMonths: raw,
+      duration: Number.isNaN(num) ? '' : `${num} Months`,
+      durationInDays: Number.isNaN(num) ? prev.durationInDays : Math.round(num * 30),
+    }));
   };
 
   const handleSaveCourse = async (e) => {
@@ -154,6 +207,7 @@ export default function CoursesManagement() {
           courses.map((course) => {
             const maxDiscount = course.standardFee - course.minFloorFee;
             const discountPercent = Math.round((maxDiscount / course.standardFee) * 100);
+            const schoolName = schools.find((s) => s._id === course.schoolId)?.name;
 
             return (
               <div
@@ -176,6 +230,18 @@ export default function CoursesManagement() {
                   <p className="mt-1 text-xs text-slate-500 line-clamp-2 leading-relaxed">
                     {course.description || 'Professional job-oriented practical training curriculum.'}
                   </p>
+
+                  <div className="mt-3 flex flex-wrap gap-1.5 text-[10px] font-bold">
+                    {course.provider && (
+                      <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-slate-700">{course.provider}</span>
+                    )}
+                    {course.mode && (
+                      <span className="rounded-full bg-sky-50 px-2.5 py-0.5 text-sky-700">{course.mode}</span>
+                    )}
+                    {schoolName && (
+                      <span className="rounded-full bg-terracotta/10 px-2.5 py-0.5 text-terracotta">{schoolName}</span>
+                    )}
+                  </div>
 
                   {/* Pricing Matrix Box */}
                   <div className="mt-4 rounded-2xl border border-slate-200/80 bg-slate-50 p-3.5 space-y-2 text-xs">
@@ -223,9 +289,9 @@ export default function CoursesManagement() {
 
       {/* Create / Edit Modal */}
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 backdrop-blur-sm p-4">
-          <div className="relative w-full max-w-lg rounded-3xl bg-white p-6 shadow-2xl space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 backdrop-blur-sm p-4 sm:p-6">
+          <div className="relative flex max-h-[calc(100dvh-2rem)] w-full max-w-xl flex-col overflow-hidden rounded-3xl bg-white shadow-2xl sm:max-h-[calc(100dvh-3rem)]">
+            <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4 sm:px-6">
               <h3 className="font-display text-base font-bold text-slate-900">
                 {editingCourse ? 'Edit Course & Pricing' : 'Create New Course'}
               </h3>
@@ -243,7 +309,7 @@ export default function CoursesManagement() {
               </div>
             )}
 
-            <form onSubmit={handleSaveCourse} className="space-y-4 text-xs font-semibold text-slate-700">
+            <form onSubmit={handleSaveCourse} className="flex-1 space-y-4 overflow-y-auto overscroll-contain px-5 py-4 text-xs font-semibold text-slate-700 sm:px-6">
               <div>
                 <label className="block uppercase text-[10px] text-slate-400">Course Name *</label>
                 <input
@@ -256,7 +322,7 @@ export default function CoursesManagement() {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div>
                   <label className="block uppercase text-[10px] text-slate-400">Course Code *</label>
                   <input
@@ -269,14 +335,85 @@ export default function CoursesManagement() {
                   />
                 </div>
                 <div>
-                  <label className="block uppercase text-[10px] text-slate-400">Duration Display</label>
+                  <label className="block uppercase text-[10px] text-slate-400">Duration (Months)</label>
                   <input
                     type="text"
-                    placeholder="e.g. 6 Months"
-                    value={formData.duration}
-                    onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
+                    inputMode="decimal"
+                    placeholder="e.g. 1.5"
+                    value={formData.durationMonths}
+                    onChange={handleDurationChange}
                     className="mt-1 w-full rounded-xl border border-slate-300 p-2.5 text-xs text-slate-800 font-medium"
                   />
+                </div>
+              </div>
+
+              {/* School placement */}
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 space-y-3">
+                <span className="font-bold text-[#0b3c68] uppercase tracking-wider text-[10px] block">
+                  School &amp; Marketing Placement
+                </span>
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <div>
+                    <label className="block uppercase text-[10px] text-slate-400">Assign to School</label>
+                    <select
+                      value={formData.schoolId}
+                      onChange={(e) => setFormData({ ...formData, schoolId: e.target.value })}
+                      className="mt-1 w-full rounded-xl border border-slate-300 p-2.5 text-xs text-slate-800 font-medium"
+                    >
+                      <option value="">— Not assigned —</option>
+                      {schools.map((s) => (
+                        <option key={s._id} value={s._id}>{s.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block uppercase text-[10px] text-slate-400">Mode</label>
+                    <select
+                      value={formData.mode}
+                      onChange={(e) => setFormData({ ...formData, mode: e.target.value })}
+                      className="mt-1 w-full rounded-xl border border-slate-300 p-2.5 text-xs text-slate-800 font-medium"
+                    >
+                      <option value="">— Select mode —</option>
+                      <option value="online">online</option>
+                      <option value="classroom">classroom</option>
+                      <option value="online + classroom">online + classroom</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <div>
+                    <label className="block uppercase text-[10px] text-slate-400">Provider Badge</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. FTI Mumbai"
+                      value={formData.provider}
+                      onChange={(e) => setFormData({ ...formData, provider: e.target.value })}
+                      className="mt-1 w-full rounded-xl border border-slate-300 p-2.5 text-xs text-slate-800 font-medium"
+                    />
+                  </div>
+                  <div className="flex items-end">
+                    <div className="flex w-full items-center gap-2 rounded-xl border border-slate-300 bg-white p-2">
+                      {formData.image ? (
+                        <img src={assetUrl(formData.image)} alt="Card" className="h-9 w-9 rounded-lg object-cover" />
+                      ) : (
+                        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-100">
+                          <ImageIcon className="h-4 w-4 text-slate-400" />
+                        </div>
+                      )}
+                      <label className="inline-flex cursor-pointer items-center gap-1.5 text-[11px] font-bold text-[#0b3c68] hover:underline">
+                        <Upload className="h-3.5 w-3.5" />
+                        {uploading ? 'Uploading...' : 'Card image'}
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          disabled={uploading}
+                          onChange={(e) => handleUploadImage(e.target.files[0])}
+                        />
+                      </label>
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -285,7 +422,7 @@ export default function CoursesManagement() {
                 <span className="font-bold text-[#0b3c68] uppercase tracking-wider text-[10px] block">
                   Dynamic Price Floor Configuration
                 </span>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                   <div>
                     <label className="block text-[10px] text-slate-500 font-bold">Standard Fee (MRP) *</label>
                     <input

@@ -72,17 +72,17 @@ export default function Placements() {
             For <strong className="text-navy">Placement Enquiries,</strong>{" "}
             contact us on{" "}
             <a
-              href="mailto:ftiofmumbai@gmail.com"
+              href="mailto:hello@ftimumbai.com"
               className="break-all font-bold text-navy underline decoration-terracotta decoration-2 underline-offset-4 transition hover:text-terracotta"
             >
-              ftiofmumbai@gmail.com
+              hello@ftimumbai.com
             </a>
             {" / "}
             <a
-              href="tel:+919000000000"
+              href="tel:+919769933844"
               className="font-bold text-navy underline decoration-terracotta decoration-2 underline-offset-4 transition hover:text-terracotta"
             >
-              +91 90000 00000
+              +91 97699 33844
             </a>
           </p>
           <Link

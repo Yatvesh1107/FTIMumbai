@@ -1,9 +1,12 @@
 import AudienceLanding from "../components/AudienceLanding";
-import { schools } from "../data/schools";
-
-const school = schools.find((s) => s.slug === "code-data-careers");
+import { useSchools } from "../hooks/useSchools";
 
 export default function CodeDataCareers() {
+  const { schools } = useSchools();
+  const school = schools.find((s) => s.slug === "code-data-careers");
+
+  if (!school) return null;
+
   return (
     <AudienceLanding
       eyebrow={school.eyebrow}
@@ -14,6 +17,7 @@ export default function CodeDataCareers() {
       featureIcon={school.featureIcon}
       features={school.features}
       courses={school.courses}
+      slug={school.slug}
     />
   );
 }
