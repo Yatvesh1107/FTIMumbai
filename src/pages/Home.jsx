@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import { testimonials } from "../data/content";
 import ProgramCard from "../components/ProgramCard";
-import { useSchoolCourses } from "../hooks/useSchoolCourses";
+import { useCourseGroups } from "../hooks/useCourseGroups";
 import CareerTracks from "../components/CareerTracks";
 import TalentCorridor from "../components/TalentCorridor";
 import FtiStandard from "../components/FtiStandard";
@@ -76,7 +76,7 @@ const lightYears = [
 
 export default function Home() {
   const [storyIdx, setStoryIdx] = useState(0);
-  const { groups, courses } = useSchoolCourses();
+  const { groups, courses } = useCourseGroups();
   const [selectedSlug, setSelectedSlug] = useState("code-data-careers");
   const [domainMenuOpen, setDomainMenuOpen] = useState(false);
 
@@ -329,7 +329,7 @@ export default function Home() {
               onClick={() => setDomainMenuOpen((v) => !v)}
               className="flex h-[56px] w-full items-center justify-between rounded-[48px] border-[1.5px] border-terracotta px-6 font-display text-[16px] font-semibold text-terracotta"
             >
-              {domain ? domain.name : "Select school"}
+              {domain ? domain.name : "Select category"}
               <ChevronDown className={`h-5 w-5 transition-transform ${domainMenuOpen ? "rotate-180" : ""}`} />
             </button>
             {domainMenuOpen && (
@@ -385,11 +385,11 @@ export default function Home() {
                     {domain.courses.length} job-oriented programs
                   </p>
                   <Link
-                    to={`/${domain.slug}`}
+                    to={`/category/${domain.slug}`}
                     className="group mt-6 flex cursor-pointer items-center justify-center gap-2 rounded-[40px] border border-terracotta bg-terracotta px-5 py-3 transition-all hover:bg-terracotta-dark active:scale-95"
                   >
                     <span className="font-display text-[16px] font-[600] tracking-[0.16px] text-white">
-                      Explore this school
+                      Explore this category
                     </span>
                     <ArrowRight className="h-4 w-4 text-white" />
                   </Link>
@@ -428,7 +428,7 @@ export default function Home() {
                 {[...groups, ...groups].map((g, i) => (
                   <Link
                     key={`${g.slug}-${i}`}
-                    to={`/${g.slug}`}
+                    to={`/category/${g.slug}`}
                     className="block h-full snap-center overflow-hidden md:w-[360px]"
                   >
                     <img

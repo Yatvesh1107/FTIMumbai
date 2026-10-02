@@ -4,14 +4,14 @@ import { ArrowRight, ArrowUpRight, ChevronDown } from "lucide-react";
 import ProgramCard from "../components/ProgramCard";
 import CareerTracks from "../components/CareerTracks";
 import FtiStandard from "../components/FtiStandard";
-import { useSchoolCourses } from "../hooks/useSchoolCourses";
+import { useCourseGroups } from "../hooks/useCourseGroups";
 
 export default function Courses() {
   const location = useLocation();
   const requested =
-    (location.state && (location.state.schoolSlug || location.state.category)) || null;
+    (location.state && (location.state.categorySlug || location.state.category)) || null;
 
-  const { groups } = useSchoolCourses();
+  const { groups } = useCourseGroups();
 
   const groupRefs = useRef({});
 
@@ -44,7 +44,7 @@ export default function Courses() {
             Explore our courses below!
           </h1>
           <p className="mx-auto mt-5 max-w-2xl text-lg text-slate-600">
-            Five schools of future skills, {totalCourses || "20+"} industry-built
+            Five course categories of future skills, {totalCourses || "20+"} industry-built
             programmes — each one co-owned by a company that does the work, with
             placement assistance on paper.
           </p>
@@ -56,12 +56,12 @@ export default function Courses() {
         <CareerTracks />
       </div>
 
-      {/* Explore by school */}
+      {/* Explore by category */}
       <section className="bg-white py-16 lg:py-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
           <div className="mb-10 text-center">
             <p className="text-xs font-bold uppercase tracking-[0.2em] text-terracotta">
-              Explore by school
+              Explore by category
             </p>
             <h2 className="font-display mt-2 text-[28px] font-[600] text-[#21191B] sm:text-4xl">
               Find the right program for you
@@ -102,7 +102,7 @@ export default function Courses() {
         </div>
       </section>
 
-      {/* Course sections, grouped by school (admin-driven) */}
+      {/* Course sections, grouped by category (admin-driven) */}
       <section className="bg-slate-50 py-16 lg:py-20">
         <div className="mx-auto max-w-7xl space-y-16 px-4 sm:px-6">
           {groups.map((g) => (
@@ -114,7 +114,7 @@ export default function Courses() {
               <div className="flex flex-wrap items-end justify-between gap-4">
                 <div>
                   <p className="text-xs font-bold uppercase tracking-[0.2em] text-terracotta">
-                    {g.poweredBy ? `Powered by ${g.poweredBy}` : "School of future skills"}
+                    {g.poweredBy ? `Powered by ${g.poweredBy}` : "Course category of future skills"}
                   </p>
                   <h2 className="font-display mt-1 text-2xl font-[600] text-[#21191B]">
                     {g.name}
@@ -138,7 +138,7 @@ export default function Courses() {
               </div>
 
               <Link
-                to={`/${g.slug}`}
+                to={`/category/${g.slug}`}
                 className="mt-6 inline-flex items-center gap-2 rounded-[40px] bg-gradient-to-r from-terracotta to-terracotta-dark px-6 py-2.5 text-xs font-bold text-white transition hover:brightness-110"
               >
                 View {g.name}

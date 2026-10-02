@@ -13,7 +13,7 @@ export default function FtiStandard({ showAudiences = true }) {
             Learn. Build. Prove. Place.
           </h2>
           <p className="mx-auto mt-3 max-w-2xl text-slate-600">
-            Every programme, in every school, runs on the same four moves.
+            Every programme, in every category, runs on the same four moves.
           </p>
         </div>
 

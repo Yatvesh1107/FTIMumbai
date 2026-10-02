@@ -1,23 +1,23 @@
 import AudienceLanding from "../components/AudienceLanding";
-import { useSchools } from "../hooks/useSchools";
+import { useCourseCategories } from "../hooks/useCourseCategories";
 
 export default function EnterpriseTech() {
-  const { schools } = useSchools();
-  const school = schools.find((s) => s.slug === "enterprise-tech");
+  const { categories } = useCourseCategories();
+  const category = categories.find((c) => c.slug === "enterprise-tech");
 
-  if (!school) return null;
+  if (!category) return null;
 
   return (
     <AudienceLanding
-      eyebrow={school.eyebrow}
-      headline={school.headline}
-      description={school.description}
-      heroImage={school.heroImage}
-      background={school.heroImage}
-      featureIcon={school.featureIcon}
-      features={school.features}
-      courses={school.courses}
-      slug={school.slug}
+      eyebrow={category.eyebrow}
+      headline={category.headline}
+      description={category.description}
+      heroImage={category.heroImage}
+      background={category.heroImage}
+      featureIcon={category.featureIcon}
+      features={category.features}
+      courses={category.courses}
+      slug={category.slug}
     />
   );
 }

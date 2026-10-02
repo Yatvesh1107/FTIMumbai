@@ -38,7 +38,7 @@ const columns = [
     ],
   },
   {
-    title: "Our Schools",
+    title: "Our Categories",
     links: [
       { label: "Code & Data Careers", to: "/code-data-careers" },
       { label: "Enterprise Tech", to: "/enterprise-tech" },

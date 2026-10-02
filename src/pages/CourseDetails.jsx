@@ -1,8 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import { testimonials } from "../data/content";
-import { useSchools } from "../hooks/useSchools";
+import { useCourseCategories } from "../hooks/useCourseCategories";
 import blurBg from "../assets/blur-bg.png";
 import processDesktop from "../assets/detail-process-desktop.png";
 import processMobile from "../assets/detail-process-mobile.png";
@@ -30,82 +30,70 @@ const headingClass =
 
 export default function CourseDetails() {
   const location = useLocation();
-  const state = useMemo(() => location.state || {}, [location.state]);
-  const { schools } = useSchools();
-  const [all, setAll] = useState(null);
-
-  useEffect(() => {
-    let alive = true;
-    import("../data/courseData.json").then((mod) => {
-      if (alive) setAll(mod.default);
-    });
-    return () => {
-      alive = false;
-    };
-  }, []);
+  const state = location.state || {};
+  const { categories, loading } = useCourseCategories();
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [state.course]);
 
-  const resolved = useMemo(() => {
-    const raw = state.course;
-    const directObj = raw && typeof raw === "object" ? raw : null;
-    const requestName = directObj ? raw.name : raw;
-    const names = all ? Object.keys(all) : [];
+  const raw = state.course;
+  const directObj = raw && typeof raw === "object" ? raw : null;
+  const requestName = directObj ? raw.name : raw;
 
-    // 1. Full course object passed straight from a card
-    if (directObj && requestName) {
-      const legacy = all && all[requestName];
-      return {
-        courseName: requestName,
-        data: {
-          category: directObj.category || (legacy && legacy.category) || "",
-          description: directObj.description || (legacy && legacy.description) || "",
-          image: directObj.image || "",
-          mode: directObj.mode || "",
-          duration: directObj.duration || "",
-          provider: directObj.provider || "",
-          wywl: (legacy && legacy.wywl) || [],
-          content: (legacy && legacy.content) || [],
-          skills: (legacy && legacy.skills) || [],
-        },
-      };
-    }
-
-    // 2. Exact match in the legacy catalog
-    if (requestName && all && all[requestName]) {
-      return { courseName: requestName, data: all[requestName] };
-    }
-
-    // 3. Backend course (present in one of the schools)
-    if (requestName) {
-      let found = null;
-      for (const s of schools) {
-        const match = (s.courses || []).find((c) => c.name === requestName);
-        if (match) {
-          found = { ...match, wywl: [], content: [], skills: [] };
-          break;
-        }
+  let resolved = null;
+  // 1. Full course object passed straight from a card
+  if (directObj && requestName) {
+    resolved = {
+      courseName: requestName,
+      data: {
+        category: directObj.category || "",
+        description: directObj.description || "",
+        image: directObj.image || "",
+        mode: directObj.mode || "",
+        duration: directObj.duration || "",
+        provider: directObj.provider || "",
+        wywl: directObj.wywl || [],
+        skills: directObj.skills || [],
+        content: directObj.content || [],
+      },
+    };
+  }
+  // 2. Backend course found in one of the categories (admin panel data)
+  if (!resolved && requestName) {
+    for (const cat of categories) {
+      const match = (cat.courses || []).find((c) => c.name === requestName);
+      if (match) {
+        resolved = { courseName: match.name, data: match };
+        break;
       }
-      if (found) return { courseName: found.name, data: found };
-      if (all) return { courseName: requestName, data: all[requestName] || {} };
     }
+  }
 
-    // 4. Legacy fallback (default first course of matching category)
-    if (all) {
-      const fallbackName =
-        names.find((n) => !state.category || all[n].category === state.category) || names[0];
-      return { courseName: fallbackName, data: all[fallbackName] || {} };
-    }
-
-    return null;
-  }, [all, schools, state]);
-
-  if (!resolved) {
+  if (loading) {
     return (
       <div className="flex min-h-[50vh] items-center justify-center">
         <div className="h-12 w-12 animate-spin rounded-full border-4 border-navy/20 border-t-navy" />
+      </div>
+    );
+  }
+
+  if (!resolved) {
+    return (
+      <div className="flex min-h-[50vh] flex-col items-center justify-center px-6 py-16 text-center">
+        <h1 className="font-display text-2xl font-[600] text-[#21191B]">
+          Course details not found
+        </h1>
+        <p className="mt-3 max-w-md text-slate-600">
+          This course isn&apos;t published yet or the link is out of date. Browse the
+          latest programmes from the admin-managed catalog.
+        </p>
+        <Link
+          to="/courses"
+          className="mt-8 inline-flex items-center gap-2 rounded-[40px] bg-terracotta px-8 py-3 font-semibold text-white shadow-md transition hover:bg-terracotta-dark active:scale-95"
+        >
+          Explore Courses <ArrowRight className="h-4 w-4" />
+        </Link>
       </div>
     );
   }
@@ -140,21 +128,23 @@ export default function CourseDetails() {
       </section>
 
       {/* What you'll learn */}
-      <section className="bg-white py-14">
-        <div className="mx-auto max-w-6xl px-6">
-          <h2 className={headingClass}>What you'll learn</h2>
-          <ul className="mt-8 grid gap-x-10 gap-y-4 sm:grid-cols-2">
-            {(data.wywl || []).map((point) => (
-              <li key={point} className="flex items-start gap-3 text-sm leading-relaxed text-slate-700 sm:text-base">
-                <svg viewBox="0 0 24 24" fill="#0B3C68" className="mt-0.5 h-5 w-5 shrink-0">
-                  <path d="M16.97 6.25a2 2 0 0 0-2.72.78l-3.71 6.68-2.13-2.13a2 2 0 1 0-2.82 2.83l4 4a2 2 0 0 0 1.69.56 2 2 0 0 0 1.47-1l5-9a2 2 0 0 0-.78-2.72Z" />
-                </svg>
-                {point}
-              </li>
-            ))}
-          </ul>
-        </div>
-      </section>
+      {(data.wywl || []).length > 0 && (
+        <section className="bg-white py-14">
+          <div className="mx-auto max-w-6xl px-6">
+            <h2 className={headingClass}>What you'll learn</h2>
+            <ul className="mt-8 grid gap-x-10 gap-y-4 sm:grid-cols-2">
+              {(data.wywl || []).map((point) => (
+                <li key={point} className="flex items-start gap-3 text-sm leading-relaxed text-slate-700 sm:text-base">
+                  <svg viewBox="0 0 24 24" fill="#0B3C68" className="mt-0.5 h-5 w-5 shrink-0">
+                    <path d="M16.97 6.25a2 2 0 0 0-2.72.78l-3.71 6.68-2.13-2.13a2 2 0 1 0-2.82 2.83l4 4a2 2 0 0 0 1.69.56 2 2 0 0 0 1.47-1l5-9a2 2 0 0 0-.78-2.72Z" />
+                  </svg>
+                  {point}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
+      )}
 
       {/* Training process */}
       <section className="rounded-[48px] bg-cream py-14 text-center px-6 md:px-20">
@@ -222,20 +212,22 @@ export default function CourseDetails() {
       {(data.content || []).length > 0 && (
         <section className="bg-white py-14">
           <div className="mx-auto max-w-6xl px-6">
-            <h2 className={headingClass}>Course Content</h2>
+            <h2 className="font-display inline-block border-b-4 border-terracotta pb-1 text-2xl font-bold text-navy sm:text-3xl">
+              Course Content
+            </h2>
             <div className="mt-10 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {data.content.map((mod) => (
+              {data.content.map((mod, mi) => (
                 <div
-                  key={mod.heading}
-                  className="rounded-[24px] bg-cream p-6 shadow-card ring-1 ring-slate-100 transition hover:-translate-y-1 hover:shadow-lift"
+                  key={mod.heading || mi}
+                  className="rounded-2xl bg-cream p-6 shadow-card ring-1 ring-slate-100 transition hover:-translate-y-1 hover:shadow-lift"
                 >
-                  <h3 className="font-display flex items-center gap-2 font-[600] text-navy">
+                  <h3 className="font-display flex items-center gap-2 font-bold text-navy">
                     <span className="h-2 w-2 shrink-0 rounded-full bg-terracotta" />
                     {mod.heading}
                   </h3>
                   <ul className="mt-3 space-y-1.5 pl-4 text-sm leading-relaxed text-slate-600">
-                    {mod.topics.map((t) => (
-                      <li key={t}>• {t}</li>
+                    {(mod.topics || []).map((t, ti) => (
+                      <li key={ti}>• {t}</li>
                     ))}
                   </ul>
                 </div>

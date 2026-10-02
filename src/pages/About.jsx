@@ -168,7 +168,7 @@ export default function About() {
               Ready to start building what people actually use?
             </h3>
             <p className="mt-2 text-white/70">
-              Explore the programmes across FTI's five schools of future skills.
+              Explore the programmes across FTI's five course categories of future skills.
             </p>
           </div>
           <Link

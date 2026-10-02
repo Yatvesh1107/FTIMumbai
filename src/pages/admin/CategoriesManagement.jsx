@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { apiRequest, assetUrl, uploadImage } from '../../utils/api';
 import {
-  School as SchoolIcon,
+  LayoutGrid as CategoryIcon,
   Plus,
   Edit2,
   Trash2,
@@ -36,8 +36,16 @@ const emptyForm = {
   features: [{ title: '' }],
 };
 
-export default function SchoolsManagement() {
-  const [schools, setSchools] = useState([]);
+const slugify = (str) =>
+  String(str || '')
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .replace(/-+/g, '-');
+
+export default function CategoriesManagement() {
+  const [categories, setCategories] = useState([]);
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -50,14 +58,15 @@ export default function SchoolsManagement() {
   const [assignedCourses, setAssignedCourses] = useState([]);
   const [addCourseId, setAddCourseId] = useState('');
   const [assignBusy, setAssignBusy] = useState(false);
+  const [slugAuto, setSlugAuto] = useState(true);
 
   const fetchAll = async () => {
     try {
-      const [schoolRes, courseRes] = await Promise.all([
-        apiRequest('/schools'),
+      const [categoryRes, courseRes] = await Promise.all([
+        apiRequest('/categories'),
         apiRequest('/courses'),
       ]);
-      setSchools(schoolRes.schools || []);
+      setCategories(categoryRes.categories || []);
       setCourses(courseRes.courses || []);
     } catch (err) {
       console.error(err);
@@ -68,10 +77,10 @@ export default function SchoolsManagement() {
 
   useEffect(() => {
     let alive = true;
-    Promise.all([apiRequest('/schools'), apiRequest('/courses')])
-      .then(([schoolRes, courseRes]) => {
+    Promise.all([apiRequest('/categories'), apiRequest('/courses')])
+      .then(([categoryRes, courseRes]) => {
         if (!alive) return;
-        setSchools(schoolRes.schools || []);
+        setCategories(categoryRes.categories || []);
         setCourses(courseRes.courses || []);
       })
       .catch((err) => console.error(err))
@@ -88,31 +97,33 @@ export default function SchoolsManagement() {
     setForm({ ...emptyForm, features: [{ title: '' }] });
     setAssignedCourses([]);
     setAddCourseId('');
+    setSlugAuto(true);
     setError('');
     setShowModal(true);
   };
 
-  const openEdit = (school) => {
-    setEditing(school);
+  const openEdit = (category) => {
+    setEditing(category);
     setForm({
-      slug: school.slug,
-      name: school.name,
-      navLabel: school.navLabel,
-      poweredBy: school.poweredBy || '',
-      eyebrow: school.eyebrow || '',
-      headline: school.headline || '',
-      description: school.description || '',
-      heroImage: school.heroImage || '',
-      featureIcon: school.featureIcon || 'Code2',
-      enabled: school.enabled !== false,
-      orderIndex: school.orderIndex || 0,
+      slug: category.slug,
+      name: category.name,
+      navLabel: category.navLabel,
+      poweredBy: category.poweredBy || '',
+      eyebrow: category.eyebrow || '',
+      headline: category.headline || '',
+      description: category.description || '',
+      heroImage: category.heroImage || '',
+      featureIcon: category.featureIcon || 'Code2',
+      enabled: category.enabled !== false,
+      orderIndex: category.orderIndex || 0,
       features:
-        school.features && school.features.length
-          ? school.features.map((f) => ({ title: f.title }))
+        category.features && category.features.length
+          ? category.features.map((f) => ({ title: f.title }))
           : [{ title: '' }],
     });
-    setAssignedCourses(school.courses || []);
+    setAssignedCourses(category.courses || []);
     setAddCourseId('');
+    setSlugAuto(false);
     setError('');
     setShowModal(true);
   };
@@ -122,6 +133,7 @@ export default function SchoolsManagement() {
     setEditing(null);
     setForm({ ...emptyForm, features: [{ title: '' }] });
     setAssignedCourses([]);
+    setSlugAuto(true);
     setError('');
   };
 
@@ -142,6 +154,13 @@ export default function SchoolsManagement() {
   const handleFeatureChange = (index, value) => {
     const next = form.features.map((f, i) => (i === index ? { title: value } : f));
     setForm((prev) => ({ ...prev, features: next }));
+  };
+
+  const handleNameChange = (value) => {
+    setForm((prev) => ({ ...prev, name: value }));
+    if (!editing && slugAuto) {
+      setForm((prev) => ({ ...prev, slug: slugify(value) }));
+    }
   };
 
   const removeFeature = (index) => {
@@ -179,47 +198,47 @@ export default function SchoolsManagement() {
     setError('');
     try {
       if (editing) {
-        await apiRequest(`/schools/${editing._id}`, 'PUT', payload);
+        await apiRequest(`/categories/${editing._id}`, 'PUT', payload);
       } else {
-        await apiRequest('/schools', 'POST', payload);
+        await apiRequest('/categories', 'POST', payload);
       }
       setShowModal(false);
       setEditing(null);
       fetchAll();
     } catch (err) {
-      setError(err.message || 'Error saving school.');
+      setError(err.message || 'Error saving category.');
     } finally {
       setFormLoading(false);
     }
   };
 
-  const handleDelete = async (school) => {
-    if (!window.confirm(`Delete school "${school.name}"? Its courses will be unassigned (not deleted).`)) return;
+  const handleDelete = async (category) => {
+    if (!window.confirm(`Delete category "${category.name}"? Its courses will be unassigned (not deleted).`)) return;
     try {
-      await apiRequest(`/schools/${school._id}`, 'DELETE');
+      await apiRequest(`/categories/${category._id}`, 'DELETE');
       fetchAll();
     } catch (err) {
-      alert(err.message || 'Could not delete school.');
+      alert(err.message || 'Could not delete category.');
     }
   };
 
   const unassignedCourses = courses.filter((c) => !assignedCourses.some((a) => a._id === c._id));
 
-  const addCourseToSchool = async () => {
+  const addCourseToCategory = async () => {
     if (!editing || !addCourseId) return;
     const course = courses.find((c) => c._id === addCourseId);
     if (!course) return;
     setAssignBusy(true);
     setError('');
     try {
-      const maxOrder = assignedCourses.reduce((m, c) => Math.max(m, Number(c.orderInSchool) || 0), 0);
+      const maxOrder = assignedCourses.reduce((m, c) => Math.max(m, Number(c.orderInCategory) || 0), 0);
       await apiRequest(`/courses/${course._id}`, 'PUT', {
-        schoolId: editing._id,
-        orderInSchool: maxOrder + 1,
+        courseCategoryId: editing._id,
+        orderInCategory: maxOrder + 1,
       });
       setAssignedCourses((prev) => [
         ...prev,
-        { ...course, schoolId: editing._id, orderInSchool: maxOrder + 1 },
+        { ...course, courseCategoryId: editing._id, orderInCategory: maxOrder + 1 },
       ]);
       setAddCourseId('');
     } catch (err) {
@@ -229,11 +248,11 @@ export default function SchoolsManagement() {
     }
   };
 
-  const removeCourseFromSchool = async (course) => {
+  const removeCourseFromCategory = async (course) => {
     setAssignBusy(true);
     setError('');
     try {
-      await apiRequest(`/courses/${course._id}`, 'PUT', { schoolId: null });
+      await apiRequest(`/courses/${course._id}`, 'PUT', { courseCategoryId: null });
       setAssignedCourses((prev) => prev.filter((c) => c._id !== course._id));
     } catch (err) {
       setError(err.message || 'Could not unassign course.');
@@ -257,11 +276,11 @@ export default function SchoolsManagement() {
     try {
       for (let i = 0; i < reordered.length; i++) {
         const c = reordered[i];
-        if (String(c.orderInSchool || 0) !== String(i + 1)) {
-          await apiRequest(`/courses/${c._id}`, 'PUT', { orderInSchool: i + 1 });
+        if (String(c.orderInCategory || 0) !== String(i + 1)) {
+          await apiRequest(`/courses/${c._id}`, 'PUT', { orderInCategory: i + 1 });
         }
       }
-      setAssignedCourses(reordered.map((c, i) => ({ ...c, orderInSchool: i + 1 })));
+      setAssignedCourses(reordered.map((c, i) => ({ ...c, orderInCategory: i + 1 })));
     } catch (err) {
       setError(err.message || 'Could not reorder courses.');
     } finally {
@@ -274,74 +293,74 @@ export default function SchoolsManagement() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="font-display text-2xl font-black text-slate-900 tracking-tight">
-            Schools &amp; Products
+            Course Categories 
           </h1>
           <p className="text-xs text-slate-500 font-medium">
-            Manage the 5 school landing pages. Courses are created/edited in Courses &amp; Pricing Matrix and assigned here.
+            Manage the course category landing pages. Courses are created/edited in Courses &amp; Pricing Matrix and assigned here.
           </p>
         </div>
         <button
           onClick={openCreate}
           className="inline-flex items-center gap-2 rounded-xl bg-[#0b3c68] px-5 py-2.5 text-xs font-bold text-white shadow hover:bg-[#12518a] transition"
         >
-          <Plus className="h-4 w-4" /> + Create New School
+          <Plus className="h-4 w-4" /> + Create New Category
         </button>
       </div>
 
-      {/* Schools grid */}
+      {/* Categories grid */}
       <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
         {loading ? (
           <div className="col-span-full py-12 text-center">
             <div className="h-8 w-8 animate-spin mx-auto rounded-full border-4 border-[#0b3c68] border-t-transparent"></div>
           </div>
-        ) : schools.length === 0 ? (
+        ) : categories.length === 0 ? (
           <div className="col-span-full py-12 text-center text-slate-400 italic">
-            No schools found. Click &quot;+ Create New School&quot; to add one.
+            No categories found. Click &quot;+ Create New Category&quot; to add one.
           </div>
         ) : (
-          schools.map((school) => (
+          categories.map((category) => (
             <div
-              key={school._id}
+              key={category._id}
               className="flex flex-col justify-between rounded-3xl border border-slate-200 bg-white p-5 shadow-sm hover:shadow-md transition"
             >
               <div>
                 <div className="flex items-center gap-3">
                   <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-slate-100">
-                    {school.heroImage ? (
-                      <img src={assetUrl(school.heroImage)} alt={school.name} className="h-full w-full object-cover" />
+                    {category.heroImage ? (
+                      <img src={assetUrl(category.heroImage)} alt={category.name} className="h-full w-full object-cover" />
                     ) : (
-                      <SchoolIcon className="h-6 w-6 text-slate-400" />
+                      <CategoryIcon className="h-6 w-6 text-slate-400" />
                     )}
                   </div>
                   <div className="min-w-0">
-                    <h3 className="truncate font-display text-base font-bold text-slate-900">{school.name}</h3>
-                    <p className="truncate text-xs text-slate-500">/{school.slug}</p>
+                    <h3 className="truncate font-display text-base font-bold text-slate-900">{category.name}</h3>
+                    <p className="truncate text-xs text-slate-500">/{category.slug}</p>
                   </div>
                 </div>
 
                 <div className="mt-3 flex flex-wrap gap-1.5 text-[10px] font-bold">
-                  <span className={`rounded-full px-2.5 py-0.5 ${school.enabled !== false ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-500'}`}>
-                    {school.enabled !== false ? 'Live' : 'Hidden'}
+                  <span className={`rounded-full px-2.5 py-0.5 ${category.enabled !== false ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-500'}`}>
+                    {category.enabled !== false ? 'Live' : 'Hidden'}
                   </span>
-                  <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-slate-700">{school.navLabel}</span>
-                  {school.poweredBy && (
-                    <span className="rounded-full bg-terracotta/10 px-2.5 py-0.5 text-terracotta">Powered by {school.poweredBy}</span>
+                  <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-slate-700">{category.navLabel}</span>
+                  {category.poweredBy && (
+                    <span className="rounded-full bg-terracotta/10 px-2.5 py-0.5 text-terracotta">Powered by {category.poweredBy}</span>
                   )}
                 </div>
 
                 <p className="mt-3 text-xs text-slate-500 line-clamp-2 leading-relaxed">
-                  {school.headline || school.description || 'No copy added yet.'}
+                  {category.headline || category.description || 'No copy added yet.'}
                 </p>
 
                 <div className="mt-4 rounded-2xl border border-slate-200/80 bg-slate-50 px-4 py-3 text-xs">
-                  <span className="font-bold text-slate-800">{school.courses ? school.courses.length : 0} courses</span>
+                  <span className="font-bold text-slate-800">{category.courses ? category.courses.length : 0} courses</span>
                   <span className="text-slate-400"> · assigned</span>
                 </div>
               </div>
 
               <div className="mt-5 flex items-center justify-between border-t border-slate-100 pt-3">
                 <a
-                  href={`/${school.slug}`}
+                  href={`/category/${category.slug}`}
                   target="_blank"
                   rel="noreferrer"
                   className="inline-flex items-center gap-1.5 text-xs font-bold text-[#0b3c68] hover:underline"
@@ -350,16 +369,16 @@ export default function SchoolsManagement() {
                 </a>
                 <div className="flex gap-2">
                   <button
-                    onClick={() => openEdit(school)}
+                    onClick={() => openEdit(category)}
                     className="rounded-lg p-2 text-slate-600 hover:bg-slate-100 hover:text-[#0b3c68]"
-                    title="Edit School"
+                    title="Edit Category"
                   >
                     <Edit2 className="h-4 w-4" />
                   </button>
                   <button
-                    onClick={() => handleDelete(school)}
+                    onClick={() => handleDelete(category)}
                     className="rounded-lg p-2 text-slate-400 hover:bg-red-50 hover:text-red-600"
-                    title="Delete School"
+                    title="Delete Category"
                   >
                     <Trash2 className="h-4 w-4" />
                   </button>
@@ -376,7 +395,7 @@ export default function SchoolsManagement() {
           <div className="relative flex max-h-[90vh] w-full max-w-2xl flex-col rounded-3xl bg-white shadow-2xl">
             <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4">
               <h3 className="font-display text-base font-bold text-slate-900">
-                {editing ? `Edit School — ${editing.name}` : 'Create New School'}
+                {editing ? `Edit Category — ${editing.name}` : 'Create New Category'}
               </h3>
               <button
                 onClick={() => setShowModal(false)}
@@ -398,9 +417,12 @@ export default function SchoolsManagement() {
                     <input
                       type="text"
                       required
-                      placeholder="e.g. code-data-careers"
+                      placeholder={editing ? 'e.g. code-data-careers' : 'Auto-filled from name'}
                       value={form.slug}
-                      onChange={(e) => setForm({ ...form, slug: e.target.value })}
+                      onChange={(e) => {
+                        setForm({ ...form, slug: e.target.value });
+                        setSlugAuto(false);
+                      }}
                       className="mt-1 w-full rounded-xl border border-slate-300 p-2.5 text-xs text-slate-800 font-medium"
                     />
                   </div>
@@ -419,13 +441,13 @@ export default function SchoolsManagement() {
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block uppercase text-[10px] text-slate-400">School Name *</label>
+                    <label className="block uppercase text-[10px] text-slate-400">Category Name *</label>
                     <input
                       type="text"
                       required
                       placeholder="e.g. Code & Data Careers"
                       value={form.name}
-                      onChange={(e) => setForm({ ...form, name: e.target.value })}
+                      onChange={(e) => handleNameChange(e.target.value)}
                       className="mt-1 w-full rounded-xl border border-slate-300 p-2.5 text-xs text-slate-800 font-medium"
                     />
                   </div>
@@ -469,7 +491,7 @@ export default function SchoolsManagement() {
                     rows={3}
                     value={form.description}
                     onChange={(e) => setForm({ ...form, description: e.target.value })}
-                    placeholder="School positioning paragraph"
+                    placeholder="Category positioning paragraph"
                     className="mt-1 w-full rounded-xl border border-slate-300 p-2.5 text-xs font-medium"
                   />
                 </div>
@@ -593,7 +615,7 @@ export default function SchoolsManagement() {
                     disabled={formLoading}
                     className="rounded-xl bg-[#0b3c68] px-6 py-2.5 text-xs font-bold text-white shadow hover:bg-[#12518a] disabled:opacity-40"
                   >
-                    {formLoading ? 'Saving...' : editing ? 'Save Changes' : 'Create School'}
+                    {formLoading ? 'Saving...' : editing ? 'Save Changes' : 'Create Category'}
                   </button>
                 </div>
               </form>
@@ -637,7 +659,7 @@ export default function SchoolsManagement() {
                               <ArrowDown className="h-3.5 w-3.5" />
                             </button>
                             <button
-                              onClick={() => removeCourseFromSchool(course)}
+                              onClick={() => removeCourseFromCategory(course)}
                               disabled={assignBusy}
                               className="rounded p-1 text-slate-400 hover:bg-red-50 hover:text-red-600 disabled:opacity-30"
                               title="Unassign"
@@ -664,7 +686,7 @@ export default function SchoolsManagement() {
                       ))}
                     </select>
                     <button
-                      onClick={addCourseToSchool}
+                      onClick={addCourseToCategory}
                       disabled={assignBusy || !addCourseId}
                       className="rounded-xl bg-[#0b3c68] px-4 py-2.5 text-xs font-bold text-white shadow hover:bg-[#12518a] disabled:opacity-40"
                     >

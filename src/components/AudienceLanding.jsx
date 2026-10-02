@@ -1,8 +1,6 @@
 import { useMemo } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight, ChevronLeft, Check } from "lucide-react";
-import { categories } from "../data/content";
-import { categoryCourses } from "../data/courseGroups";
 import ProgramCard from "./ProgramCard";
 
 export default function AudienceLanding({
@@ -20,12 +18,7 @@ export default function AudienceLanding({
     if (courses && courses.length) {
       return [{ category: eyebrow, courses }];
     }
-    return categories.map((cat) => ({
-      ...cat,
-      courses: categoryCourses(cat.category)
-        .slice(0, 6)
-        .map((name) => ({ name, category: cat.category })),
-    }));
+    return [];
   }, [courses, eyebrow]);
 
   return (
@@ -106,29 +99,42 @@ export default function AudienceLanding({
             ))}
           </div>
 
-          <div className="mt-14 space-y-16">
-            {groups.map((g, i) => (
-              <div key={g.category} id={`group-${i}`} className="scroll-mt-24">
-                <div className="flex flex-wrap items-end justify-between gap-4">
-                  <h3 className="font-display text-2xl font-[600] text-[#21191B]">
-                    {g.category}
-                  </h3>
-                  <Link
-                    to="/courses"
-                    state={{ schoolSlug: slug || g.category }}
-                    className="inline-flex items-center gap-1 rounded-[40px] bg-gradient-to-r from-terracotta to-terracotta-dark px-5 py-2 text-xs font-bold text-white transition hover:brightness-110 active:scale-95"
-                  >
-                    View All Courses in {g.category} <ArrowRight className="h-3.5 w-3.5" />
-                  </Link>
-                </div>
-
-                <div className="mt-6 grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
-                  {g.courses.map((courseItem) => (
-                    <ProgramCard key={courseItem.name} course={courseItem} />
-                  ))}
-                </div>
+          <div className="mt-14">
+            {groups.length === 0 ? (
+              <div className="rounded-[24px] border border-dashed border-slate-200 bg-slate-50 px-6 py-16 text-center">
+                <p className="font-display text-lg font-[600] text-[#21191B]">
+                  Courses are being added for this category
+                </p>
+                <p className="mt-2 text-sm text-slate-500">
+                  Please check back soon — the head office is curating programmes for this category.
+                </p>
               </div>
-            ))}
+            ) : (
+              <div className="space-y-16">
+                {groups.map((g, i) => (
+                  <div key={g.category} id={`group-${i}`} className="scroll-mt-24">
+                    <div className="flex flex-wrap items-end justify-between gap-4">
+                      <h3 className="font-display text-2xl font-[600] text-[#21191B]">
+                        {g.category}
+                      </h3>
+                      <Link
+                        to="/courses"
+                        state={{ categorySlug: slug || g.category }}
+                        className="inline-flex items-center gap-1 rounded-[40px] bg-gradient-to-r from-terracotta to-terracotta-dark px-5 py-2 text-xs font-bold text-white transition hover:brightness-110 active:scale-95"
+                      >
+                        View All Courses in {g.category} <ArrowRight className="h-3.5 w-3.5" />
+                      </Link>
+                    </div>
+
+                    <div className="mt-6 grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
+                      {g.courses.map((courseItem) => (
+                        <ProgramCard key={courseItem.name} course={courseItem} />
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </section>

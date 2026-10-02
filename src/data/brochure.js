@@ -42,7 +42,7 @@ export const careerTracks = [
 export const aboutFti = {
   headline: "India has the talent. We make it future-ready, and connect it to the world.",
   body: [
-    "FTI, the Futures & Technology Institute, is a live lab for the skills the next decade will hire for. From our base in Mumbai, we run five schools of future skills, each co-owned by a company that does the work for a living: software and data, enterprise technology, deep tech, engineering design, and AI-led supply chains.",
+    "FTI, the Futures & Technology Institute, is a live lab for the skills the next decade will hire for. From our base in Mumbai, we run five course categories of future skills, each co-owned by a company that does the work for a living: software and data, enterprise technology, deep tech, engineering design, and AI-led supply chains.",
     "Learners do not just attend classes. They build real projects, are assessed against real job competencies, and leave with a portfolio and an industry-recognised certificate. That is how we turn degrees into careers, and how we contribute to skilling India at scale.",
   ],
   corridor:
@@ -50,7 +50,7 @@ export const aboutFti = {
 };
 
 export const ftiStats = [
-  { value: "5", label: "schools of future skills" },
+  { value: "5", label: "course categories of future skills" },
   { value: "20+", label: "industry-built programmes" },
   { value: "2", label: "hubs — FTI Mumbai & FTI Dubai" },
   { value: "500,000", label: "lives to future-proof by 2030" },

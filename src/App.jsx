@@ -14,6 +14,7 @@ import EngineeringDesign from "./pages/EngineeringDesign";
 import SupplyChainAI from "./pages/SupplyChainAI";
 import Courses from "./pages/Courses";
 import CourseDetails from "./pages/CourseDetails";
+import CategoryPage from "./pages/CategoryPage";
 import Placements from "./pages/Placements";
 import ContactUs from "./pages/ContactUs";
 import EnquiryForm from "./pages/EnquiryForm";
@@ -27,7 +28,7 @@ import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdmissionDesk from "./pages/admin/AdmissionDesk";
 import AdmissionsList from "./pages/admin/AdmissionsList";
 import CoursesManagement from "./pages/admin/CoursesManagement";
-import SchoolsManagement from "./pages/admin/SchoolsManagement";
+import CategoriesManagement from "./pages/admin/CategoriesManagement";
 import BatchManagement from "./pages/admin/batches/BatchManagement";
 import FeeManagement from "./pages/admin/FeeManagement";
 import LMSManagement from "./pages/admin/LMSManagement";
@@ -169,6 +170,18 @@ export default function App() {
             }
           />
           <Route
+            path="/category/:slug"
+            element={
+              <div className="flex min-h-svh flex-col">
+                <Navbar />
+                <div className="flex-1">
+                  <CategoryPage />
+                </div>
+                <Footer />
+              </div>
+            }
+          />
+          <Route
             path="/coursedetails"
             element={
               <div className="flex min-h-svh flex-col">
@@ -233,7 +246,7 @@ export default function App() {
             <Route path="enquiries/:id/edit" element={<EnquiryEditForm />} />
             <Route path="enquiries/:id" element={<EnquiryDetail />} />
             <Route path="courses" element={<CoursesManagement />} />
-            <Route path="schools" element={<SchoolsManagement />} />
+            <Route path="categories" element={<CategoriesManagement />} />
             <Route path="batches" element={<BatchManagement />} />
             <Route path="fees" element={<FeeManagement />} />
             <Route path="lms" element={<LMSManagement />} />
