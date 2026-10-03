@@ -1,6 +1,10 @@
 import { useState, useEffect } from 'react';
+import { toast } from 'sonner';
 import { Link } from 'react-router-dom';
 import { apiRequest } from '../../../utils/api';
+import { usePagination } from '../../../hooks/usePagination';
+import Pagination, { PAGE_SIZE } from '../../../components/Pagination';
+import CourseSelect from '../../../components/CourseSelect';
 import {
   FileText,
   Plus,
@@ -28,7 +32,7 @@ export default function StudyNotesList() {
       const res = await apiRequest('/courses');
       if (res.success) setCourses(res.courses || []);
     } catch (err) {
-      console.error(err);
+      toast.error(err.message || 'Could not load courses for study notes. Please try again.');
     }
   };
 
@@ -52,7 +56,7 @@ export default function StudyNotesList() {
         }
       }
     } catch (err) {
-      console.error(err);
+      toast.error(err.message || 'Could not load study notes. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -76,6 +80,8 @@ export default function StudyNotesList() {
       n.courseName?.toLowerCase().includes(term)
     );
   });
+
+  const { page, setPage, total, pageItems } = usePagination(filtered);
 
   return (
     <div className="space-y-6">
@@ -113,18 +119,15 @@ export default function StudyNotesList() {
 
         <div className="flex items-center gap-2">
           <Filter className="h-4 w-4 text-slate-400" />
-          <select
-            value={selectedCourseId}
-            onChange={(e) => setSelectedCourseId(e.target.value)}
-            className="rounded-xl border border-slate-200 bg-slate-50/60 px-3.5 py-2 text-xs font-bold text-[#0b3c68] focus:border-[#0b3c68] focus:outline-none"
-          >
-            <option value="All">All Courses ({courses.length})</option>
-            {courses.map((c) => (
-              <option key={c._id} value={c._id}>
-                {c.name}
-              </option>
-            ))}
-          </select>
+<CourseSelect
+              courses={courses}
+              value={selectedCourseId}
+              onChange={(courseId) => setSelectedCourseId(courseId)}
+              includeAll
+              tone="navy"
+              variant="filter"
+              className="w-52"
+            />
         </div>
       </div>
 
@@ -161,7 +164,7 @@ export default function StudyNotesList() {
                   </td>
                 </tr>
               ) : (
-                filtered.map((note, idx) => {
+                pageItems.map((note, idx) => {
                   const pdfUrl = note.fileUrl.startsWith('http')
                     ? note.fileUrl
                     : `http://localhost:5000${note.fileUrl}`;
@@ -171,7 +174,7 @@ export default function StudyNotesList() {
                   return (
                     <tr key={note._id} className="hover:bg-slate-50/80 transition">
                       <td className="py-3.5 px-4 text-center font-mono font-bold text-slate-400">
-                        {idx + 1}
+                        {(page - 1) * PAGE_SIZE + idx + 1}
                       </td>
                       <td className="py-3.5 px-4 font-bold text-[#0b3c68]">
                         <span className="rounded bg-sky-50 px-2.5 py-1 text-[11px] font-bold text-[#0b3c68] border border-sky-100">
@@ -233,6 +236,15 @@ export default function StudyNotesList() {
           </table>
         </div>
       </div>
+
+      {total > 0 && (
+        <Pagination
+          total={total}
+          page={page}
+          onPageChange={setPage}
+          itemLabel="study notes"
+        />
+      )}
 
       {/* PDF Document Preview Modal */}
       {previewPdfUrl && (

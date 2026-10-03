@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react';
+import { toast } from 'sonner';
 import { useParams, Link } from 'react-router-dom';
 import { apiRequest } from '../../../utils/api';
+import { usePagination } from '../../../hooks/usePagination';
+import Pagination, { PAGE_SIZE } from '../../../components/Pagination';
 import {
   Users,
   ArrowLeft,
@@ -27,7 +30,7 @@ export default function StudyNoteStudentTracking() {
           setTrackingData(res);
         }
       } catch (err) {
-        console.error(err);
+        toast.error(err.message || 'Could not load student attempt tracking for this study note. Please try again.');
       } finally {
         setLoading(false);
       }
@@ -42,6 +45,8 @@ export default function StudyNoteStudentTracking() {
     const enroll = att.studentId?.enrollmentNo?.toLowerCase() || '';
     return name.includes(term) || enroll.includes(term);
   });
+
+  const { page, setPage, total, pageItems } = usePagination(filtered);
 
   return (
     <div className="space-y-6">
@@ -118,10 +123,10 @@ export default function StudyNoteStudentTracking() {
                   </td>
                 </tr>
               ) : (
-                filtered.map((att, idx) => (
+                pageItems.map((att, idx) => (
                   <tr key={att._id} className="hover:bg-slate-50/80 transition">
                     <td className="py-3.5 px-4 text-center font-mono font-bold text-slate-400">
-                      {idx + 1}
+                      {(page - 1) * PAGE_SIZE + idx + 1}
                     </td>
                     <td className="py-3.5 px-4 font-bold text-slate-900">
                       {att.studentId?.personalDetails?.fullName || 'Student'}
@@ -158,6 +163,15 @@ export default function StudyNoteStudentTracking() {
           </table>
         </div>
       </div>
+
+      {total > 0 && (
+        <Pagination
+          total={total}
+          page={page}
+          onPageChange={setPage}
+          itemLabel="attempts"
+        />
+      )}
     </div>
   );
 }

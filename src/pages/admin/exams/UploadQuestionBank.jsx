@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { toast } from 'sonner';
 import { useNavigate, Link } from 'react-router-dom';
 import { apiRequest } from '../../../utils/api';
 import {
@@ -11,6 +12,7 @@ import {
   FileCheck
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
+import CourseSelect from '../../../components/CourseSelect';
 
 export default function UploadQuestionBank() {
   const navigate = useNavigate();
@@ -34,7 +36,7 @@ export default function UploadQuestionBank() {
           setSelectedCourseId(res.courses[0]._id);
         }
       } catch (err) {
-        console.error(err);
+        toast.error(err.message || 'Could not load courses for the question bank. Please try again.');
       }
     };
     fetchCourses();
@@ -63,7 +65,7 @@ export default function UploadQuestionBank() {
           setParsedPreview({ headers, rows, totalCount: data.length - 1 });
         }
       } catch (err) {
-        console.error('Error previewing excel:', err);
+        toast.error(err.message || 'Could not preview this Excel file. Please check it is a valid .xlsx/.xls/.csv file.');
       }
     };
     reader.readAsBinaryString(file);
@@ -280,18 +282,14 @@ export default function UploadQuestionBank() {
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
               <label className="block uppercase text-[10px] text-slate-400 font-bold">Target Course *</label>
-              <select
-                required
-                value={selectedCourseId}
-                onChange={(e) => setSelectedCourseId(e.target.value)}
-                className="mt-1 w-full rounded-xl border border-slate-300 bg-white p-3 text-xs font-bold text-[#0b3c68]"
-              >
-                {courses.map((c) => (
-                  <option key={c._id} value={c._id}>
-                    {c.name} ({c.courseCode})
-                  </option>
-                ))}
-              </select>
+              <CourseSelect
+                  courses={courses}
+                  value={selectedCourseId}
+                  onChange={(courseId) => setSelectedCourseId(courseId)}
+                  placeholder="Select a course"
+                  tone="navy"
+                  className="mt-1"
+                />
             </div>
 
             <div>

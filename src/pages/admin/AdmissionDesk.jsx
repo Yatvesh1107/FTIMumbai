@@ -1,6 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
+import { toast } from 'sonner';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { apiRequest } from '../../utils/api';
+import { sanitizeMobile } from '../../utils/sanitizeMobile';
+import SmartSelect from '../../components/SmartSelect';
 import {
   UserPlus,
   BookOpen,
@@ -109,7 +112,7 @@ export default function AdmissionDesk() {
         setSelectedBatchId('');
       }
     } catch (e) {
-      console.error('Error fetching batches:', e);
+      toast.error(e.message || 'Could not load batches for this course. Please try again.');
     }
   };
 
@@ -189,7 +192,7 @@ export default function AdmissionDesk() {
     const val = Number(value);
     if (Number.isNaN(val) || val < 0) return;
     if (agreedFee > 0 && val > agreedFee) {
-      alert(`Received Amount cannot exceed Final Fee (₹${agreedFee.toLocaleString('en-IN')})`);
+      toast.error(`Received Amount cannot exceed Final Fee (₹${agreedFee.toLocaleString('en-IN')})`);
       return;
     }
     setDownPayment(val);
@@ -239,7 +242,7 @@ export default function AdmissionDesk() {
     const allocated = installmentsList.reduce((sum, inst) => sum + Number(inst.amount || 0), 0);
     const left = Math.round(remainingBalance - allocated);
     if (left <= 0) {
-      alert('Balance Amount is already fully covered by the existing installments.');
+      toast.error('Balance Amount is already fully covered by the existing installments.');
       return;
     }
     const last = installmentsList[installmentsList.length - 1];
@@ -432,6 +435,16 @@ const handleClearExistingStudent = () => {
 
   const handleSubmitAdmission = async (e) => {
     e.preventDefault();
+    if (!selectedCourse) {
+      setError('Please select a course for this admission.');
+      return;
+    }
+
+    if (batches.length > 0 && !selectedBatchId) {
+      setError('Please select a batch for this admission.');
+      return;
+    }
+
     if (isFloorBreached) {
       setError(`Cannot register admission! Negotiated fee of ₹${agreedFee} is below the allowable floor limit of ₹${selectedCourse.minFloorFee}.`);
       return;
@@ -505,7 +518,7 @@ const handleClearExistingStudent = () => {
               admissionId: res.admission._id
             });
           } catch (convErr) {
-            console.error('Enquiry conversion error:', convErr.message);
+            toast.error(convErr.message || 'Admission was saved, but linking the enquiry failed. Please verify the enquiry record manually.');
           }
         }
         setSuccessData(res);
@@ -806,21 +819,19 @@ const handleClearExistingStudent = () => {
                   <Target className="h-3.5 w-3.5" /> Pick from Enquiry (auto-fills student details & course)
                 </label>
                 <div className="mt-2 flex gap-2">
-                  <select
-                    value={selectedEnquiryId}
-                    onChange={(e) => {
-                      const enq = enquiries.find((en) => en._id === e.target.value);
-                      handleEnquirySelect(enq);
-                    }}
-                    className="w-full rounded-xl border border-slate-300 bg-white p-2.5 text-sm font-medium focus:border-[#0b3c68] focus:outline-none"
-                  >
-                    <option value="">— Select an enquiry —</option>
-                    {enquiries.map((enq) => (
-                      <option key={enq._id} value={enq._id}>
-                        {enq.name} ({enq.mobile}) — {enq.courseInterest || 'No course specified'}
-                      </option>
-                    ))}
-                  </select>
+<SmartSelect
+                      options={enquiries.map((enq) => ({
+                        value: enq._id,
+                        label: `${enq.name} (${enq.mobile}) \u2014 ${enq.courseInterest || 'No course specified'}`,
+                        enquiry: enq
+                      }))}
+                      value={selectedEnquiryId}
+                      onChange={(option) => handleEnquirySelect(option ? option.enquiry : undefined)}
+                      placeholder="Select an enquiry"
+                      tone="navy"
+                      size="md"
+                      className="flex-1"
+                    />
                   {selectedEnquiryId && (
                     <button
                       type="button"
@@ -865,11 +876,13 @@ const handleClearExistingStudent = () => {
               <div>
                 <label className="block text-xs font-bold text-slate-700 uppercase">Mobile Number (Calling) *</label>
                 <input
-                  type="tel"
-                  required
-                  placeholder="10-digit mobile"
-                  value={formData.mobile}
-                  onChange={(e) => setFormData({ ...formData, mobile: e.target.value })}
+type="tel"
+                    required
+                    maxLength={10}
+                    inputMode="numeric"
+                    placeholder="10-digit mobile"
+                    value={formData.mobile}
+                  onChange={(e) => setFormData({ ...formData, mobile: sanitizeMobile(e.target.value) })}
                   className="mt-1.5 w-full rounded-xl border border-slate-300 p-2.5 text-sm font-medium focus:border-[#0b3c68] focus:outline-none"
                 />
               </div>
@@ -877,10 +890,12 @@ const handleClearExistingStudent = () => {
               <div>
                 <label className="block text-xs font-bold text-slate-700 uppercase">WhatsApp Number</label>
                 <input
-                  type="tel"
-                  placeholder="WhatsApp mobile"
-                  value={formData.whatsappMobile}
-                  onChange={(e) => setFormData({ ...formData, whatsappMobile: e.target.value })}
+type="tel"
+                    placeholder="WhatsApp mobile"
+                    maxLength={10}
+                    inputMode="numeric"
+                    value={formData.whatsappMobile}
+                  onChange={(e) => setFormData({ ...formData, whatsappMobile: sanitizeMobile(e.target.value) })}
                   className="mt-1.5 w-full rounded-xl border border-slate-300 p-2.5 text-sm font-medium focus:border-[#0b3c68] focus:outline-none"
                 />
               </div>
@@ -936,10 +951,12 @@ const handleClearExistingStudent = () => {
                 <div>
                   <label className="block text-xs font-semibold text-slate-700">Guardian Mobile</label>
                   <input
-                    type="tel"
-                    placeholder="Guardian Contact"
-                    value={formData.guardianMobile}
-                    onChange={(e) => setFormData({ ...formData, guardianMobile: e.target.value })}
+type="tel"
+                      placeholder="Guardian Contact"
+                      maxLength={10}
+                      inputMode="numeric"
+                      value={formData.guardianMobile}
+                    onChange={(e) => setFormData({ ...formData, guardianMobile: sanitizeMobile(e.target.value) })}
                     className="mt-1 w-full rounded-xl border border-slate-300 p-2.5 text-sm"
                   />
                 </div>
@@ -974,24 +991,26 @@ const handleClearExistingStudent = () => {
             {/* Course Dropdown */}
             <div className="mt-5">
               <label className="block text-xs font-bold text-slate-700 uppercase mb-2">Choose Course *</label>
-              <select
-                value={selectedCourseId || ''}
-                onChange={(e) => {
-                  const course = courses.find((c) => c._id === e.target.value);
-                  if (course) handleCourseSelect(course);
-                }}
-                className="w-full rounded-xl border border-slate-300 bg-white p-3.5 text-sm font-bold text-[#0b3c68] focus:border-[#0b3c68] focus:outline-none"
-              >
-                <option value="" disabled>— Select a course —</option>
-                {courses.map((c) => {
-                  const isEnrolled = existingStudent && existingAdmissions.some((a) => a.courseId?._id === c._id);
-                  return (
-                    <option key={c._id} value={c._id} disabled={isEnrolled}>
-                      {c.name} [{c.courseCode}] {isEnrolled ? '— Already Enrolled' : `— ${c.duration}`}
-                    </option>
-                  );
-                })}
-              </select>
+<SmartSelect
+                  options={courses.map((c) => {
+                    const isEnrolled = Boolean(
+                      existingStudent && existingAdmissions.some((a) => a.courseId?._id === c._id)
+                    );
+                    return {
+                      value: c._id,
+                      label: `${c.name} [${c.courseCode}] ${isEnrolled ? '\u2014 Already Enrolled' : `\u2014 ${c.duration}`}`,
+                      isDisabled: isEnrolled,
+                      course: c
+                    };
+                  })}
+                  value={selectedCourseId || ''}
+                  onChange={(option) => {
+                    if (option) handleCourseSelect(option.course);
+                  }}
+                  placeholder="Select a course"
+                  tone="navy"
+                  size="md"
+                />
               {selectedCourse && (
                 <div className="mt-2 flex flex-wrap gap-2">
                   <span className="rounded-md bg-slate-100 px-2 py-1 text-[10px] font-bold text-slate-600">{selectedCourse.courseCode}</span>
@@ -1149,22 +1168,21 @@ const handleClearExistingStudent = () => {
               <div>
                 <label className="block text-xs font-bold text-slate-700 uppercase">Assigned Training Batch *</label>
                 {batches.length > 0 ? (
-                  <select
-                    required
-                    value={selectedBatchId}
-                    onChange={(e) => {
-                      setSelectedBatchId(e.target.value);
-                      const b = batches.find(item => item._id === e.target.value);
-                      if (b) setFormData({ ...formData, batchTiming: `${b.batchName} (${b.timing})` });
-                    }}
-                    className="mt-1.5 w-full rounded-xl border border-slate-300 p-2.5 text-sm font-bold text-[#0b3c68] bg-white"
-                  >
-                    {batches.map((b) => (
-                      <option key={b._id} value={b._id}>
-                        {b.batchName} ({b.timing}) [{b.batchCode}] - {b.days}
-                      </option>
-                    ))}
-                  </select>
+<SmartSelect
+                      options={batches.map((b) => ({
+                        value: b._id,
+                        label: `${b.batchName} (${b.timing}) [${b.batchCode}] - ${b.days}`,
+                        batch: b
+                      }))}
+                      value={selectedBatchId}
+                      onChange={(option) => {
+                        setSelectedBatchId(option ? option.value : '');
+                        if (option) setFormData({ ...formData, batchTiming: `${option.batch.batchName} (${option.batch.timing})` });
+                      }}
+                      tone="navy"
+                      size="md"
+                      className="mt-1.5"
+                    />
                 ) : (
                   <div className="mt-1.5 rounded-xl border border-amber-200 bg-amber-50 p-2.5 text-xs text-amber-900 font-semibold">
                     No active batches found for this course. Please create a batch in Batch Management or select timing below.

@@ -1,5 +1,8 @@
 import { useState, useEffect } from 'react';
+import { toast } from 'sonner';
 import { apiRequest, assetUrl, uploadImage } from '../../utils/api';
+import { usePagination } from '../../hooks/usePagination';
+import Pagination from '../../components/Pagination';
 import {
   LayoutGrid as CategoryIcon,
   Plus,
@@ -12,6 +15,7 @@ import {
   Upload,
   ImageIcon
 } from 'lucide-react';
+import CourseSelect from '../../components/CourseSelect';
 
 const FEATURE_ICONS = [
   { value: 'Code2', label: 'Code' },
@@ -59,6 +63,7 @@ export default function CategoriesManagement() {
   const [addCourseId, setAddCourseId] = useState('');
   const [assignBusy, setAssignBusy] = useState(false);
   const [slugAuto, setSlugAuto] = useState(true);
+  const [navLabelAuto, setNavLabelAuto] = useState(true);
 
   const fetchAll = async () => {
     try {
@@ -69,7 +74,7 @@ export default function CategoriesManagement() {
       setCategories(categoryRes.categories || []);
       setCourses(courseRes.courses || []);
     } catch (err) {
-      console.error(err);
+      toast.error(err.message || 'Could not load categories. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -83,7 +88,9 @@ export default function CategoriesManagement() {
         setCategories(categoryRes.categories || []);
         setCourses(courseRes.courses || []);
       })
-      .catch((err) => console.error(err))
+      .catch((err) => {
+        if (alive) toast.error(err.message || 'Could not load categories. Please try again.');
+      })
       .finally(() => {
         if (alive) setLoading(false);
       });
@@ -98,6 +105,7 @@ export default function CategoriesManagement() {
     setAssignedCourses([]);
     setAddCourseId('');
     setSlugAuto(true);
+    setNavLabelAuto(true);
     setError('');
     setShowModal(true);
   };
@@ -124,6 +132,7 @@ export default function CategoriesManagement() {
     setAssignedCourses(category.courses || []);
     setAddCourseId('');
     setSlugAuto(false);
+    setNavLabelAuto(false);
     setError('');
     setShowModal(true);
   };
@@ -134,6 +143,7 @@ export default function CategoriesManagement() {
     setForm({ ...emptyForm, features: [{ title: '' }] });
     setAssignedCourses([]);
     setSlugAuto(true);
+    setNavLabelAuto(true);
     setError('');
   };
 
@@ -144,8 +154,10 @@ export default function CategoriesManagement() {
       setError('');
       const url = await uploadImage(file);
       setForm((prev) => ({ ...prev, heroImage: url }));
+      toast.success('Hero image uploaded.');
     } catch (err) {
       setError(err.message || 'Hero image upload failed.');
+      toast.error(err.message || 'Hero image upload failed.');
     } finally {
       setUploading(false);
     }
@@ -161,6 +173,9 @@ export default function CategoriesManagement() {
     if (!editing && slugAuto) {
       setForm((prev) => ({ ...prev, slug: slugify(value) }));
     }
+    if (!editing && navLabelAuto) {
+      setForm((prev) => ({ ...prev, navLabel: value.trim() }));
+    }
   };
 
   const removeFeature = (index) => {
@@ -175,7 +190,9 @@ export default function CategoriesManagement() {
   const handleSave = async (e) => {
     e.preventDefault();
     if (!form.slug.trim() || !form.name.trim() || !form.navLabel.trim()) {
-      setError('Slug, name, and nav label are required.');
+      const msg = 'Slug, name, and nav label are required.';
+      setError(msg);
+      toast.error(msg);
       return;
     }
 
@@ -199,14 +216,17 @@ export default function CategoriesManagement() {
     try {
       if (editing) {
         await apiRequest(`/categories/${editing._id}`, 'PUT', payload);
+        toast.success('Category updated successfully.');
       } else {
         await apiRequest('/categories', 'POST', payload);
+        toast.success('Category created successfully.');
       }
       setShowModal(false);
       setEditing(null);
       fetchAll();
     } catch (err) {
       setError(err.message || 'Error saving category.');
+      toast.error(err.message || 'Error saving category.');
     } finally {
       setFormLoading(false);
     }
@@ -216,9 +236,10 @@ export default function CategoriesManagement() {
     if (!window.confirm(`Delete category "${category.name}"? Its courses will be unassigned (not deleted).`)) return;
     try {
       await apiRequest(`/categories/${category._id}`, 'DELETE');
+      toast.success('Category deleted successfully.');
       fetchAll();
     } catch (err) {
-      alert(err.message || 'Could not delete category.');
+      toast.error(err.message || 'Could not delete category.');
     }
   };
 
@@ -241,8 +262,10 @@ export default function CategoriesManagement() {
         { ...course, courseCategoryId: editing._id, orderInCategory: maxOrder + 1 },
       ]);
       setAddCourseId('');
+      toast.success(`"${course.name}" assigned to category.`);
     } catch (err) {
       setError(err.message || 'Could not assign course.');
+      toast.error(err.message || 'Could not assign course.');
     } finally {
       setAssignBusy(false);
     }
@@ -254,8 +277,10 @@ export default function CategoriesManagement() {
     try {
       await apiRequest(`/courses/${course._id}`, 'PUT', { courseCategoryId: null });
       setAssignedCourses((prev) => prev.filter((c) => c._id !== course._id));
+      toast.success(`"${course.name}" unassigned.`);
     } catch (err) {
       setError(err.message || 'Could not unassign course.');
+      toast.error(err.message || 'Could not unassign course.');
     } finally {
       setAssignBusy(false);
     }
@@ -281,12 +306,16 @@ export default function CategoriesManagement() {
         }
       }
       setAssignedCourses(reordered.map((c, i) => ({ ...c, orderInCategory: i + 1 })));
+      toast.success('Course order updated.');
     } catch (err) {
       setError(err.message || 'Could not reorder courses.');
+      toast.error(err.message || 'Could not reorder courses.');
     } finally {
       setAssignBusy(false);
     }
   };
+
+  const { page, setPage, total, pageItems } = usePagination(categories);
 
   return (
     <div className="space-y-6">
@@ -318,7 +347,7 @@ export default function CategoriesManagement() {
             No categories found. Click &quot;+ Create New Category&quot; to add one.
           </div>
         ) : (
-          categories.map((category) => (
+          pageItems.map((category) => (
             <div
               key={category._id}
               className="flex flex-col justify-between rounded-3xl border border-slate-200 bg-white p-5 shadow-sm hover:shadow-md transition"
@@ -389,6 +418,15 @@ export default function CategoriesManagement() {
         )}
       </div>
 
+      {total > 0 && (
+        <Pagination
+          total={total}
+          page={page}
+          onPageChange={setPage}
+          itemLabel="categories"
+        />
+      )}
+
       {/* Create / Edit Modal */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 backdrop-blur-sm p-4">
@@ -433,7 +471,7 @@ export default function CategoriesManagement() {
                       required
                       placeholder="e.g. Code & Data"
                       value={form.navLabel}
-                      onChange={(e) => setForm({ ...form, navLabel: e.target.value })}
+                      onChange={(e) => { setNavLabelAuto(false); setForm({ ...form, navLabel: e.target.value }); }}
                       className="mt-1 w-full rounded-xl border border-slate-300 p-2.5 text-xs text-slate-800 font-medium"
                     />
                   </div>
@@ -673,18 +711,14 @@ export default function CategoriesManagement() {
                   )}
 
                   <div className="mt-3 flex items-center gap-2">
-                    <select
-                      value={addCourseId}
-                      onChange={(e) => setAddCourseId(e.target.value)}
-                      className="flex-1 rounded-xl border border-slate-300 bg-white p-2.5 text-xs font-medium"
-                    >
-                      <option value="">Select a course to assign...</option>
-                      {unassignedCourses.map((c) => (
-                        <option key={c._id} value={c._id}>
-                          {c.name} {c.courseCode ? `[${c.courseCode}]` : ''}
-                        </option>
-                      ))}
-                    </select>
+                    <CourseSelect
+                        courses={unassignedCourses}
+                        value={addCourseId}
+                        onChange={(courseId) => setAddCourseId(courseId)}
+                        placeholder="Select a course to assign..."
+                        tone="slate"
+                        className="flex-1"
+                      />
                     <button
                       onClick={addCourseToCategory}
                       disabled={assignBusy || !addCourseId}

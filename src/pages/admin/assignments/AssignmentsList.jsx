@@ -1,6 +1,10 @@
 import { useState, useEffect } from 'react';
+import { toast } from 'sonner';
 import { Link } from 'react-router-dom';
 import { apiRequest } from '../../../utils/api';
+import { usePagination } from '../../../hooks/usePagination';
+import Pagination, { PAGE_SIZE } from '../../../components/Pagination';
+import CourseSelect from '../../../components/CourseSelect';
 import {
   Clock,
   Plus,
@@ -25,7 +29,7 @@ export default function AssignmentsList() {
       const res = await apiRequest('/courses');
       if (res.success) setCourses(res.courses || []);
     } catch (err) {
-      console.error(err);
+      toast.error(err.message || 'Could not load courses for the assignment filter. Please try again.');
     }
   };
 
@@ -49,7 +53,7 @@ export default function AssignmentsList() {
         }
       }
     } catch (err) {
-      console.error(err);
+      toast.error(err.message || 'Could not load assignments. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -69,6 +73,8 @@ export default function AssignmentsList() {
     const term = searchTerm.toLowerCase();
     return a.title?.toLowerCase().includes(term) || a.courseName?.toLowerCase().includes(term);
   });
+
+  const { page, setPage, total, pageItems } = usePagination(filtered);
 
   return (
     <div className="space-y-6">
@@ -106,18 +112,15 @@ export default function AssignmentsList() {
 
         <div className="flex items-center gap-2">
           <Filter className="h-4 w-4 text-slate-400" />
-          <select
-            value={selectedCourseId}
-            onChange={(e) => setSelectedCourseId(e.target.value)}
-            className="rounded-xl border border-slate-200 bg-slate-50/60 px-3.5 py-2 text-xs font-bold text-teal-800 focus:border-teal-700 focus:outline-none"
-          >
-            <option value="All">All Courses ({courses.length})</option>
-            {courses.map((c) => (
-              <option key={c._id} value={c._id}>
-                {c.name}
-              </option>
-            ))}
-          </select>
+<CourseSelect
+              courses={courses}
+              value={selectedCourseId}
+              onChange={(courseId) => setSelectedCourseId(courseId)}
+              includeAll
+              tone="teal"
+              variant="filter"
+              className="w-52"
+            />
         </div>
       </div>
 
@@ -153,10 +156,10 @@ export default function AssignmentsList() {
                   </td>
                 </tr>
               ) : (
-                filtered.map((ass, idx) => (
+                pageItems.map((ass, idx) => (
                   <tr key={ass._id} className="hover:bg-slate-50/80 transition">
                     <td className="py-3.5 px-4 text-center font-mono font-bold text-slate-400">
-                      {idx + 1}
+                      {(page - 1) * PAGE_SIZE + idx + 1}
                     </td>
                     <td className="py-3.5 px-4">
                       <span className="font-bold text-slate-900 block">{ass.title}</span>
@@ -188,6 +191,15 @@ export default function AssignmentsList() {
           </table>
         </div>
       </div>
+
+      {total > 0 && (
+        <Pagination
+          total={total}
+          page={page}
+          onPageChange={setPage}
+          itemLabel="assignments"
+        />
+      )}
     </div>
   );
 }

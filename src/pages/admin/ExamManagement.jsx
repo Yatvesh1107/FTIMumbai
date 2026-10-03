@@ -1,6 +1,10 @@
 import { useState, useEffect } from 'react';
+import { toast } from 'sonner';
 import { Link } from 'react-router-dom';
 import { apiRequest } from '../../utils/api';
+import { usePagination } from '../../hooks/usePagination';
+import Pagination, { PAGE_SIZE } from '../../components/Pagination';
+import CourseSelect from '../../components/CourseSelect';
 import {
   HelpCircle,
   Plus,
@@ -69,7 +73,7 @@ export default function ExamManagement() {
           setCourses(res.courses);
         }
       } catch (err) {
-        console.error(err);
+        toast.error(err.message || 'Could not load courses. Please try again.');
       }
     };
     fetchCourses();
@@ -90,7 +94,7 @@ export default function ExamManagement() {
         setAllResults(rRes.results || []);
       }
     } catch (err) {
-      console.error(err);
+      toast.error(err.message || 'Could not load exam questions and schedules. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -125,7 +129,7 @@ export default function ExamManagement() {
         loadExamData(selectedCourseId);
       }
     } catch (err) {
-      alert(err.message || 'Error creating question');
+      toast.error(err.message || 'Error creating question');
     }
   };
 
@@ -190,6 +194,20 @@ export default function ExamManagement() {
     return s.examTitle?.toLowerCase().includes(term);
   });
 
+  const {
+    page: questionsPage,
+    setPage: setQuestionsPage,
+    total: questionsTotal,
+    pageItems: questionsPageItems,
+  } = usePagination(filteredQuestions);
+
+  const {
+    page: schedulesPage,
+    setPage: setSchedulesPage,
+    total: schedulesTotal,
+    pageItems: schedulesPageItems,
+  } = usePagination(filteredSchedules);
+
   const pendingRequestsCount = reExamRequests.filter(r => r.status === 'Pending').length;
 
   return (
@@ -206,21 +224,18 @@ export default function ExamManagement() {
         </div>
 
         <div className="flex flex-wrap items-center gap-2.5">
-          <select
-            value={selectedCourseId}
-            onChange={(e) => {
-              setSelectedCourseId(e.target.value);
-              loadExamData(e.target.value);
-            }}
-            className="rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-xs font-bold text-[#0b3c68] shadow-sm"
-          >
-            <option value="All">All Courses ({courses.length})</option>
-            {courses.map((c) => (
-              <option key={c._id} value={c._id}>
-                {c.name}
-              </option>
-            ))}
-          </select>
+<CourseSelect
+              courses={courses}
+              value={selectedCourseId}
+              onChange={(courseId) => {
+                setSelectedCourseId(courseId);
+                loadExamData(courseId);
+              }}
+              includeAll
+              tone="navy"
+              variant="filter"
+              className="w-52"
+/>
 
           {activeTab === 'questions' ? (
             <>
@@ -308,187 +323,209 @@ export default function ExamManagement() {
 
       {/* TAB 1: QUESTIONS TABLE */}
       {activeTab === 'questions' && (
-        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs border-collapse">
-              <thead>
-                <tr className="border-b border-slate-200 bg-[#082c4d] text-white uppercase text-[11px] font-bold tracking-wider">
-                  <th className="py-3.5 px-4 w-14 text-center">#</th>
-                  <th className="py-3.5 px-4">Course Name</th>
-                  <th className="py-3.5 px-4">Topic / Subject</th>
-                  <th className="py-3.5 px-4">Question Text</th>
-                  <th className="py-3.5 px-4">Options & Correct Answer</th>
-                  <th className="py-3.5 px-4 text-center">Marks</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
-                {loading ? (
-                  <tr>
-                    <td colSpan={6} className="py-12 text-center text-slate-400">
-                      <div className="h-6 w-6 animate-spin mx-auto rounded-full border-2 border-[#0b3c68] border-t-transparent"></div>
-                      <span className="block mt-2 text-[11px]">Loading question bank...</span>
-                    </td>
+        <>
+          <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs border-collapse">
+                <thead>
+                  <tr className="border-b border-slate-200 bg-[#082c4d] text-white uppercase text-[11px] font-bold tracking-wider">
+                    <th className="py-3.5 px-4 w-14 text-center">#</th>
+                    <th className="py-3.5 px-4">Course Name</th>
+                    <th className="py-3.5 px-4">Topic / Subject</th>
+                    <th className="py-3.5 px-4">Question Text</th>
+                    <th className="py-3.5 px-4">Options & Correct Answer</th>
+                    <th className="py-3.5 px-4 text-center">Marks</th>
                   </tr>
-                ) : filteredQuestions.length === 0 ? (
-                  <tr>
-                    <td colSpan={6} className="py-12 text-center text-slate-400 italic space-y-2">
-                      <p>No questions in question bank for this course filter.</p>
-                      <Link
-                        to="/admin/exams/upload"
-                        className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-bold text-white shadow hover:bg-emerald-700"
-                      >
-                        <FileSpreadsheet className="h-4 w-4" /> Bulk Import from Excel (.xlsx)
-                      </Link>
-                    </td>
-                  </tr>
-                ) : (
-                  filteredQuestions.map((q, idx) => (
-                    <tr key={q._id} className="hover:bg-slate-50/80 transition">
-                      <td className="py-3.5 px-4 text-center font-mono font-bold text-slate-400">
-                        {idx + 1}
-                      </td>
-                      <td className="py-3.5 px-4 font-semibold text-slate-700 max-w-[150px] truncate">
-                        {q.courseId?.name || 'All Courses'}
-                      </td>
-                      <td className="py-3.5 px-4">
-                        <span className="rounded bg-sky-50 px-2 py-0.5 text-[10px] font-bold text-[#0b3c68] border border-sky-100">
-                          {q.topic}
-                        </span>
-                      </td>
-                      <td className="py-3.5 px-4">
-                        <p className="font-bold text-slate-900 leading-relaxed">{q.questionText}</p>
-                        {q.explanation && (
-                          <p className="text-[10px] text-slate-400 mt-0.5">Note: {q.explanation}</p>
-                        )}
-                      </td>
-                      <td className="py-3.5 px-4">
-                        <div className="flex flex-wrap gap-1.5 max-w-sm">
-                          {q.options?.map((opt, oIdx) => (
-                            <span
-                              key={oIdx}
-                              className={`rounded-lg px-2 py-1 text-[11px] font-medium border ${
-                                opt.isCorrect
-                                  ? 'bg-emerald-50 border-emerald-300 text-emerald-900 font-bold'
-                                  : 'bg-slate-50 border-slate-200 text-slate-600'
-                              }`}
-                            >
-                              <strong>{String.fromCharCode(65 + oIdx)}:</strong> {opt.optionText}
-                              {opt.isCorrect && ' ✓'}
-                            </span>
-                          ))}
-                        </div>
-                      </td>
-                      <td className="py-3.5 px-4 text-center">
-                        <span className="rounded-md bg-slate-100 px-2 py-0.5 font-bold text-slate-700 text-[10px]">
-                          {q.marks || 1} Mark
-                        </span>
+                </thead>
+                <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
+                  {loading ? (
+                    <tr>
+                      <td colSpan={6} className="py-12 text-center text-slate-400">
+                        <div className="h-6 w-6 animate-spin mx-auto rounded-full border-2 border-[#0b3c68] border-t-transparent"></div>
+                        <span className="block mt-2 text-[11px]">Loading question bank...</span>
                       </td>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+                  ) : filteredQuestions.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="py-12 text-center text-slate-400 italic space-y-2">
+                        <p>No questions in question bank for this course filter.</p>
+                        <Link
+                          to="/admin/exams/upload"
+                          className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-bold text-white shadow hover:bg-emerald-700"
+                        >
+                          <FileSpreadsheet className="h-4 w-4" /> Bulk Import from Excel (.xlsx)
+                        </Link>
+                      </td>
+                    </tr>
+                  ) : (
+                    questionsPageItems.map((q, idx) => (
+                      <tr key={q._id} className="hover:bg-slate-50/80 transition">
+                        <td className="py-3.5 px-4 text-center font-mono font-bold text-slate-400">
+                          {(questionsPage - 1) * PAGE_SIZE + idx + 1}
+                        </td>
+                        <td className="py-3.5 px-4 font-semibold text-slate-700 max-w-[150px] truncate">
+                          {q.courseId?.name || 'All Courses'}
+                        </td>
+                        <td className="py-3.5 px-4">
+                          <span className="rounded bg-sky-50 px-2 py-0.5 text-[10px] font-bold text-[#0b3c68] border border-sky-100">
+                            {q.topic}
+                          </span>
+                        </td>
+                        <td className="py-3.5 px-4">
+                          <p className="font-bold text-slate-900 leading-relaxed">{q.questionText}</p>
+                          {q.explanation && (
+                            <p className="text-[10px] text-slate-400 mt-0.5">Note: {q.explanation}</p>
+                          )}
+                        </td>
+                        <td className="py-3.5 px-4">
+                          <div className="flex flex-wrap gap-1.5 max-w-sm">
+                            {q.options?.map((opt, oIdx) => (
+                              <span
+                                key={oIdx}
+                                className={`rounded-lg px-2 py-1 text-[11px] font-medium border ${
+                                  opt.isCorrect
+                                    ? 'bg-emerald-50 border-emerald-300 text-emerald-900 font-bold'
+                                    : 'bg-slate-50 border-slate-200 text-slate-600'
+                                }`}
+                              >
+                                <strong>{String.fromCharCode(65 + oIdx)}:</strong> {opt.optionText}
+                                {opt.isCorrect && ' ✓'}
+                              </span>
+                            ))}
+                          </div>
+                        </td>
+                        <td className="py-3.5 px-4 text-center">
+                          <span className="rounded-md bg-slate-100 px-2 py-0.5 font-bold text-slate-700 text-[10px]">
+                            {q.marks || 1} Mark
+                          </span>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
-        </div>
+
+          {questionsTotal > 0 && (
+            <Pagination
+              total={questionsTotal}
+              page={questionsPage}
+              onPageChange={setQuestionsPage}
+              itemLabel="questions"
+            />
+          )}
+        </>
       )}
 
       {/* TAB 2: SCHEDULES TABLE */}
       {activeTab === 'schedules' && (
-        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs border-collapse">
-              <thead>
-                <tr className="border-b border-slate-200 bg-[#082c4d] text-white uppercase text-[11px] font-bold tracking-wider">
-                  <th className="py-3.5 px-4 w-16 text-center">#</th>
-                  <th className="py-3.5 px-4">Exam Type & Title</th>
-                  <th className="py-3.5 px-4">Target Batch Cohort</th>
-                  <th className="py-3.5 px-4">Questions Sampled</th>
-                  <th className="py-3.5 px-4">Total Score</th>
-                  <th className="py-3.5 px-4">Duration</th>
-                  <th className="py-3.5 px-4">Scheduled Date & Time Window</th>
-                  <th className="py-3.5 px-4 text-center">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
-                {loading ? (
-                  <tr>
-                    <td colSpan={8} className="py-12 text-center text-slate-400">
-                      <div className="h-6 w-6 animate-spin mx-auto rounded-full border-2 border-indigo-700 border-t-transparent"></div>
-                      <span className="block mt-2 text-[11px]">Loading schedules...</span>
-                    </td>
+        <>
+          <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs border-collapse">
+                <thead>
+                  <tr className="border-b border-slate-200 bg-[#082c4d] text-white uppercase text-[11px] font-bold tracking-wider">
+                    <th className="py-3.5 px-4 w-16 text-center">#</th>
+                    <th className="py-3.5 px-4">Exam Type & Title</th>
+                    <th className="py-3.5 px-4">Target Batch Cohort</th>
+                    <th className="py-3.5 px-4">Questions Sampled</th>
+                    <th className="py-3.5 px-4">Total Score</th>
+                    <th className="py-3.5 px-4">Duration</th>
+                    <th className="py-3.5 px-4">Scheduled Date & Time Window</th>
+                    <th className="py-3.5 px-4 text-center">Status</th>
                   </tr>
-                ) : filteredSchedules.length === 0 ? (
-                  <tr>
-                    <td colSpan={8} className="py-12 text-center text-slate-400 italic space-y-2">
-                      <p>No exams scheduled yet for this course.</p>
-                      <Link
-                        to="/admin/exams/schedule"
-                        className="inline-flex items-center gap-1 text-xs font-bold text-indigo-700 underline"
-                      >
-                        <Plus className="h-3.5 w-3.5" /> Schedule an exam now
-                      </Link>
-                    </td>
-                  </tr>
-                ) : (
-                  filteredSchedules.map((sch, idx) => {
-                    const isFinal = sch.examType === 'final_exam';
-                    const typeLabel = isFinal ? 'Final Certification Exam' : 'Normal Practice Exam';
-                    const batchLabel = sch.batchId?.batchName
-                      ? `${sch.batchId.batchName} (${sch.batchId.timing})`
-                      : (sch.batchNameSnapshot || 'All Batches');
+                </thead>
+                <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
+                  {loading ? (
+                    <tr>
+                      <td colSpan={8} className="py-12 text-center text-slate-400">
+                        <div className="h-6 w-6 animate-spin mx-auto rounded-full border-2 border-indigo-700 border-t-transparent"></div>
+                        <span className="block mt-2 text-[11px]">Loading schedules...</span>
+                      </td>
+                    </tr>
+                  ) : filteredSchedules.length === 0 ? (
+                    <tr>
+                      <td colSpan={8} className="py-12 text-center text-slate-400 italic space-y-2">
+                        <p>No exams scheduled yet for this course.</p>
+                        <Link
+                          to="/admin/exams/schedule"
+                          className="inline-flex items-center gap-1 text-xs font-bold text-indigo-700 underline"
+                        >
+                          <Plus className="h-3.5 w-3.5" /> Schedule an exam now
+                        </Link>
+                      </td>
+                    </tr>
+                  ) : (
+                    schedulesPageItems.map((sch, idx) => {
+                      const isFinal = sch.examType === 'final_exam';
+                      const typeLabel = isFinal ? 'Final Certification Exam' : 'Normal Practice Exam';
+                      const batchLabel = sch.batchId?.batchName
+                        ? `${sch.batchId.batchName} (${sch.batchId.timing})`
+                        : (sch.batchNameSnapshot || 'All Batches');
 
-                    return (
-                      <tr key={sch._id} className="hover:bg-slate-50/80 transition">
-                        <td className="py-3.5 px-4 text-center font-mono font-bold text-slate-400">
-                          {idx + 1}
-                        </td>
-                        <td className="py-3.5 px-4">
-                          <span className={`inline-block rounded px-2.5 py-0.5 text-[10px] font-bold uppercase mb-1 ${
-                            isFinal
-                              ? 'bg-amber-100 text-amber-950 border border-amber-300'
-                              : 'bg-indigo-100 text-indigo-950 border border-indigo-200'
-                          }`}>
-                            {typeLabel}
-                          </span>
-                          <span className="font-bold text-slate-900 block">{sch.examTitle}</span>
-                        </td>
-                        <td className="py-3.5 px-4">
-                          <span className="inline-flex items-center gap-1 rounded bg-slate-100 px-2.5 py-0.5 text-[10px] font-bold text-slate-800 border border-slate-200">
-                            <Users className="h-3 w-3 text-slate-500" /> {batchLabel}
-                          </span>
-                        </td>
-                        <td className="py-3.5 px-4">
-                          <span className="rounded bg-indigo-50 px-2.5 py-0.5 text-[10px] font-bold text-indigo-800 border border-indigo-200">
-                            {sch.questions?.length || sch.totalQuestions} Random MCQs
-                          </span>
-                        </td>
-                        <td className="py-3.5 px-4 font-bold text-slate-800">
-                          {sch.totalMarks || (sch.totalQuestions * (sch.marksPerQuestion || 1))} Marks
-                        </td>
-                        <td className="py-3.5 px-4 text-slate-600 font-semibold">
-                          {sch.durationMinutes} Minutes
-                        </td>
-                        <td className="py-3.5 px-4 text-slate-700 text-[11px]">
-                          <span className="block font-semibold">
-                            {new Date(sch.startDate).toLocaleString('en-IN', { dateStyle: 'short', timeStyle: 'short' })}
-                          </span>
-                          <span className="text-slate-400">
-                            to {new Date(sch.endDate).toLocaleString('en-IN', { dateStyle: 'short', timeStyle: 'short' })}
-                          </span>
-                        </td>
-                        <td className="py-3.5 px-4 text-center">
-                          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2.5 py-0.5 text-[10px] font-bold text-emerald-800">
-                            <CheckCircle2 className="h-3 w-3" /> {sch.status}
-                          </span>
-                        </td>
-                      </tr>
-                    );
-                  })
-                )}
-              </tbody>
-            </table>
+                      return (
+                        <tr key={sch._id} className="hover:bg-slate-50/80 transition">
+                          <td className="py-3.5 px-4 text-center font-mono font-bold text-slate-400">
+                            {(schedulesPage - 1) * PAGE_SIZE + idx + 1}
+                          </td>
+                          <td className="py-3.5 px-4">
+                            <span className={`inline-block rounded px-2.5 py-0.5 text-[10px] font-bold uppercase mb-1 ${
+                              isFinal
+                                ? 'bg-amber-100 text-amber-950 border border-amber-300'
+                                : 'bg-indigo-100 text-indigo-950 border border-indigo-200'
+                            }`}>
+                              {typeLabel}
+                            </span>
+                            <span className="font-bold text-slate-900 block">{sch.examTitle}</span>
+                          </td>
+                          <td className="py-3.5 px-4">
+                            <span className="inline-flex items-center gap-1 rounded bg-slate-100 px-2.5 py-0.5 text-[10px] font-bold text-slate-800 border border-slate-200">
+                              <Users className="h-3 w-3 text-slate-500" /> {batchLabel}
+                            </span>
+                          </td>
+                          <td className="py-3.5 px-4">
+                            <span className="rounded bg-indigo-50 px-2.5 py-0.5 text-[10px] font-bold text-indigo-800 border border-indigo-200">
+                              {sch.questions?.length || sch.totalQuestions} Random MCQs
+                            </span>
+                          </td>
+                          <td className="py-3.5 px-4 font-bold text-slate-800">
+                            {sch.totalMarks || (sch.totalQuestions * (sch.marksPerQuestion || 1))} Marks
+                          </td>
+                          <td className="py-3.5 px-4 text-slate-600 font-semibold">
+                            {sch.durationMinutes} Minutes
+                          </td>
+                          <td className="py-3.5 px-4 text-slate-700 text-[11px]">
+                            <span className="block font-semibold">
+                              {new Date(sch.startDate).toLocaleString('en-IN', { dateStyle: 'short', timeStyle: 'short' })}
+                            </span>
+                            <span className="text-slate-400">
+                              to {new Date(sch.endDate).toLocaleString('en-IN', { dateStyle: 'short', timeStyle: 'short' })}
+                            </span>
+                          </td>
+                          <td className="py-3.5 px-4 text-center">
+                            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-800">
+                              <CheckCircle2 className="h-3 w-3" /> {sch.status}
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
-        </div>
+
+          {schedulesTotal > 0 && (
+            <Pagination
+              total={schedulesTotal}
+              page={schedulesPage}
+              onPageChange={setSchedulesPage}
+              itemLabel="exam schedules"
+            />
+          )}
+        </>
       )}
 
       {/* TAB 3: RE-EXAM SCHEDULER & STUDENT RESULTS */}

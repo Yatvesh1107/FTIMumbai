@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { apiRequest } from '../../utils/api';
+import { sanitizeMobile } from '../../utils/sanitizeMobile';
+import CourseSelect from '../../components/CourseSelect';
 import {
   ArrowLeft,
   AlertCircle,
@@ -62,7 +64,7 @@ export default function EnquiryEditForm() {
     fetchEnquiry();
   }, [id]);
 
-  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.name === 'mobile' ? sanitizeMobile(e.target.value) : e.target.value });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -132,7 +134,7 @@ export default function EnquiryEditForm() {
               </div>
               <div>
                 <label className={labelCls}>Mobile Number *</label>
-                <input type="tel" name="mobile" required placeholder="10-digit mobile" value={form.mobile} onChange={handleChange} className={inputCls} />
+                <input type="tel" name="mobile" required maxLength={10} inputMode="numeric" placeholder="10-digit mobile" value={form.mobile} onChange={handleChange} className={inputCls} />
               </div>
             </div>
             <div>
@@ -146,15 +148,17 @@ export default function EnquiryEditForm() {
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
                 <label className={labelCls}>Interested Course *</label>
-                <select name="courseInterest" required value={form.courseInterest} onChange={handleChange} className={inputCls}>
-                  <option value="">Select Course...</option>
-                  {!courses.some((c) => c.name === form.courseInterest) && form.courseInterest && (
-                    <option value={form.courseInterest}>{form.courseInterest}</option>
-                  )}
-                  {courses.map((c) => (
-                    <option key={c._id} value={c.name}>{c.name} {c.courseCode ? `[${c.courseCode}]` : ''}</option>
-                  ))}
-                </select>
+<CourseSelect
+                      courses={courses}
+                      value={form.courseInterest}
+                      onChange={(courseInterest) => setForm({ ...form, courseInterest })}
+                      valueBy={(c) => c.name}
+                      allowUnknown
+                      placeholder="Select Course..."
+                      tone="slate"
+                      size="md"
+                      className="mt-1"
+                    />
               </div>
               <div>
                 <label className={labelCls}>Enquiry Source</label>

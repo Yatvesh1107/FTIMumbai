@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { toast } from 'sonner';
 import { useNavigate, Link, useParams } from 'react-router-dom';
 import { apiRequest } from '../../../utils/api';
 import {
@@ -16,6 +17,7 @@ import {
   LinkIcon
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
+import CourseSelect from '../../../components/CourseSelect';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
@@ -71,7 +73,7 @@ export default function UploadVideoLecture() {
           }
         }
       } catch (err) {
-        console.error(err);
+        toast.error(err.message || 'Could not load courses for the video lecture. Please try again.');
       }
     };
     fetchCourses();
@@ -134,7 +136,7 @@ export default function UploadVideoLecture() {
         const ws = wb.Sheets[wb.SheetNames[0]];
         setExcelPreviewCount(XLSX.utils.sheet_to_json(ws).length);
       } catch (err) {
-        console.error('Error reading excel:', err);
+        toast.error(err.message || 'Could not read the MCQ Excel file. Please check it is a valid .xlsx/.xls/.csv file.');
       }
     };
     reader.readAsBinaryString(file);
@@ -343,20 +345,15 @@ export default function UploadVideoLecture() {
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
                 <label className="block uppercase text-[10px] text-slate-400 font-bold">Target Course *</label>
-                <select
-                  required
-                  disabled={isEditMode}
-                  value={formData.courseId}
-                  onChange={(e) => setFormData({ ...formData, courseId: e.target.value })}
-                  className="mt-1 w-full rounded-xl border border-slate-300 bg-white p-3 text-xs font-bold text-[#0b3c68] disabled:bg-slate-100 disabled:text-slate-500"
-                >
-                  <option value="">Select a course</option>
-                  {courses.map((c) => (
-                    <option key={c._id} value={c._id}>
-                      {c.name} ({c.courseCode})
-                    </option>
-                  ))}
-                </select>
+                <CourseSelect
+                    courses={courses}
+                    value={formData.courseId}
+                    onChange={(courseId) => setFormData({ ...formData, courseId })}
+                    placeholder="Select a course"
+                    tone="navy"
+                    isDisabled={isEditMode}
+                    className="mt-1"
+                  />
               </div>
 
               <div>

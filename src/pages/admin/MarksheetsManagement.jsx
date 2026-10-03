@@ -1,5 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
+import { toast } from 'sonner';
 import { apiRequest } from '../../utils/api';
+import { usePagination } from '../../hooks/usePagination';
+import Pagination from '../../components/Pagination';
+import SmartSelect from '../../components/SmartSelect';
+import CourseSelect from '../../components/CourseSelect';
 import {
   Printer,
   X,
@@ -26,10 +31,8 @@ export default function MarksheetsManagement() {
   const [calcLoading, setCalcLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
-  // Search & pagination
+  // Search
   const [search, setSearch] = useState('');
-  const [page, setPage] = useState(1);
-  const totalPages = Math.max(1, Math.ceil(marksheets.length / 10));
   const filtered = marksheets.filter((m) => {
     const q = search.toLowerCase();
     return (
@@ -38,7 +41,7 @@ export default function MarksheetsManagement() {
       m.marksheetNo?.toLowerCase().includes(q)
     );
   });
-  const paged = filtered.slice((page - 1) * 10, page * 10);
+  const { page, setPage, total, pageItems } = usePagination(filtered);
 
   const fetchData = async () => {
     try {
@@ -50,7 +53,7 @@ export default function MarksheetsManagement() {
       if (mRes.success) setMarksheets(mRes.marksheets || []);
       if (aRes.success) setAdmissions(aRes.admissions || []);
     } catch (err) {
-      console.error(err);
+      toast.error(err.message || 'Could not load marksheets. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -91,7 +94,7 @@ export default function MarksheetsManagement() {
         setFormSections(res.sections || []);
       }
     } catch (err) {
-      console.error(err);
+      toast.error(err.message || 'Could not calculate marksheet sections for this student and course. Please try again.');
     } finally {
       setCalcLoading(false);
     }
@@ -141,7 +144,7 @@ export default function MarksheetsManagement() {
         fetchData();
       }
     } catch (err) {
-      alert(err.message || 'Error generating marksheet');
+      toast.error(err.message || 'Error generating marksheet');
     } finally {
       setSubmitting(false);
     }
@@ -160,7 +163,7 @@ export default function MarksheetsManagement() {
       const res = await apiRequest(`/marksheets/${ms._id}/publish`, 'POST');
       if (res.success) fetchData();
     } catch (err) {
-      alert(err.message || 'Error publishing');
+      toast.error(err.message || 'Error publishing');
     }
   };
 
@@ -171,7 +174,7 @@ export default function MarksheetsManagement() {
       const res = await apiRequest(`/marksheets/${ms._id}`, 'DELETE');
       if (res.success) fetchData();
     } catch (err) {
-      alert(err.message || 'Error deleting');
+      toast.error(err.message || 'Error deleting');
     }
   };
 
@@ -204,7 +207,7 @@ export default function MarksheetsManagement() {
       });
       if (res.success) { setEditMs(null); fetchData(); }
     } catch (err) {
-      alert(err.message || 'Error saving');
+      toast.error(err.message || 'Error saving');
     }
   };
 
@@ -240,13 +243,13 @@ export default function MarksheetsManagement() {
       {/* List */}
       {loading ? (
         <div className="rounded-3xl border border-slate-200 bg-white p-12 text-center text-slate-400 italic">Loading...</div>
-      ) : paged.length === 0 ? (
+      ) : pageItems.length === 0 ? (
         <div className="rounded-3xl border border-slate-200 bg-white p-12 text-center text-slate-400 italic">
           {search ? 'No marksheets match your search.' : 'No marksheets generated yet.'}
         </div>
       ) : (
         <div className="space-y-4">
-          {paged.map((ms) => (
+          {pageItems.map((ms) => (
             <div
               key={ms._id}
               className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm hover:shadow-md transition"
@@ -310,12 +313,13 @@ export default function MarksheetsManagement() {
           ))}
 
           {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="flex justify-center gap-2 text-xs font-bold">
-              <button disabled={page <= 1} onClick={() => setPage(page - 1)} className="rounded-lg border px-3 py-1.5 disabled:opacity-40">Prev</button>
-              <span className="px-3 py-1.5 text-slate-500">Page {page} of {totalPages}</span>
-              <button disabled={page >= totalPages} onClick={() => setPage(page + 1)} className="rounded-lg border px-3 py-1.5 disabled:opacity-40">Next</button>
-            </div>
+          {total > 0 && (
+            <Pagination
+              total={total}
+              page={page}
+              onPageChange={setPage}
+              itemLabel="marksheets"
+            />
           )}
         </div>
       )}
@@ -335,36 +339,34 @@ export default function MarksheetsManagement() {
               {/* Student */}
               <div>
                 <label className="block text-slate-400 uppercase text-[10px]">Select Student *</label>
-                <select
-                  required
-                  value={formStudentId}
-                  onChange={(e) => { setFormStudentId(e.target.value); setFormCourseId(''); }}
-                  className="mt-1 w-full rounded-xl border border-slate-300 p-2.5 text-xs font-bold text-slate-800"
-                >
-                  <option value="">-- Choose Student --</option>
-                  {[...studentMap.values()].map((s) => (
-                    <option key={s._id} value={s._id}>
-                      {s.fullName} ({s.enrollmentNo})
-                    </option>
-                  ))}
-                </select>
+<SmartSelect
+                    options={[...studentMap.values()].map((s) => ({
+                      value: s._id,
+                      label: `${s.fullName} (${s.enrollmentNo})`
+                    }))}
+                    value={formStudentId}
+                    onChange={(option) => {
+                      setFormStudentId(option ? option.value : '');
+                      setFormCourseId('');
+                    }}
+                    placeholder="-- Choose Student --"
+                    tone="slate"
+                    className="mt-1"
+                  />
               </div>
 
               {/* Course */}
               {selectedStudent && (
                 <div>
                   <label className="block text-slate-400 uppercase text-[10px]">Select Course *</label>
-                  <select
-                    required
-                    value={formCourseId}
-                    onChange={(e) => setFormCourseId(e.target.value)}
-                    className="mt-1 w-full rounded-xl border border-slate-300 p-2.5 text-xs font-bold text-slate-800"
-                  >
-                    <option value="">-- Choose Course --</option>
-                    {selectedStudent.courses.map((c) => (
-                      <option key={c._id} value={c._id}>{c.name}</option>
-                    ))}
-                  </select>
+<CourseSelect
+                      courses={selectedStudent.courses}
+                      value={formCourseId}
+                      onChange={(courseId) => setFormCourseId(courseId)}
+                      placeholder="-- Choose Course --"
+                      tone="slate"
+                      className="mt-1"
+                    />
                 </div>
               )}
 

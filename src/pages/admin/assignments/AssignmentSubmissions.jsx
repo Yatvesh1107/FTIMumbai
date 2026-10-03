@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react';
+import { toast } from 'sonner';
 import { useParams, Link } from 'react-router-dom';
 import { apiRequest } from '../../../utils/api';
+import { usePagination } from '../../../hooks/usePagination';
+import Pagination, { PAGE_SIZE } from '../../../components/Pagination';
 import {
   Clock,
   ArrowLeft,
@@ -35,7 +38,7 @@ export default function AssignmentSubmissions() {
         setData(res);
       }
     } catch (err) {
-      console.error(err);
+      toast.error(err.message || 'Could not load student submissions for this assignment. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -67,7 +70,7 @@ export default function AssignmentSubmissions() {
         fetchSubmissions();
       }
     } catch (err) {
-      alert(err.message || 'Error grading submission');
+      toast.error(err.message || 'Error grading submission');
     } finally {
       setSavingGrade(false);
     }
@@ -82,6 +85,8 @@ export default function AssignmentSubmissions() {
     const enroll = s.studentId?.enrollmentNo?.toLowerCase() || '';
     return name.includes(term) || enroll.includes(term);
   });
+
+  const { page, setPage, total, pageItems } = usePagination(filtered);
 
   return (
     <div className="space-y-6">
@@ -158,10 +163,10 @@ export default function AssignmentSubmissions() {
                   </td>
                 </tr>
               ) : (
-                filtered.map((sub, idx) => (
+                pageItems.map((sub, idx) => (
                   <tr key={sub._id} className="hover:bg-slate-50/80 transition">
                     <td className="py-3.5 px-4 text-center font-mono font-bold text-slate-400">
-                      {idx + 1}
+                      {(page - 1) * PAGE_SIZE + idx + 1}
                     </td>
                     <td className="py-3.5 px-4 font-bold text-slate-900">
                       {sub.studentId?.personalDetails?.fullName || 'Student'}
@@ -211,6 +216,15 @@ export default function AssignmentSubmissions() {
           </table>
         </div>
       </div>
+
+      {total > 0 && (
+        <Pagination
+          total={total}
+          page={page}
+          onPageChange={setPage}
+          itemLabel="submissions"
+        />
+      )}
 
       {/* Faculty Grading Modal */}
       {gradingModalOpen && selectedSubmission && (

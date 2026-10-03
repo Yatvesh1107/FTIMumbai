@@ -1,6 +1,10 @@
 import { useState, useEffect } from 'react';
+import { toast } from 'sonner';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { apiRequest } from '../../utils/api';
+import { usePagination } from '../../hooks/usePagination';
+import Pagination, { PAGE_SIZE } from '../../components/Pagination';
+import CourseSelect from '../../components/CourseSelect';
 import {
   Video, Plus, Play, Sparkles, ExternalLink, FileVideo, X, Search,
   Pencil, Trash2, CheckCircle2, Link2, Unlink, Users, Globe,
@@ -69,7 +73,7 @@ export default function LMSManagement() {
         }
         if (bRes.success) setBatches(bRes.batches || []);
         if (gRes.success) setGoogleLinked(gRes.isLinked);
-      } catch (err) { console.error(err); }
+      } catch (err) { toast.error(err.message || 'Could not load LMS courses and batches. Please try again.'); }
       finally { setLoading(false); }
     };
     fetchCourses();
@@ -86,7 +90,7 @@ export default function LMSManagement() {
       ]);
       if (vRes.success) setVideos(vRes.videos || []);
       if (lRes.success) setLiveSessions(lRes.sessions || []);
-    } catch (err) { console.error(err); }
+    } catch (err) { toast.error(err.message || 'Could not load videos and live sessions for this course. Please try again.'); }
     finally { setLoading(false); }
   };
 
@@ -121,7 +125,7 @@ export default function LMSManagement() {
     try {
       const res = await apiRequest('/lms/google/auth-url');
       if (res.success && res.url) window.location.href = res.url;
-    } catch { alert('Failed to get Google auth URL'); }
+    } catch { toast.error('Failed to get Google auth URL'); }
     setGoogleLoading(false);
   };
 
@@ -130,13 +134,14 @@ export default function LMSManagement() {
     try {
       await apiRequest('/lms/google/unlink', 'POST');
       setGoogleLinked(false);
-    } catch { /* ignore */ }
+      toast.success('Google account unlinked.');
+    } catch (err) { toast.error(err.message || 'Failed to unlink Google account'); }
   };
 
   // Auto-generate meet link
   const handleAutoGenerate = async () => {
     if (!liveForm.scheduledDate || !liveForm.startTime || !liveForm.endTime) {
-      alert('Please set date, start time, and end time first');
+      toast.error('Please set date, start time, and end time first');
       return;
     }
     setGeneratingLink(true);
@@ -150,9 +155,10 @@ export default function LMSManagement() {
       });
       if (res.success && res.link) {
         setLiveForm({ ...liveForm, meetLink: res.link });
+        toast.success('Google Meet link generated.');
       }
     } catch (err) {
-      alert(err.message || 'Failed to generate link');
+      toast.error(err.message || 'Failed to generate link');
     }
     setGeneratingLink(false);
   };
@@ -168,9 +174,10 @@ export default function LMSManagement() {
       if (res.success) {
         setLiveModalOpen(false);
         resetLiveForm();
+        toast.success('Live session scheduled successfully.');
         loadCourseContent(selectedCourseId);
       }
-    } catch (err) { alert(err.message || 'Error scheduling session'); }
+    } catch (err) { toast.error(err.message || 'Error scheduling session'); }
   };
 
   // Delete session
@@ -178,16 +185,18 @@ export default function LMSManagement() {
     try {
       await apiRequest('/lms/live-sessions/' + id, 'DELETE');
       setDeleteConfirm(null);
+      toast.success('Live session deleted.');
       loadCourseContent(selectedCourseId);
-    } catch (err) { alert(err.message || 'Error deleting'); }
+    } catch (err) { toast.error(err.message || 'Error deleting'); }
   };
 
   // Update session status
   const handleStatusChange = async (id, newStatus) => {
     try {
       await apiRequest('/lms/live-sessions/' + id, 'PUT', { status: newStatus });
+      toast.success('Session status updated.');
       loadCourseContent(selectedCourseId);
-    } catch (err) { alert(err.message || 'Error updating status'); }
+    } catch (err) { toast.error(err.message || 'Error updating status'); }
   };
 
   const resetLiveForm = () => {
@@ -226,8 +235,9 @@ export default function LMSManagement() {
     if (!window.confirm('Delete "' + vid.title + '" permanently?')) return;
     try {
       await apiRequest('/lms/videos/' + vid._id, 'DELETE');
+      toast.success('Video lecture deleted.');
       loadCourseContent(selectedCourseId);
-    } catch (err) { alert(err.message || 'Error deleting'); }
+    } catch (err) { toast.error(err.message || 'Error deleting'); }
   };
 
   const filteredVideos = videos.filter((v) => {
@@ -239,6 +249,20 @@ export default function LMSManagement() {
     const term = searchTerm.toLowerCase();
     return s.title?.toLowerCase().includes(term) || s.batchTiming?.toLowerCase().includes(term);
   });
+
+  const {
+    page: videoPage,
+    setPage: setVideoPage,
+    total: videoTotal,
+    pageItems: videoPageItems,
+  } = usePagination(filteredVideos);
+
+  const {
+    page: livePage,
+    setPage: setLivePage,
+    total: liveTotal,
+    pageItems: livePageItems,
+  } = usePagination(filteredLive);
 
   const getStatusBadge = (status) => {
     switch (status) {
@@ -278,13 +302,14 @@ export default function LMSManagement() {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <select
-            value={selectedCourseId}
-            onChange={(e) => setSelectedCourseId(e.target.value)}
-            className="rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-xs font-bold text-[#0b3c68] shadow-sm"
-          >
-            {courses.map((c) => (<option key={c._id} value={c._id}>{c.name}</option>))}
-          </select>
+<CourseSelect
+              courses={courses}
+              value={selectedCourseId}
+              onChange={(courseId) => setSelectedCourseId(courseId)}
+              placeholder="Select a course"
+              tone="navy"
+              className="w-64"
+            />
           {activeTab === 'videos' ? (
             <button onClick={() => navigate('/admin/lms/upload')} className="inline-flex items-center gap-2 rounded-xl bg-[#0b3c68] px-4 py-2 text-xs font-bold text-white shadow hover:bg-[#12518a]">
               <Plus className="h-4 w-4" /> Upload Video
@@ -339,53 +364,64 @@ export default function LMSManagement() {
 
       {/* VIDEOS TABLE */}
       {activeTab === 'videos' && (
-        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs border-collapse">
-              <thead>
-                <tr className="border-b border-slate-200 bg-[#082c4d] text-white uppercase text-[11px] font-bold tracking-wider">
-                  <th className="py-3.5 px-4 w-16 text-center">#</th>
-                  <th className="py-3.5 px-4">Module / Chapter</th>
-                  <th className="py-3.5 px-4">Lecture</th>
-                  <th className="py-3.5 px-4">Duration</th>
-                  <th className="py-3.5 px-4">Status</th>
-                  <th className="py-3.5 px-4 text-center">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
-                {loading ? (
-                  <tr><td colSpan={6} className="py-12 text-center text-slate-400"><div className="h-6 w-6 animate-spin mx-auto rounded-full border-2 border-[#0b3c68] border-t-transparent" /></td></tr>
-                ) : filteredVideos.length === 0 ? (
-                  <tr><td colSpan={6} className="py-12 text-center text-slate-400 italic">No videos found.</td></tr>
-                ) : filteredVideos.map((vid, idx) => {
-                  const videoLink = vid.videoUrl.startsWith('http') ? vid.videoUrl : SERVER_URL + vid.videoUrl;
-                  const thumbLink = vid.thumbnailUrl ? (vid.thumbnailUrl.startsWith('http') ? vid.thumbnailUrl : SERVER_URL + vid.thumbnailUrl) : '';
-                  return (
-                    <tr key={vid._id} className="hover:bg-slate-50/80 transition">
-                      <td className="py-3.5 px-4 text-center font-mono font-bold text-slate-400">{idx + 1}</td>
-                      <td className="py-3.5 px-4"><span className="rounded bg-sky-50 px-2.5 py-1 text-[11px] font-bold text-[#0b3c68] border border-sky-100">{vid.moduleTitle}</span></td>
-                      <td className="py-3.5 px-4">
-                        <div className="flex items-center gap-3">
-                          {thumbLink ? <img src={thumbLink} alt="" className="h-10 w-16 shrink-0 rounded-lg object-cover border border-slate-200" /> : <div className="flex h-10 w-16 shrink-0 items-center justify-center rounded-lg bg-slate-100 border border-slate-200"><FileVideo className="h-4 w-4 text-slate-400" /></div>}
-                          <div className="min-w-0"><span className="font-bold text-slate-900 block truncate">{vid.title}</span></div>
-                        </div>
-                      </td>
-                      <td className="py-3.5 px-4"><span className="rounded bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-700">{Math.round(vid.durationInSeconds / 60)} min</span></td>
-                      <td className="py-3.5 px-4">{vid.isActive === false ? <span className="rounded-full bg-red-50 border border-red-200 px-2 py-0.5 text-[10px] font-bold text-red-700">Inactive</span> : <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 border border-emerald-200 px-2 py-0.5 text-[10px] font-bold text-emerald-700"><CheckCircle2 className="h-3 w-3" /> Active</span>}</td>
-                      <td className="py-3.5 px-4">
-                        <div className="flex items-center justify-center gap-1.5">
-                          <button onClick={() => setActivePlayUrl(videoLink)} title="Stream" className="inline-flex items-center gap-1 rounded-lg bg-sky-50 px-2.5 py-1.5 text-[11px] font-bold text-[#0b3c68] hover:bg-sky-100 transition"><Play className="h-3.5 w-3.5 fill-current" /> Stream</button>
-                          <button onClick={() => navigate('/admin/lms/videos/edit/' + vid._id)} title="Edit" className="rounded-lg p-1.5 text-slate-500 hover:bg-amber-50 hover:text-amber-600 transition"><Pencil className="h-4 w-4" /></button>
-                          <button onClick={() => handleDeleteVideo(vid)} title="Delete" className="rounded-lg p-1.5 text-slate-500 hover:bg-red-50 hover:text-red-600 transition"><Trash2 className="h-4 w-4" /></button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+        <>
+          <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs border-collapse">
+                <thead>
+                  <tr className="border-b border-slate-200 bg-[#082c4d] text-white uppercase text-[11px] font-bold tracking-wider">
+                    <th className="py-3.5 px-4 w-16 text-center">#</th>
+                    <th className="py-3.5 px-4">Module / Chapter</th>
+                    <th className="py-3.5 px-4">Lecture</th>
+                    <th className="py-3.5 px-4">Duration</th>
+                    <th className="py-3.5 px-4">Status</th>
+                    <th className="py-3.5 px-4 text-center">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
+                  {loading ? (
+                    <tr><td colSpan={6} className="py-12 text-center text-slate-400"><div className="h-6 w-6 animate-spin mx-auto rounded-full border-2 border-[#0b3c68] border-t-transparent" /></td></tr>
+                  ) : filteredVideos.length === 0 ? (
+                    <tr><td colSpan={6} className="py-12 text-center text-slate-400 italic">No videos found.</td></tr>
+                  ) : videoPageItems.map((vid, idx) => {
+                    const videoLink = vid.videoUrl.startsWith('http') ? vid.videoUrl : SERVER_URL + vid.videoUrl;
+                    const thumbLink = vid.thumbnailUrl ? (vid.thumbnailUrl.startsWith('http') ? vid.thumbnailUrl : SERVER_URL + vid.thumbnailUrl) : '';
+                    return (
+                      <tr key={vid._id} className="hover:bg-slate-50/80 transition">
+                        <td className="py-3.5 px-4 text-center font-mono font-bold text-slate-400">{(videoPage - 1) * PAGE_SIZE + idx + 1}</td>
+                        <td className="py-3.5 px-4"><span className="rounded bg-sky-50 px-2.5 py-1 text-[11px] font-bold text-[#0b3c68] border border-sky-100">{vid.moduleTitle}</span></td>
+                        <td className="py-3.5 px-4">
+                          <div className="flex items-center gap-3">
+                            {thumbLink ? <img src={thumbLink} alt="" className="h-10 w-16 shrink-0 rounded-lg object-cover border border-slate-200" /> : <div className="flex h-10 w-16 shrink-0 items-center justify-center rounded-lg bg-slate-100 border border-slate-200"><FileVideo className="h-4 w-4 text-slate-400" /></div>}
+                            <div className="min-w-0"><span className="font-bold text-slate-900 block truncate">{vid.title}</span></div>
+                          </div>
+                        </td>
+                        <td className="py-3.5 px-4"><span className="rounded bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-700">{Math.round(vid.durationInSeconds / 60)} min</span></td>
+                        <td className="py-3.5 px-4">{vid.isActive === false ? <span className="rounded-full bg-red-50 border border-red-200 px-2 py-0.5 text-[10px] font-bold text-red-700">Inactive</span> : <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 border border-emerald-200 px-2 py-0.5 text-[10px] font-bold text-emerald-700"><CheckCircle2 className="h-3 w-3" /> Active</span>}</td>
+                        <td className="py-3.5 px-4">
+                          <div className="flex items-center justify-center gap-1.5">
+                            <button onClick={() => setActivePlayUrl(videoLink)} title="Stream" className="inline-flex items-center gap-1 rounded-lg bg-sky-50 px-2.5 py-1.5 text-[11px] font-bold text-[#0b3c68] hover:bg-sky-100 transition"><Play className="h-3.5 w-3.5 fill-current" /> Stream</button>
+                            <button onClick={() => navigate('/admin/lms/videos/edit/' + vid._id)} title="Edit" className="rounded-lg p-1.5 text-slate-500 hover:bg-amber-50 hover:text-amber-600 transition"><Pencil className="h-3.5 w-3.5" /></button>
+                            <button onClick={() => handleDeleteVideo(vid)} title="Delete" className="rounded-lg p-1.5 text-slate-500 hover:bg-red-50 hover:text-red-600 transition"><Trash2 className="h-3.5 w-3.5" /></button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           </div>
-        </div>
+
+          {videoTotal > 0 && (
+            <Pagination
+              total={videoTotal}
+              page={videoPage}
+              onPageChange={setVideoPage}
+              itemLabel="video lectures"
+            />
+          )}
+        </>
       )}
 
       {/* LIVE SESSIONS TABLE */}
@@ -399,7 +435,7 @@ export default function LMSManagement() {
               <p className="text-sm text-slate-400 font-medium">No live sessions scheduled</p>
               <button onClick={openLiveModal} className="mt-3 inline-flex items-center gap-1 text-xs font-bold text-purple-700 underline"><Plus className="h-3.5 w-3.5" /> Schedule one</button>
             </div>
-          ) : filteredLive.map((session) => (
+          ) : livePageItems.map((session) => (
             <div key={session._id} className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5 hover:border-purple-200 transition">
               <div className="flex items-start justify-between gap-3">
                 <div className="flex-1 min-w-0">
@@ -438,6 +474,15 @@ export default function LMSManagement() {
               </div>
             </div>
           ))}
+
+          {liveTotal > 0 && (
+            <Pagination
+              total={liveTotal}
+              page={livePage}
+              onPageChange={setLivePage}
+              itemLabel="live sessions"
+            />
+          )}
         </div>
       )}
 

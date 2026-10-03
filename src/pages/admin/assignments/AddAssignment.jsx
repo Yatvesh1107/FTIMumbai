@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { toast } from 'sonner';
 import { useNavigate, Link } from 'react-router-dom';
 import { apiRequest } from '../../../utils/api';
 import {
@@ -11,6 +12,7 @@ import {
   Plus,
   Trash2
 } from 'lucide-react';
+import CourseSelect from '../../../components/CourseSelect';
 
 export default function AddAssignment() {
   const navigate = useNavigate();
@@ -45,7 +47,7 @@ export default function AddAssignment() {
           setFormData(prev => ({ ...prev, courseId: res.courses[0]._id }));
         }
       } catch (err) {
-        console.error(err);
+        toast.error(err.message || 'Could not load courses for this assignment. Please try again.');
       }
     };
     fetchCourses();
@@ -157,18 +159,14 @@ export default function AddAssignment() {
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
                 <label className="block uppercase text-[10px] text-slate-400 font-bold">Target Course *</label>
-                <select
-                  required
-                  value={formData.courseId}
-                  onChange={(e) => setFormData({ ...formData, courseId: e.target.value })}
-                  className="mt-1 w-full rounded-xl border border-slate-300 bg-white p-3 text-xs font-bold text-teal-800"
-                >
-                  {courses.map((c) => (
-                    <option key={c._id} value={c._id}>
-                      {c.name} ({c.courseCode})
-                    </option>
-                  ))}
-                </select>
+                <CourseSelect
+                    courses={courses}
+                    value={formData.courseId}
+                    onChange={(courseId) => setFormData({ ...formData, courseId })}
+                    placeholder="Select a course"
+                    tone="teal"
+                    className="mt-1"
+                  />
               </div>
 
               <div>

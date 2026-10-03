@@ -1,5 +1,9 @@
 import { useState, useEffect } from 'react';
+import { toast } from 'sonner';
 import { apiRequest, assetUrl, uploadImage } from '../../utils/api';
+import { usePagination } from '../../hooks/usePagination';
+import Pagination from '../../components/Pagination';
+import CategorySelect from '../../components/CategorySelect';
 import {
   Plus,
   Edit2,
@@ -42,9 +46,28 @@ export default function CoursesManagement() {
   const [step, setStep] = useState(1);
 
   const [formData, setFormData] = useState(emptyFormData);
+  const [codeAuto, setCodeAuto] = useState(true);
   const [wywl, setWywl] = useState(['']);
   const [skills, setSkills] = useState(['']);
   const [content, setContent] = useState([{ heading: '', topics: [''] }]);
+
+  const generateCourseCode = (name) => {
+    const words = name
+      .trim()
+      .replace(/[^a-zA-Z0-9\s-]/g, '')
+      .split(/[\s-]+/)
+      .filter(Boolean);
+    if (!words.length) return '';
+    const full = words.map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join('').toUpperCase();
+    return full.length <= 18 ? full : words.slice(0, 4).map((w) => w.charAt(0).toUpperCase()).join('').toUpperCase();
+  };
+
+  const handleNameChange = (value) => {
+    setFormData((prev) => ({ ...prev, name: value }));
+    if (codeAuto) {
+      setFormData((prev) => ({ ...prev, courseCode: generateCourseCode(value) }));
+    }
+  };
 
   const fetchCourses = async () => {
     try {
@@ -58,7 +81,7 @@ export default function CoursesManagement() {
         setCategories(categoryRes.categories || []);
       }
     } catch (err) {
-      console.error(err);
+      toast.error(err.message || 'Could not load courses. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -71,6 +94,7 @@ export default function CoursesManagement() {
   const openCreateModal = () => {
     setEditingCourse(null);
     setFormData(emptyFormData);
+    setCodeAuto(true);
     setWywl(['']);
     setSkills(['']);
     setContent([{ heading: '', topics: [''] }]);
@@ -107,6 +131,7 @@ export default function CoursesManagement() {
           }))
         : [{ heading: '', topics: [''] }]
     );
+    setCodeAuto(false);
     setStep(1);
     setError('');
     setShowModal(true);
@@ -119,8 +144,10 @@ export default function CoursesManagement() {
       setError('');
       const url = await uploadImage(file);
       setFormData((prev) => ({ ...prev, image: url }));
+      toast.success('Card image uploaded.');
     } catch (err) {
       setError(err.message || 'Image upload failed.');
+      toast.error(err.message || 'Image upload failed.');
     } finally {
       setUploading(false);
     }
@@ -144,11 +171,15 @@ export default function CoursesManagement() {
 
   const handleGoToStep2 = () => {
     if (!formData.name.trim() || !formData.courseCode.trim()) {
-      setError('Course name and course code are required.');
+      const msg = 'Course name and course code are required.';
+      setError(msg);
+      toast.error(msg);
       return;
     }
     if (Number(formData.minFloorFee) > Number(formData.standardFee)) {
-      setError('Minimum Floor Fee cannot be higher than Standard Course Fee (MRP).');
+      const msg = 'Minimum Floor Fee cannot be higher than Standard Course Fee (MRP).';
+      setError(msg);
+      toast.error(msg);
       return;
     }
     setError('');
@@ -158,7 +189,9 @@ export default function CoursesManagement() {
   const handleSaveCourse = async (e) => {
     e.preventDefault();
     if (Number(formData.minFloorFee) > Number(formData.standardFee)) {
-      setError('Minimum Floor Fee cannot be higher than Standard Course Fee (MRP).');
+      const msg = 'Minimum Floor Fee cannot be higher than Standard Course Fee (MRP).';
+      setError(msg);
+      toast.error(msg);
       return;
     }
 
@@ -180,13 +213,16 @@ export default function CoursesManagement() {
     try {
       if (editingCourse) {
         await apiRequest(`/courses/${editingCourse._id}`, 'PUT', payload);
+        toast.success('Course updated successfully.');
       } else {
         await apiRequest('/courses', 'POST', payload);
+        toast.success('Course created successfully.');
       }
       setShowModal(false);
       fetchCourses();
     } catch (err) {
       setError(err.message || 'Error saving course.');
+      toast.error(err.message || 'Error saving course.');
     } finally {
       setFormLoading(false);
     }
@@ -196,9 +232,10 @@ export default function CoursesManagement() {
     if (!window.confirm('Are you sure you want to delete this course?')) return;
     try {
       await apiRequest(`/courses/${id}`, 'DELETE');
+      toast.success('Course deleted successfully.');
       fetchCourses();
     } catch (err) {
-      alert(err.message || 'Could not delete course.');
+      toast.error(err.message || 'Could not delete course.');
     }
   };
 
@@ -226,6 +263,8 @@ export default function CoursesManagement() {
     );
   const addModule = () => setContent((prev) => [...prev, { heading: '', topics: [''] }]);
   const removeModule = (mi) => setContent((prev) => (prev.length === 1 ? prev : prev.filter((_, j) => j !== mi)));
+
+  const { page, setPage, total, pageItems } = usePagination(courses);
 
   return (
     <div className="space-y-6">
@@ -259,7 +298,7 @@ export default function CoursesManagement() {
             No courses found. Click "+ Create New Course" to add one.
           </div>
         ) : (
-          courses.map((course) => {
+          pageItems.map((course) => {
             const maxDiscount = course.standardFee - course.minFloorFee;
             const discountPercent = Math.round((maxDiscount / course.standardFee) * 100);
             const categoryName = categories.find((c) => c._id === course.courseCategoryId)?.name;
@@ -267,59 +306,59 @@ export default function CoursesManagement() {
             return (
               <div
                 key={course._id}
-                className="flex flex-col justify-between rounded-3xl border border-slate-200 bg-white p-6 shadow-sm hover:shadow-md transition"
+                className="flex min-w-0 flex-col justify-between rounded-3xl border border-slate-200 bg-white p-6 shadow-sm hover:shadow-md transition"
               >
-                <div>
-                  <div className="flex items-center justify-between">
-                    <span className="rounded-md bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-700">
+                <div className="min-w-0">
+                  <div className="flex min-w-0 flex-wrap items-center justify-between gap-2">
+                    <span className="max-w-full truncate rounded-md bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-700">
                       {course.courseCode}
                     </span>
-                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2.5 py-0.5 text-[10px] font-bold text-emerald-800">
-                      <Clock className="h-3 w-3" /> {course.duration}
+                    <span className="inline-flex min-w-0 max-w-full items-center gap-1 rounded-full bg-emerald-100 px-2.5 py-0.5 text-[10px] font-bold text-emerald-800">
+                      <Clock className="h-3 w-3 shrink-0" /> <span className="truncate">{course.duration}</span>
                     </span>
                   </div>
 
-                  <h3 className="mt-3 font-display text-base font-bold text-slate-900 line-clamp-1">
+                  <h3 className="mt-3 line-clamp-1 break-words font-display text-base font-bold text-slate-900">
                     {course.name}
                   </h3>
-                  <p className="mt-1 text-xs text-slate-500 line-clamp-2 leading-relaxed">
+                  <p className="mt-1 line-clamp-2 break-words text-xs leading-relaxed text-slate-500">
                     {course.description || 'Professional job-oriented practical training curriculum.'}
                   </p>
 
-                  <div className="mt-3 flex flex-wrap gap-1.5 text-[10px] font-bold">
+                  <div className="mt-3 flex min-w-0 flex-wrap gap-1.5 text-[10px] font-bold">
                     {course.provider && (
-                      <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-slate-700">{course.provider}</span>
+                      <span className="inline-block max-w-full truncate rounded-full bg-slate-100 px-2.5 py-0.5 text-slate-700">{course.provider}</span>
                     )}
                     {course.mode && (
-                      <span className="rounded-full bg-sky-50 px-2.5 py-0.5 text-sky-700">{course.mode}</span>
+                      <span className="inline-block max-w-full truncate rounded-full bg-sky-50 px-2.5 py-0.5 text-sky-700">{course.mode}</span>
                     )}
                     {categoryName && (
-                      <span className="rounded-full bg-terracotta/10 px-2.5 py-0.5 text-terracotta">{categoryName}</span>
+                      <span className="inline-block max-w-full truncate rounded-full bg-terracotta/10 px-2.5 py-0.5 text-terracotta">{categoryName}</span>
                     )}
                   </div>
 
                   {/* Pricing Matrix Box */}
-                  <div className="mt-4 rounded-2xl border border-slate-200/80 bg-slate-50 p-3.5 space-y-2 text-xs">
-                    <div className="flex justify-between items-center">
-                      <span className="text-slate-500 font-semibold">Standard MRP Fee:</span>
-                      <span className="font-bold text-slate-900 text-sm">₹{course.standardFee?.toLocaleString('en-IN')}</span>
+                  <div className="mt-4 min-w-0 space-y-2 rounded-2xl border border-slate-200/80 bg-slate-50 p-3.5 text-xs">
+                    <div className="flex min-w-0 items-center justify-between gap-2">
+                      <span className="min-w-0 truncate font-semibold text-slate-500">Standard MRP Fee:</span>
+                      <span className="shrink-0 whitespace-nowrap text-sm font-bold text-slate-900">₹{course.standardFee?.toLocaleString('en-IN')}</span>
                     </div>
-                    <div className="flex justify-between items-center border-t border-slate-200/60 pt-1.5">
-                      <span className="text-amber-700 font-bold">Min Floor Limit:</span>
-                      <span className="font-black text-amber-700 text-sm">₹{course.minFloorFee?.toLocaleString('en-IN')}</span>
+                    <div className="flex min-w-0 items-center justify-between gap-2 border-t border-slate-200/60 pt-1.5">
+                      <span className="min-w-0 truncate font-bold text-amber-700">Min Floor Limit:</span>
+                      <span className="shrink-0 whitespace-nowrap text-sm font-black text-amber-700">₹{course.minFloorFee?.toLocaleString('en-IN')}</span>
                     </div>
-                    <div className="flex justify-between items-center text-[11px] text-emerald-700 font-semibold">
-                      <span>Max Discount Range:</span>
-                      <span>₹{maxDiscount.toLocaleString('en-IN')} ({discountPercent}%)</span>
+                    <div className="flex min-w-0 items-center justify-between gap-2 text-[11px] font-semibold text-emerald-700">
+                      <span className="min-w-0 truncate">Max Discount Range:</span>
+                      <span className="shrink-0 whitespace-nowrap">₹{maxDiscount.toLocaleString('en-IN')} ({discountPercent}%)</span>
                     </div>
                   </div>
                 </div>
 
-                <div className="mt-5 flex items-center justify-between border-t border-slate-100 pt-3">
-                  <span className="text-[11px] font-bold text-slate-400">
+                <div className="mt-5 flex min-w-0 items-center justify-between gap-2 border-t border-slate-100 pt-3">
+                  <span className="min-w-0 truncate text-[11px] font-bold text-slate-400">
                     {course.totalStudents || 0} Students Enrolled
                   </span>
-                  <div className="flex gap-2">
+                  <div className="flex shrink-0 gap-2">
                     <button
                       onClick={() => openEditModal(course)}
                       className="rounded-lg p-2 text-slate-600 hover:bg-slate-100 hover:text-[#0b3c68]"
@@ -341,6 +380,15 @@ export default function CoursesManagement() {
           })
         )}
       </div>
+
+      {total > 0 && (
+        <Pagination
+          total={total}
+          page={page}
+          onPageChange={setPage}
+          itemLabel="courses"
+        />
+      )}
 
       {/* Create / Edit Modal */}
       {showModal && (
@@ -394,7 +442,7 @@ export default function CoursesManagement() {
                       required
                       placeholder="e.g. Master in Web Designing"
                       value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      onChange={(e) => handleNameChange(e.target.value)}
                       className="mt-1 w-full rounded-xl border border-slate-300 p-2.5 text-xs text-slate-800 font-medium"
                     />
                   </div>
@@ -407,7 +455,7 @@ export default function CoursesManagement() {
                         required
                         placeholder="e.g. FTI-MWD"
                         value={formData.courseCode}
-                        onChange={(e) => setFormData({ ...formData, courseCode: e.target.value })}
+                        onChange={(e) => { setCodeAuto(false); setFormData({ ...formData, courseCode: e.target.value }); }}
                         className="mt-1 w-full rounded-xl border border-slate-300 p-2.5 text-xs uppercase text-slate-800 font-medium"
                       />
                     </div>
@@ -432,16 +480,13 @@ export default function CoursesManagement() {
                     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                       <div>
                         <label className="block uppercase text-[10px] text-slate-400">Assign to Category</label>
-                        <select
+                        <CategorySelect
+                          categories={categories}
                           value={formData.courseCategoryId}
-                          onChange={(e) => setFormData({ ...formData, courseCategoryId: e.target.value })}
-                          className="mt-1 w-full rounded-xl border border-slate-300 p-2.5 text-xs text-slate-800 font-medium"
-                        >
-                          <option value="">— Not assigned —</option>
-                          {categories.map((c) => (
-                            <option key={c._id} value={c._id}>{c.name}</option>
-                          ))}
-                        </select>
+                          onChange={(courseCategoryId) => setFormData({ ...formData, courseCategoryId })}
+                          placeholder="Not assigned"
+                          className="mt-1"
+                        />
                       </div>
                       <div>
                         <label className="block uppercase text-[10px] text-slate-400">Mode</label>

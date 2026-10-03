@@ -37,7 +37,7 @@ export default function DashboardLayout({ allowedRoles }) {
       <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
 
       {/* Main Content Area */}
-      <div className="flex flex-1 flex-col overflow-hidden">
+      <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         {/* Top Navbar */}
         <header className="flex h-16 items-center justify-between border-b border-slate-200/90 bg-white px-6 shadow-sm">
           <div className="flex items-center gap-4">
@@ -76,7 +76,7 @@ export default function DashboardLayout({ allowedRoles }) {
         </header>
 
         {/* Scrollable Page Body */}
-        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
+        <main className="min-w-0 flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
           <Outlet />
         </main>
       </div>

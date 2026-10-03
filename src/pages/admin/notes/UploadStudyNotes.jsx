@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { toast } from 'sonner';
 import { useNavigate, Link } from 'react-router-dom';
 import { apiRequest } from '../../../utils/api';
 import {
@@ -14,6 +15,7 @@ import {
   Trash2
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
+import CourseSelect from '../../../components/CourseSelect';
 
 export default function UploadStudyNotes() {
   const navigate = useNavigate();
@@ -51,7 +53,7 @@ export default function UploadStudyNotes() {
           setFormData(prev => ({ ...prev, courseId: res.courses[0]._id }));
         }
       } catch (err) {
-        console.error(err);
+        toast.error(err.message || 'Could not load courses for the study note. Please try again.');
       }
     };
     fetchCourses();
@@ -86,7 +88,7 @@ export default function UploadStudyNotes() {
         const data = XLSX.utils.sheet_to_json(ws);
         setExcelPreviewCount(data.length);
       } catch (e) {
-        console.error('Error reading excel:', e);
+        toast.error(e.message || 'Could not read the MCQ Excel file. Please check it is a valid .xlsx/.xls/.csv file.');
       }
     };
     reader.readAsBinaryString(file);
@@ -248,18 +250,14 @@ export default function UploadStudyNotes() {
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
                 <label className="block uppercase text-[10px] text-slate-400 font-bold">Target Course *</label>
-                <select
-                  required
-                  value={formData.courseId}
-                  onChange={(e) => setFormData({ ...formData, courseId: e.target.value })}
-                  className="mt-1 w-full rounded-xl border border-slate-300 bg-white p-3 text-xs font-bold text-[#0b3c68]"
-                >
-                  {courses.map((c) => (
-                    <option key={c._id} value={c._id}>
-                      {c.name} ({c.courseCode})
-                    </option>
-                  ))}
-                </select>
+                <CourseSelect
+                    courses={courses}
+                    value={formData.courseId}
+                    onChange={(courseId) => setFormData({ ...formData, courseId })}
+                    placeholder="Select a course"
+                    tone="navy"
+                    className="mt-1"
+                  />
               </div>
 
               <div>

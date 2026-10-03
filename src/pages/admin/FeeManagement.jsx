@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { toast } from 'sonner';
 import { apiRequest } from '../../utils/api';
 import {
   CreditCard,
@@ -60,7 +61,7 @@ export default function FeeManagement() {
         setCurrentPage(res.page || 1);
       }
     } catch (err) {
-      console.error('Error fetching fees:', err);
+      toast.error(err.message || 'Could not load fee records. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -155,9 +156,10 @@ export default function FeeManagement() {
     if (!window.confirm('Are you sure you want to issue an Admin Override to unlock this student portal?')) return;
     try {
       await apiRequest(`/fees/unlock-override/${studentId}`, 'POST');
+      toast.success('Admin override issued. Portal unlocked.');
       fetchFees(currentPage, debouncedSearch, lockFilter);
     } catch (err) {
-      alert(err.message || 'Unlock override failed.');
+      toast.error(err.message || 'Unlock override failed.');
     }
   };
 
@@ -165,10 +167,10 @@ export default function FeeManagement() {
     setLockRoutineLoading(true);
     try {
       const res = await apiRequest('/fees/check-overdue-lock', 'POST');
-      alert(`Overdue routine completed. ${res.lockedCount} accounts updated.`);
+      toast.success(`Overdue routine completed. ${res.lockedCount} accounts updated.`);
       fetchFees(currentPage, debouncedSearch, lockFilter);
     } catch {
-      alert('Error running overdue routine.');
+      toast.error('Error running overdue routine.');
     } finally {
       setLockRoutineLoading(false);
     }

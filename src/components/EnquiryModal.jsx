@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { sanitizeMobile } from '../utils/sanitizeMobile';
 
 const inputClass =
   "w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-800 outline-none transition focus:border-navy focus:ring-2 focus:ring-navy/20";
@@ -15,7 +16,7 @@ export default function EnquiryModal({ open, onClose }) {
   if (!open) return null;
 
   const handleChange = (e) =>
-    setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
+    setForm((f) => ({ ...f, [e.target.name]: e.target.name === 'mobile' ? sanitizeMobile(e.target.value) : e.target.value }));
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -93,10 +94,12 @@ export default function EnquiryModal({ open, onClose }) {
                 />
                 <input
                   type="text"
-                  name="mobile"
-                  value={form.mobile}
-                  onChange={handleChange}
-                  placeholder="Mobile No."
+name="mobile"
+                    value={form.mobile}
+                    onChange={handleChange}
+                    maxLength={10}
+                    inputMode="numeric"
+                    placeholder="Mobile No."
                   className={inputClass}
                 />
                 <input

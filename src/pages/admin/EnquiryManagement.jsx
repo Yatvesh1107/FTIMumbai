@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { apiRequest } from '../../utils/api';
+import { usePagination } from '../../hooks/usePagination';
+import Pagination from '../../components/Pagination';
 import {
   PhoneCall,
   Plus,
@@ -72,6 +74,8 @@ export default function EnquiryManagement() {
     if (days < 30) return `${days}d ago`;
     return new Date(d).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
   };
+
+  const { page, setPage, total, pageItems } = usePagination(enquiries);
 
   return (
     <div className="space-y-6">
@@ -181,7 +185,7 @@ export default function EnquiryManagement() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {enquiries.map((enq) => {
+              {pageItems.map((enq) => {
                 const meta = STATUS_META[enq.status] || STATUS_META.new;
                 return (
                   <tr key={enq._id} className="hover:bg-slate-50/70 transition cursor-pointer" onClick={() => navigate(`/admin/enquiries/${enq._id}`)}>
@@ -226,6 +230,15 @@ export default function EnquiryManagement() {
             </tbody>
           </table>
         </div>
+      )}
+
+      {total > 0 && (
+        <Pagination
+          total={total}
+          page={page}
+          onPageChange={setPage}
+          itemLabel="enquiries"
+        />
       )}
     </div>
   );

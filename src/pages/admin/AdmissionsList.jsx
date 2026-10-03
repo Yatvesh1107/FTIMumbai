@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react';
+import { toast } from 'sonner';
 import { Link } from 'react-router-dom';
 import { apiRequest } from '../../utils/api';
+import { usePagination } from '../../hooks/usePagination';
+import Pagination from '../../components/Pagination';
 import {
   Users,
   Search,
@@ -36,7 +39,7 @@ export default function AdmissionsList() {
         setAdmissions(res.admissions || []);
       }
     } catch (err) {
-      console.error('Error fetching admissions:', err);
+      toast.error(err.message || 'Could not load admissions. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -134,6 +137,8 @@ export default function AdmissionsList() {
     return new Date(d).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
   };
 
+  const { page, setPage, total, pageItems } = usePagination(filteredStudents);
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -197,7 +202,7 @@ export default function AdmissionsList() {
             <p className="text-sm text-slate-400 font-medium">No students found</p>
           </div>
         ) : (
-          filteredStudents.map((group) => {
+          pageItems.map((group) => {
             const s = group.student;
             return (
               <div
@@ -295,6 +300,15 @@ export default function AdmissionsList() {
           })
         )}
       </div>
+
+      {total > 0 && (
+        <Pagination
+          total={total}
+          page={page}
+          onPageChange={setPage}
+          itemLabel="students"
+        />
+      )}
 
       {/* Student Detail Modal */}
       {selectedStudent && (

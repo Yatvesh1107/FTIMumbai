@@ -1,5 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
+import { toast } from 'sonner';
 import { apiRequest } from '../../utils/api';
+import { sanitizeMobile } from '../../utils/sanitizeMobile';
+import { usePagination } from '../../hooks/usePagination';
+import Pagination from '../../components/Pagination';
 import {
   UserCog,
   Plus,
@@ -40,7 +44,7 @@ export default function StaffManagement() {
         setStaff(res.users || []);
       }
     } catch (err) {
-      console.error(err);
+      toast.error(err.message || 'Could not load staff members. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -71,11 +75,11 @@ export default function StaffManagement() {
     return p;
   };
 
-  const handleChange = (e) => {
+const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
+    setFormData({ ...formData, [name]: name === 'mobile' ? sanitizeMobile(value) : value });
     if (name === 'password') setGeneratedPassword('');
-  };
+    };
 
   const handleAddStaff = async (e) => {
     e.preventDefault();
@@ -110,13 +114,15 @@ export default function StaffManagement() {
       await apiRequest(`/auth/users/${id}`, 'DELETE');
       fetchStaff();
     } catch (err) {
-      alert(err.message || 'Could not delete staff member.');
+      toast.error(err.message || 'Could not delete staff member.');
     }
   };
 
   const visibleStaff = staff.filter((u) =>
     filter === 'all' ? u.role !== 'student' : u.role === filter
   );
+
+  const { page, setPage, total, pageItems } = usePagination(visibleStaff);
 
   return (
     <div className="space-y-6">
@@ -176,7 +182,7 @@ export default function StaffManagement() {
           </div>
         ) : (
           <div className="divide-y divide-slate-100">
-            {visibleStaff.map((u) => (
+            {pageItems.map((u) => (
               <div key={u._id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-6 py-4 hover:bg-slate-50/60 transition">
                 <div className="flex items-center gap-4">
                   <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[#0b3c68] font-bold text-white text-sm shadow">
@@ -231,6 +237,15 @@ export default function StaffManagement() {
         )}
       </div>
 
+      {total > 0 && (
+        <Pagination
+          total={total}
+          page={page}
+          onPageChange={setPage}
+          itemLabel="staff members"
+        />
+      )}
+
       {/* Add Receptionist Modal */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 backdrop-blur-sm p-4">
@@ -283,10 +298,12 @@ export default function StaffManagement() {
                 <div>
                   <label className="block uppercase text-[10px] text-slate-400">Mobile No.</label>
                   <input
-                    type="text"
-                    name="mobile"
-                    placeholder="9876543210"
-                    value={formData.mobile}
+type="text"
+                      name="mobile"
+                      placeholder="9876543210"
+                      maxLength={10}
+                      inputMode="numeric"
+                      value={formData.mobile}
                     onChange={handleChange}
                     className="mt-1 w-full rounded-xl border border-slate-300 p-2.5 text-xs text-slate-800 font-medium"
                   />

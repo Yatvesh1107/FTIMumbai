@@ -1,5 +1,8 @@
 import { useState, useEffect } from 'react';
+import { toast } from 'sonner';
 import { apiRequest } from '../../../utils/api';
+import { usePagination } from '../../../hooks/usePagination';
+import Pagination, { PAGE_SIZE } from '../../../components/Pagination';
 import {
   Users,
   Plus,
@@ -13,6 +16,7 @@ import {
   Layers,
   GraduationCap
 } from 'lucide-react';
+import CourseSelect from '../../../components/CourseSelect';
 
 export default function BatchManagement() {
   const [courses, setCourses] = useState([]);
@@ -44,7 +48,7 @@ export default function BatchManagement() {
         setFormData(prev => ({ ...prev, courseId: res.courses[0]._id }));
       }
     } catch (err) {
-      console.error(err);
+      toast.error(err.message || 'Could not load courses for batch management. Please try again.');
     }
   };
 
@@ -57,7 +61,7 @@ export default function BatchManagement() {
         setBatches(res.batches || []);
       }
     } catch (err) {
-      console.error(err);
+      toast.error(err.message || 'Could not load batches. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -112,6 +116,8 @@ export default function BatchManagement() {
     );
   });
 
+  const { page, setPage, total, pageItems } = usePagination(filtered);
+
   return (
     <div className="space-y-6">
       {/* Top Header */}
@@ -151,18 +157,15 @@ export default function BatchManagement() {
 
         <div className="flex items-center gap-2">
           <Filter className="h-4 w-4 text-slate-400" />
-          <select
-            value={selectedCourseId}
-            onChange={(e) => setSelectedCourseId(e.target.value)}
-            className="rounded-xl border border-slate-200 bg-slate-50/60 px-3.5 py-2 text-xs font-bold text-[#0b3c68] focus:border-[#0b3c68] focus:outline-none"
-          >
-            <option value="All">All Courses ({courses.length})</option>
-            {courses.map((c) => (
-              <option key={c._id} value={c._id}>
-                {c.name}
-              </option>
-            ))}
-          </select>
+<CourseSelect
+              courses={courses}
+              value={selectedCourseId}
+              onChange={(courseId) => setSelectedCourseId(courseId)}
+              includeAll
+              tone="navy"
+              variant="filter"
+              className="w-52"
+            />
         </div>
       </div>
 
@@ -202,10 +205,10 @@ export default function BatchManagement() {
                   </td>
                 </tr>
               ) : (
-                filtered.map((batch, idx) => (
+                pageItems.map((batch, idx) => (
                   <tr key={batch._id} className="hover:bg-slate-50/80 transition">
                     <td className="py-3.5 px-4 text-center font-mono font-bold text-slate-400">
-                      {idx + 1}
+                      {(page - 1) * PAGE_SIZE + idx + 1}
                     </td>
                     <td className="py-3.5 px-4 font-mono font-bold text-[#0b3c68]">
                       <span className="rounded bg-sky-50 px-2 py-0.5 text-[11px] border border-sky-200">
@@ -243,6 +246,15 @@ export default function BatchManagement() {
         </div>
       </div>
 
+      {total > 0 && (
+        <Pagination
+          total={total}
+          page={page}
+          onPageChange={setPage}
+          itemLabel="batches"
+        />
+      )}
+
       {/* Create Batch Modal */}
       {createModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 backdrop-blur-sm p-4">
@@ -272,18 +284,14 @@ export default function BatchManagement() {
             <form onSubmit={handleCreateBatch} className="space-y-4">
               <div>
                 <label className="block uppercase text-[10px] text-slate-400 font-bold">Target Course *</label>
-                <select
-                  required
-                  value={formData.courseId}
-                  onChange={(e) => setFormData({ ...formData, courseId: e.target.value })}
-                  className="mt-1 w-full rounded-xl border border-slate-300 bg-white p-2.5 text-xs font-bold text-[#0b3c68]"
-                >
-                  {courses.map((c) => (
-                    <option key={c._id} value={c._id}>
-                      {c.name} ({c.courseCode})
-                    </option>
-                  ))}
-                </select>
+                <CourseSelect
+                    courses={courses}
+                    value={formData.courseId}
+                    onChange={(courseId) => setFormData({ ...formData, courseId })}
+                    placeholder="Select a course"
+                    tone="navy"
+                    className="mt-1"
+                  />
               </div>
 
               <div className="grid gap-3 sm:grid-cols-2">

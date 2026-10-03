@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Bell, CheckCircle, Trash2, Filter, Search, Send, X } from 'lucide-react';
 import notificationService from '../../services/notificationService';
+import { usePagination } from '../../hooks/usePagination';
+import Pagination from '../../components/Pagination';
 
 const TYPE_ICONS = {
   fee_reminder: '💰', fee_overdue: '🔴', fee_critical: '🚨', payment_success: '✅',
@@ -91,6 +93,8 @@ export default function Notifications({ role = 'student' }) {
 
   const unreadCount = notifications.filter((n) => !n.isRead).length;
 
+  const { page, setPage, total, pageItems } = usePagination(filtered);
+
   const timeAgo = (date) => {
     const diff = new Date().getTime() - new Date(date).getTime();
     const mins = Math.floor(diff / 60000);
@@ -177,7 +181,7 @@ export default function Notifications({ role = 'student' }) {
               <p className="text-sm text-slate-400 font-medium">No notifications found</p>
             </div>
           ) : (
-            filtered.map((notif) => (
+            pageItems.map((notif) => (
               <div
                 key={notif._id}
                 className={`rounded-2xl border p-4 transition ${
@@ -228,6 +232,15 @@ export default function Notifications({ role = 'student' }) {
             ))
           )}
         </div>
+
+        {total > 0 && (
+          <Pagination
+            total={total}
+            page={page}
+            onPageChange={setPage}
+            itemLabel="notifications"
+          />
+        )}
 
         {/* Broadcast Modal */}
         {showBroadcast && (

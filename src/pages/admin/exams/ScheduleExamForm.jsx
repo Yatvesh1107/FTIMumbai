@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { toast } from 'sonner';
 import { useNavigate, Link } from 'react-router-dom';
 import { apiRequest } from '../../../utils/api';
 import {
@@ -11,10 +12,10 @@ import {
   Award,
   Sparkles,
   Users,
-  UserCheck,
-  CheckSquare,
-  Square
+  UserCheck
 } from 'lucide-react';
+import SmartSelect from '../../../components/SmartSelect';
+import CourseSelect from '../../../components/CourseSelect';
 
 const EXAM_TYPES = [
   { value: 'normal_exam', label: 'Normal Practice Exam', desc: 'Regular course test for self-assessment & knowledge check' },
@@ -62,7 +63,7 @@ export default function ScheduleExamForm() {
           fetchTargetStudents(first._id, 'All');
         }
       } catch (err) {
-        console.error(err);
+        toast.error(err.message || 'Could not load courses for exam scheduling. Please try again.');
       }
     };
     fetchCourses();
@@ -82,7 +83,7 @@ export default function ScheduleExamForm() {
         fetchTargetStudents(courseId, '');
       }
     } catch (e) {
-      console.error('Error fetching batches:', e);
+      toast.error(e.message || 'Could not load batches for this course. Please try again.');
     }
   };
 
@@ -95,7 +96,7 @@ export default function ScheduleExamForm() {
         setSelectedStudentIds((res.students || []).map(s => s.studentId));
       }
     } catch (e) {
-      console.error('Error fetching students for exam:', e);
+      toast.error(e.message || 'Could not load the students targeted for this exam. Please try again.');
     }
   };
 
@@ -106,7 +107,7 @@ export default function ScheduleExamForm() {
         setQuestionCount(res.questions?.length || 0);
       }
     } catch (e) {
-      console.error(e);
+      toast.error(e.message || 'Could not check the question bank for this course. Please try again.');
     }
   };
 
@@ -121,14 +122,6 @@ export default function ScheduleExamForm() {
     fetchTargetStudents(formData.courseId, batchId);
   };
 
-  const toggleStudentSelect = (id) => {
-    if (selectedStudentIds.includes(id)) {
-      setSelectedStudentIds(selectedStudentIds.filter(sId => sId !== id));
-    } else {
-      setSelectedStudentIds([...selectedStudentIds, id]);
-    }
-  };
-
   const handleSelectAllStudents = () => {
     if (selectedStudentIds.length === students.length) {
       setSelectedStudentIds([]);
@@ -139,7 +132,7 @@ export default function ScheduleExamForm() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.courseId || !formData.examTitle || !formData.endDate) {
+    if (!formData.courseId || !formData.batchId || !formData.examTitle || !formData.endDate) {
       setError('Please fill in all required fields.');
       return;
     }
@@ -234,34 +227,29 @@ export default function ScheduleExamForm() {
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
                 <label className="block uppercase text-[10px] text-slate-400 font-bold">1. Select Course *</label>
-                <select
-                  required
-                  value={formData.courseId}
-                  onChange={(e) => handleCourseChange(e.target.value)}
-                  className="mt-1 w-full rounded-xl border border-slate-300 bg-white p-3 text-xs font-bold text-indigo-900"
-                >
-                  {courses.map((c) => (
-                    <option key={c._id} value={c._id}>
-                      {c.name} ({c.courseCode})
-                    </option>
-                  ))}
-                </select>
+<CourseSelect
+                    courses={courses}
+                    value={formData.courseId}
+                    onChange={(courseId) => handleCourseChange(courseId)}
+                    placeholder="Select a course"
+                    tone="indigo"
+                    className="mt-1"
+                  />
               </div>
 
               <div>
                 <label className="block uppercase text-[10px] text-slate-400 font-bold">2. Select Batch *</label>
-                <select
-                  required
-                  value={formData.batchId}
-                  onChange={(e) => handleBatchChange(e.target.value)}
-                  className="mt-1 w-full rounded-xl border border-slate-300 bg-white p-3 text-xs font-bold text-indigo-900"
-                >
-                  {batches.map((b) => (
-                    <option key={b._id} value={b._id}>
-                      {b.batchName} ({b.timing}) [{b.batchCode}]
-                    </option>
-                  ))}
-                </select>
+<SmartSelect
+                    options={batches.map((b) => ({
+                      value: b._id,
+                      label: `${b.batchName} (${b.timing}) [${b.batchCode}]`
+                    }))}
+                    value={formData.batchId}
+                    onChange={(option) => handleBatchChange(option ? option.value : '')}
+                    placeholder="Select a batch"
+                    tone="indigo"
+                    className="mt-1"
+                  />
               </div>
             </div>
 
@@ -332,35 +320,22 @@ export default function ScheduleExamForm() {
                 {students.length === 0 ? (
                   <p className="text-xs text-slate-400 italic py-2">No students enrolled in this batch yet.</p>
                 ) : (
-                  <div className="max-h-56 overflow-y-auto divide-y divide-slate-100 border rounded-xl">
-                    {students.map((stu) => {
-                      const isSelected = selectedStudentIds.includes(stu.studentId);
-                      return (
-                        <div
-                          key={stu.studentId}
-                          onClick={() => toggleStudentSelect(stu.studentId)}
-                          className={`cursor-pointer flex items-center justify-between p-3 transition ${
-                            isSelected ? 'bg-indigo-50/70 font-semibold' : 'hover:bg-slate-50'
-                          }`}
-                        >
-                          <div className="flex items-center gap-3">
-                            {isSelected ? (
-                              <CheckSquare className="h-4 w-4 text-indigo-700" />
-                            ) : (
-                              <Square className="h-4 w-4 text-slate-300" />
-                            )}
-                            <div>
-                              <p className="text-xs font-bold text-slate-900">{stu.fullName}</p>
-                              <p className="text-[10px] text-slate-500 font-mono">
-                                {stu.enrollmentNo} • {stu.batchName}
-                              </p>
-                            </div>
-                          </div>
-                          <span className="text-[10px] text-slate-400 font-mono">{stu.mobile}</span>
-                        </div>
-                      );
-                    })}
-                  </div>
+                  <SmartSelect
+                    isMulti
+                    options={students.map((stu) => ({
+                      value: stu.studentId,
+                      label: `${stu.fullName} · ${stu.enrollmentNo}`
+                    }))}
+                    value={selectedStudentIds
+                      .map((id) => students.find((s) => s.studentId === id))
+                      .filter(Boolean)
+                      .map((s) => ({ value: s.studentId, label: `${s.fullName} · ${s.enrollmentNo}` }))}
+                    onChange={(selected) => setSelectedStudentIds((selected || []).map((o) => o.value))}
+                    placeholder="Search and select students"
+                    isCloseMenuOnSelect={false}
+                    tone="indigo"
+                    size="md"
+                  />
                 )}
               </div>
             )}

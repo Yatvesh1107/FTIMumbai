@@ -1,5 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
+import { toast } from 'sonner';
 import { apiRequest } from '../../utils/api';
+import { usePagination } from '../../hooks/usePagination';
+import Pagination from '../../components/Pagination';
+import CourseSelect from '../../components/CourseSelect';
 import {
   FileText,
   Plus,
@@ -48,7 +52,7 @@ export default function AcademicsManagement() {
           setSelectedCourseId(res.courses[0]._id);
         }
       } catch (err) {
-        console.error(err);
+        toast.error(err.message || 'Could not load courses. Please try again.');
       }
     };
     fetchCourses();
@@ -64,7 +68,7 @@ export default function AcademicsManagement() {
       if (nRes.success) setNotes(nRes.notes || []);
       if (aRes.success) setAssignments(aRes.assignments || []);
     } catch (err) {
-      console.error(err);
+      toast.error(err.message || 'Could not load notes and assignments for this course. Please try again.');
     }
   };
 
@@ -90,7 +94,7 @@ export default function AcademicsManagement() {
       } else if (noteForm.fileUrl) {
         formData.append('fileUrl', noteForm.fileUrl);
       } else {
-        alert('Please choose a PDF file or enter file URL');
+        toast.error('Please choose a PDF file or enter file URL');
         setUploadingNote(false);
         return;
       }
@@ -114,11 +118,14 @@ export default function AcademicsManagement() {
       setNoteForm({ chapterTitle: 'Chapter 1: Foundations', title: '', description: '', fileUrl: '' });
       loadAcademics(selectedCourseId);
     } catch (err) {
-      alert(err.message || 'Error uploading note');
+      toast.error(err.message || 'Error uploading note');
     } finally {
       setUploadingNote(false);
     }
   };
+
+  const { page: notesPage, setPage: setNotesPage, total: notesTotal, pageItems: notesPageItems } = usePagination(notes);
+  const { page: assignmentsPage, setPage: setAssignmentsPage, total: assignmentsTotal, pageItems: assignmentsPageItems } = usePagination(assignments);
 
   const handleCreateAssignment = async (e) => {
     e.preventDefault();
@@ -132,7 +139,7 @@ export default function AcademicsManagement() {
         loadAcademics(selectedCourseId);
       }
     } catch (err) {
-      alert(err.message || 'Error creating assignment');
+      toast.error(err.message || 'Error creating assignment');
     }
   };
 
@@ -150,17 +157,14 @@ export default function AcademicsManagement() {
         </div>
 
         <div className="flex items-center gap-3">
-          <select
-            value={selectedCourseId}
-            onChange={(e) => setSelectedCourseId(e.target.value)}
-            className="rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-xs font-bold text-[#0b3c68] shadow-sm"
-          >
-            {courses.map((c) => (
-              <option key={c._id} value={c._id}>
-                {c.name}
-              </option>
-            ))}
-          </select>
+<CourseSelect
+              courses={courses}
+              value={selectedCourseId}
+              onChange={(courseId) => setSelectedCourseId(courseId)}
+              placeholder="Select a course"
+              tone="navy"
+              className="w-64"
+            />
 
           {activeTab === 'notes' ? (
             <button
@@ -202,55 +206,67 @@ export default function AcademicsManagement() {
 
       {/* NOTES LIST */}
       {activeTab === 'notes' && (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {notes.length === 0 ? (
-            <div className="col-span-full rounded-3xl border border-slate-200 bg-white p-12 text-center text-slate-400 italic">
-              No study notes uploaded for this course. Click "+ Upload Study Notes" to add PDFs.
-            </div>
-          ) : (
-            notes.map((note) => {
-              const fileLink = note.fileUrl.startsWith('http') ? note.fileUrl : `http://localhost:5000${note.fileUrl}`;
-              return (
-                <div
-                  key={note._id}
-                  className="flex flex-col justify-between rounded-3xl border border-slate-200 bg-white p-5 shadow-sm space-y-4"
-                >
-                  <div>
-                    <div className="flex items-center justify-between">
-                      <span className="rounded bg-sky-50 px-2 py-0.5 text-[10px] font-bold text-[#0b3c68]">
-                        {note.chapterTitle}
-                      </span>
-                      <span className="text-[10px] font-bold text-slate-400">{note.fileSize}</span>
-                    </div>
-                    <h4 className="mt-2 font-display text-sm font-bold text-slate-900">{note.title}</h4>
-                    <p className="mt-1 text-xs text-slate-500 line-clamp-2 leading-relaxed">
-                      {note.description || 'Downloadable chapter documentation & reference materials.'}
-                    </p>
-                  </div>
-                  <a
-                    href={fileLink}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-100 py-2 text-xs font-bold text-[#0b3c68] hover:bg-[#0b3c68] hover:text-white transition"
+        <>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {notes.length === 0 ? (
+              <div className="col-span-full rounded-3xl border border-slate-200 bg-white p-12 text-center text-slate-400 italic">
+                No study notes uploaded for this course. Click "+ Upload Study Notes" to add PDFs.
+              </div>
+            ) : (
+              notesPageItems.map((note) => {
+                const fileLink = note.fileUrl.startsWith('http') ? note.fileUrl : `http://localhost:5000${note.fileUrl}`;
+                return (
+                  <div
+                    key={note._id}
+                    className="flex flex-col justify-between rounded-3xl border border-slate-200 bg-white p-5 shadow-sm space-y-4"
                   >
-                    <Download className="h-3.5 w-3.5" /> Download PDF Handout
-                  </a>
-                </div>
-              );
-            })
+                    <div>
+                      <div className="flex items-center justify-between">
+                        <span className="rounded bg-sky-50 px-2 py-0.5 text-[10px] font-bold text-[#0b3c68]">
+                          {note.chapterTitle}
+                        </span>
+                        <span className="text-[10px] font-bold text-slate-400">{note.fileSize}</span>
+                      </div>
+                      <h4 className="mt-2 font-display text-sm font-bold text-slate-900">{note.title}</h4>
+                      <p className="mt-1 text-xs text-slate-500 line-clamp-2 leading-relaxed">
+                        {note.description || 'Downloadable chapter documentation & reference materials.'}
+                      </p>
+                    </div>
+                    <a
+                      href={fileLink}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-100 py-2 text-xs font-bold text-[#0b3c68] hover:bg-[#0b3c68] hover:text-white transition"
+                    >
+                      <Download className="h-3.5 w-3.5" /> Download PDF Handout
+                    </a>
+                  </div>
+                );
+              })
+            )}
+          </div>
+
+          {notesTotal > 0 && (
+            <Pagination
+              total={notesTotal}
+              page={notesPage}
+              onPageChange={setNotesPage}
+              itemLabel="study notes"
+            />
           )}
-        </div>
+        </>
       )}
 
       {/* ASSIGNMENTS LIST */}
       {activeTab === 'assignments' && (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {assignments.length === 0 ? (
-            <div className="col-span-full rounded-3xl border border-slate-200 bg-white p-12 text-center text-slate-400 italic">
-              No assignments assigned for this course. Click "+ Create Assignment" to set up tasks.
-            </div>
-          ) : (
-            assignments.map((ass) => (
+        <>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {assignments.length === 0 ? (
+              <div className="col-span-full rounded-3xl border border-slate-200 bg-white p-12 text-center text-slate-400 italic">
+                No assignments assigned for this course. Click "+ Create Assignment" to set up tasks.
+              </div>
+            ) : (
+              assignmentsPageItems.map((ass) => (
               <div
                 key={ass._id}
                 className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm space-y-3"
@@ -269,8 +285,18 @@ export default function AcademicsManagement() {
                 </p>
               </div>
             ))
+            )}
+          </div>
+
+          {assignmentsTotal > 0 && (
+            <Pagination
+              total={assignmentsTotal}
+              page={assignmentsPage}
+              onPageChange={setAssignmentsPage}
+              itemLabel="assignments"
+            />
           )}
-        </div>
+        </>
       )}
 
       {/* Note Modal with PDF file input */}

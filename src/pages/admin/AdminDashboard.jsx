@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { toast } from 'sonner';
 import { Link } from 'react-router-dom';
 import { apiRequest } from '../../utils/api';
 import {
@@ -63,7 +64,7 @@ export default function AdminDashboard() {
           setRecentAdmissions(admissions.slice(0, 6));
         }
       } catch (err) {
-        console.error('Error fetching dashboard data:', err);
+        toast.error(err.message || 'Could not load dashboard data. Please try again.');
       } finally {
         setLoading(false);
       }

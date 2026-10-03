@@ -1,5 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
+import { toast } from 'sonner';
 import { apiRequest } from '../../utils/api';
+import { usePagination } from '../../hooks/usePagination';
+import Pagination from '../../components/Pagination';
+import SmartSelect from '../../components/SmartSelect';
+import CourseSelect from '../../components/CourseSelect';
 import {
   Award,
   Printer,
@@ -27,7 +32,6 @@ export default function CertificatesManagement() {
   const [submitting, setSubmitting] = useState(false);
 
   const [search, setSearch] = useState('');
-  const [page, setPage] = useState(1);
 
   const fetchData = async () => {
     try {
@@ -39,7 +43,7 @@ export default function CertificatesManagement() {
       if (cRes.success) setCertificates(cRes.certificates || []);
       if (aRes.success) setAdmissions(aRes.admissions || []);
     } catch (err) {
-      console.error(err);
+      toast.error(err.message || 'Could not load certificates. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -122,7 +126,7 @@ export default function CertificatesManagement() {
         fetchData();
       }
     } catch (err) {
-      alert(err.message || 'Error generating certificate');
+      toast.error(err.message || 'Error generating certificate');
     } finally {
       setSubmitting(false);
     }
@@ -133,7 +137,7 @@ export default function CertificatesManagement() {
       const res = await apiRequest(`/certificates/${cert._id}/publish`, 'POST');
       if (res.success) fetchData();
     } catch (err) {
-      alert(err.message || 'Error publishing');
+      toast.error(err.message || 'Error publishing');
     }
   };
 
@@ -143,7 +147,7 @@ export default function CertificatesManagement() {
       const res = await apiRequest(`/certificates/${cert._id}`, 'DELETE');
       if (res.success) fetchData();
     } catch (err) {
-      alert(err.message || 'Error deleting');
+      toast.error(err.message || 'Error deleting');
     }
   };
 
@@ -156,7 +160,7 @@ export default function CertificatesManagement() {
       });
       if (res.success) { setEditCert(null); fetchData(); }
     } catch (err) {
-      alert(err.message || 'Error saving');
+      toast.error(err.message || 'Error saving');
     }
   };
 
@@ -169,8 +173,7 @@ export default function CertificatesManagement() {
       c.certificateNo?.toLowerCase().includes(q)
     );
   });
-  const totalPages = Math.max(1, Math.ceil(filtered.length / 10));
-  const paged = filtered.slice((page - 1) * 10, page * 10);
+  const { page, setPage, total, pageItems } = usePagination(filtered);
 
   return (
     <div className="space-y-6">
@@ -204,14 +207,14 @@ export default function CertificatesManagement() {
       {/* Certificates Gallery */}
       {loading ? (
         <div className="rounded-3xl border border-slate-200 bg-white p-12 text-center text-slate-400 italic">Loading...</div>
-      ) : paged.length === 0 ? (
+      ) : pageItems.length === 0 ? (
         <div className="rounded-3xl border border-slate-200 bg-white p-12 text-center text-slate-400 italic">
           {search ? 'No certificates match your search.' : 'No certificates issued yet.'}
         </div>
       ) : (
         <div className="space-y-4">
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {paged.map((cert) => (
+            {pageItems.map((cert) => (
               <div
                 key={cert._id}
                 className="rounded-3xl border border-amber-200/80 bg-gradient-to-b from-amber-50/40 via-white to-white p-6 shadow-sm hover:shadow-md transition space-y-4"
@@ -280,12 +283,13 @@ export default function CertificatesManagement() {
             ))}
           </div>
 
-          {totalPages > 1 && (
-            <div className="flex justify-center gap-2 text-xs font-bold">
-              <button disabled={page <= 1} onClick={() => setPage(page - 1)} className="rounded-lg border px-3 py-1.5 disabled:opacity-40">Prev</button>
-              <span className="px-3 py-1.5 text-slate-500">Page {page} of {totalPages}</span>
-              <button disabled={page >= totalPages} onClick={() => setPage(page + 1)} className="rounded-lg border px-3 py-1.5 disabled:opacity-40">Next</button>
-            </div>
+          {total > 0 && (
+            <Pagination
+              total={total}
+              page={page}
+              onPageChange={setPage}
+              itemLabel="certificates"
+            />
           )}
         </div>
       )}
@@ -303,35 +307,33 @@ export default function CertificatesManagement() {
             <form onSubmit={handleGenerateCert} className="space-y-3">
               <div>
                 <label className="block text-slate-400 uppercase text-[10px]">Select Enrolled Student *</label>
-                <select
-                  required
-                  value={formStudentId}
-                  onChange={(e) => { setFormStudentId(e.target.value); setFormCourseId(''); }}
-                  className="mt-1 w-full rounded-xl border border-slate-300 p-2.5 text-xs font-bold text-slate-800"
-                >
-                  <option value="">-- Choose Student --</option>
-                  {[...studentMap.values()].map((s) => (
-                    <option key={s._id} value={s._id}>
-                      {s.fullName} ({s.enrollmentNo})
-                    </option>
-                  ))}
-                </select>
+<SmartSelect
+                    options={[...studentMap.values()].map((s) => ({
+                      value: s._id,
+                      label: `${s.fullName} (${s.enrollmentNo})`
+                    }))}
+                    value={formStudentId}
+                    onChange={(option) => {
+                      setFormStudentId(option ? option.value : '');
+                      setFormCourseId('');
+                    }}
+                    placeholder="-- Choose Student --"
+                    tone="slate"
+                    className="mt-1"
+                  />
               </div>
 
               {selectedStudent && (
                 <div>
                   <label className="block text-slate-400 uppercase text-[10px]">Select Course *</label>
-                  <select
-                    required
-                    value={formCourseId}
-                    onChange={(e) => setFormCourseId(e.target.value)}
-                    className="mt-1 w-full rounded-xl border border-slate-300 p-2.5 text-xs font-bold text-slate-800"
-                  >
-                    <option value="">-- Choose Course --</option>
-                    {selectedStudent.courses.map((c) => (
-                      <option key={c._id} value={c._id}>{c.name}</option>
-                    ))}
-                  </select>
+                  <CourseSelect
+                      courses={selectedStudent.courses}
+                      value={formCourseId}
+                      onChange={(courseId) => setFormCourseId(courseId)}
+                      placeholder="-- Choose Course --"
+                      tone="slate"
+                      className="mt-1"
+                    />
                 </div>
               )}
 
