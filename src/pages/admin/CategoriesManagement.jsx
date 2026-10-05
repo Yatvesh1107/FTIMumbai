@@ -332,7 +332,7 @@ export default function CategoriesManagement() {
           onClick={openCreate}
           className="inline-flex items-center gap-2 rounded-xl bg-[#0b3c68] px-5 py-2.5 text-xs font-bold text-white shadow hover:bg-[#12518a] transition"
         >
-          <Plus className="h-4 w-4" /> + Create New Category
+          <Plus className="h-4 w-4" />  Create New Category
         </button>
       </div>
 

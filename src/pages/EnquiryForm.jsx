@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { apiRequest } from '../utils/api';
 import { sanitizeMobile } from '../utils/sanitizeMobile';
 import CourseSelect from '../components/CourseSelect';
@@ -10,11 +10,18 @@ const labelCls = "block text-xs font-bold text-slate-700 uppercase tracking-wide
 
 export default function EnquiryForm() {
   const navigate = useNavigate();
+  const location = useLocation();
+  // Course carried over from a course detail page "Enroll Now" click.
+  const routeState = location.state || {};
+  const presetCourse =
+    routeState.courseInterest ||
+    (typeof routeState.course === 'string' ? routeState.course : routeState.course?.name) ||
+    '';
   const [form, setForm] = useState({
     name: '',
     mobile: '',
     email: '',
-    courseInterest: '',
+    courseInterest: presetCourse,
     remarks: ''
   });
   const [loading, setLoading] = useState(false);

@@ -46,22 +46,22 @@ export default function ProgramCard({ course }) {
             <span className="font-display text-3xl font-black text-white/90">FTI</span>
           </div>
         )}
+        {/* Subtle full-bleed wash over the image so the overlaid title stays legible */}
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-navy-dark/30 via-navy-dark/45 to-navy-dark/30" />
         <div className="absolute inset-0 bg-gradient-to-t from-navy-dark/60 via-navy-dark/0 to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
         <div className="absolute left-4 top-4 flex items-center gap-2 rounded-full bg-white/95 px-3 py-1.5 shadow-md backdrop-blur">
           <img src={ftiLogo} alt="FTI Mumbai" className="h-5 w-5 object-contain" />
           <span className="text-[11px] font-bold text-slate-800">{provider}</span>
         </div>
+        {/* Course title overlaid on the image: vertically centered, left aligned */}
+        <p className="pointer-events-none absolute inset-x-0 top-1/2 -translate-y-1/2 px-5 text-left font-display text-[20px] font-[700] leading-[28px] text-white line-clamp-3 [text-shadow:0_1px_2px_rgba(0,0,0,0.55),0_2px_18px_rgba(0,0,0,0.6)] md:text-[22px]">
+          {course.name}
+        </p>
       </div>
 
       <p className="mt-[16px] text-center font-display text-[14px] font-[600] leading-[24px] text-navy transition-colors duration-300 group-hover:text-white">
         {provider}
       </p>
-
-      <div className="min-h-[88px] px-1">
-        <p className="text-center font-display text-[20px] font-[700] leading-[28px] text-ink transition-colors duration-300 group-hover:text-white! md:text-[22px]">
-          {course.name}
-        </p>
-      </div>
 
       {/* Detail row: chips swap to learn-more button on hover */}
       <div className="relative mt-[18px] h-[28px]">

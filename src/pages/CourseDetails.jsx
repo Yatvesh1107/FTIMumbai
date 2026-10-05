@@ -119,7 +119,8 @@ export default function CourseDetails() {
             {data.description}
           </p>
           <Link
-            to="/contactus"
+            to="/enquiry"
+            state={{ courseInterest: courseName }}
             className="mt-8 inline-flex items-center gap-2 rounded-[40px] bg-terracotta px-10 py-3 font-semibold text-white shadow-md transition hover:bg-terracotta-dark active:scale-95"
           >
             Enroll Now <ArrowRight className="h-4 w-4" />
@@ -269,7 +270,8 @@ export default function CourseDetails() {
             {courseName} course completion, highlighting your expertise.
           </p>
           <Link
-            to="/contactus"
+            to="/enquiry"
+            state={{ courseInterest: courseName }}
             className="mt-8 inline-flex items-center gap-2 rounded-[40px] bg-gradient-to-r from-navy to-navy-light px-10 py-3 font-semibold text-white shadow-md transition hover:shadow-lift hover:brightness-110 active:scale-95"
           >
             Enroll Now <ArrowRight className="h-4 w-4" />

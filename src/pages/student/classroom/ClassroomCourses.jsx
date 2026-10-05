@@ -85,6 +85,8 @@ export default function ClassroomCourses() {
                       <BookOpen className="h-10 w-10 text-white/40" />
                     </div>
                   )}
+                  {/* Subtle full-bleed wash over the image so the overlaid title stays legible */}
+                  <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-[#082c4d]/35 via-[#082c4d]/50 to-[#082c4d]/35" />
                   <span className="absolute left-3 top-3 rounded-md bg-white/90 px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-[#0b3c68]">
                     {course.courseCode}
                   </span>
@@ -93,14 +95,15 @@ export default function ClassroomCourses() {
                       <CheckCircle2 className="h-3 w-3" /> Completed
                     </span>
                   )}
+                  {/* Course title overlaid on the image: vertically centered, left aligned */}
+                  <h3 className="pointer-events-none absolute inset-x-0 top-1/2 -translate-y-1/2 px-3 text-left font-display text-sm font-black leading-snug text-white line-clamp-2 [text-shadow:0_1px_2px_rgba(0,0,0,0.55),0_2px_14px_rgba(0,0,0,0.6)]">
+                    {course.name}
+                  </h3>
                 </div>
 
                 <div className="space-y-3 p-4">
                   <div>
-                    <h3 className="font-display text-sm font-black text-slate-900 line-clamp-1 group-hover:text-[#0b3c68]">
-                      {course.name}
-                    </h3>
-                    <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                    <div className="flex flex-wrap items-center gap-1.5">
                       <span className="rounded bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-600">
                         {course.category}
                       </span>
